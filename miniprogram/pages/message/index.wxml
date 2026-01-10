@@ -1,0 +1,7 @@
+<view class="message-page">
+  <view class="empty-state">
+    <image class="empty-icon" src="/images/icons/message-empty.svg" mode="aspectFit"></image>
+    <text class="empty-text">暂无消息</text>
+  </view>
+</view>
+

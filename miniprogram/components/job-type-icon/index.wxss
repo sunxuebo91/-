@@ -1,0 +1,56 @@
+.job-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.icon-bg {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.icon-emoji {
+  font-size: 48rpx;
+}
+
+.icon-label {
+  font-size: 24rpx;
+  color: #333;
+}
+
+/* 保姆 - 橙色渐变 */
+.job-icon.baomu .icon-bg {
+  background: linear-gradient(135deg, #FF9A56 0%, #FF6B35 100%);
+}
+
+/* 月嫂 - 粉色渐变 */
+.job-icon.yuexin .icon-bg {
+  background: linear-gradient(135deg, #FFB6D9 0%, #FF6BA9 100%);
+}
+
+/* 育儿嫂 - 紫色渐变 */
+.job-icon.yuer .icon-bg {
+  background: linear-gradient(135deg, #B794F6 0%, #8B5CF6 100%);
+}
+
+/* 小时工 - 蓝色渐变 */
+.job-icon.xiaoshi .icon-bg {
+  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+}
+
+/* 护老 - 绿色渐变 */
+.job-icon.hulao .icon-bg {
+  background: linear-gradient(135deg, #6EE7B7 0%, #10B981 100%);
+}
+
+/* 保洁 - 青色渐变 */
+.job-icon.baojie .icon-bg {
+  background: linear-gradient(135deg, #5EEAD4 0%, #14B8A6 100%);
+}
+

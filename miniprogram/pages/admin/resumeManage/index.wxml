@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="top">
+    <view class="btn primary" bindtap="create">新增简历</view>
+    <view class="btn" bindtap="reload">刷新</view>
+  </view>
+
+  <view class="list">
+    <view class="item" wx:for="{{resumes}}" wx:key="_id">
+      <view class="main" bindtap="edit" data-id="{{item._id}}">
+        <view class="name">{{item.name || '未命名'}}</view>
+        <view class="sub">{{item.status || 'draft'}} · 更新：{{item.updatedAtText || '—'}}</view>
+      </view>
+      <view class="actions">
+        <view class="link" bindtap="edit" data-id="{{item._id}}">编辑</view>
+        <view class="link danger" bindtap="remove" data-id="{{item._id}}">删除</view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!loading && resumes.length === 0}}">暂无数据</view>
+  </view>
+
+  <view class="footer" wx:if="{{loading}}">加载中...</view>
+</view>

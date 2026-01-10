@@ -1,0 +1,43 @@
+﻿<view class="page">
+  <view class="header-card">
+    <view class="header-content" bindtap="goLogin">
+      <image class="avatar" src="{{me.avatarUrl || '/images/icons/avatar.png'}}"></image>
+      <view class="user-info">
+        <view class="nickname">{{me.nickname || '立即登录'}}</view>
+      </view>
+    </view>
+    <view class="edit-btn" catchtap="onTapSettings">
+      <text class="edit-text">资料修改</text>
+    </view>
+  </view>
+
+
+  <!-- 员工功能区 -->
+  <view class="section" wx:if="{{me.role === 'staff'}}">
+    <view class="section-title">员工功能</view>
+    <view class="menu-item" bindtap="goResumeManage">
+      <view class="menu-label">简历管理</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="menu-item">
+      <button class="menu-btn" open-type="contact" session-from="from=profile" show-message-card="true" send-message-title="安得褓贝客服" send-message-path="/pages/profile/index">
+        <view class="menu-label">联系客服</view>
+        <view class="menu-arrow">›</view>
+      </button>
+    </view>
+
+    <view class="menu-item" bindtap="onTapHelp">
+      <view class="menu-label">帮助</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="onTapSettings">
+      <view class="menu-label">设置</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+</view>
+

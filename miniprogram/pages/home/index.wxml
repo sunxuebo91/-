@@ -1,0 +1,41 @@
+<view class="home">
+  <!-- 顶部渐变背景：Banner 占位 -->
+  <view class="top">
+    <view class="banner-wrap">
+      <view class="banner-placeholder"></view>
+    </view>
+  </view>
+
+  <!-- 四个入口：保姆 / 月嫂 / 育儿嫂 / 护老 -->
+  <view class="content">
+    <view class="quick-row">
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="baomu">
+        <view class="quick-icon bg-1">
+          <image class="quick-icon-img" src="/images/icons/baomu.svg" mode="aspectFit"></image>
+        </view>
+        <text class="quick-text">保姆</text>
+      </view>
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuexin">
+        <view class="quick-icon bg-2">
+          <image class="quick-icon-img" src="/images/icons/yuexin.svg" mode="aspectFit"></image>
+        </view>
+        <text class="quick-text">月嫂</text>
+      </view>
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuesao">
+        <view class="quick-icon bg-3">
+          <image class="quick-icon-img" src="/images/icons/yuer.svg" mode="aspectFit"></image>
+        </view>
+        <text class="quick-text">育儿嫂</text>
+      </view>
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="hulao">
+        <view class="quick-icon bg-4">
+          <image class="quick-icon-img" src="/images/icons/hulao.svg" mode="aspectFit"></image>
+        </view>
+        <text class="quick-text">护老</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+
+

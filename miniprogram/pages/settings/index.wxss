@@ -1,0 +1,143 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+.section {
+  background: #fff;
+  margin: 24rpx;
+  padding: 0 32rpx;
+  border-radius: 20rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: #999;
+  padding: 24rpx 0 12rpx;
+  font-weight: 600;
+}
+
+.info-item {
+	display: flex;
+	align-items: center;
+	/* 标签固定宽度，右侧内容整体靠左，不需要 space-between */
+	justify-content: flex-start;
+	padding: 24rpx 0;
+	border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  padding-bottom: 32rpx;
+}
+
+.label {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+  width: 120rpx;
+  flex-shrink: 0;
+}
+
+.value-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16rpx;
+}
+
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  flex-shrink: 0;
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.edit-btn::after {
+  border: none;
+}
+
+
+.edit-text {
+  font-size: 26rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nickname-input {
+  width: 100%;
+  text-align: left;
+  font-size: 30rpx;
+  color: #333;
+}
+
+.phone-text {
+  font-size: 30rpx;
+  color: #999;
+}
+
+.phone-auth-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.phone-auth-btn::after {
+  border: none;
+}
+
+
+.phone-text-btn {
+  font-size: 30rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 500;
+}
+
+.btn-wrapper {
+  padding: 0 24rpx;
+  margin-top: 32rpx;
+}
+
+.save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+}
+
+.save-btn::after {
+  border: none;
+}
+

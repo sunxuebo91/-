@@ -1,0 +1,93 @@
+.page {
+  padding: 20rpx;
+}
+
+.top {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.btn {
+  flex: 1;
+  text-align: center;
+  border-radius: 12rpx;
+  padding: 18rpx 0;
+  background: #fff;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 28rpx;
+}
+
+.primary {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+}
+
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 18rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.main {
+  flex: 1;
+}
+
+.name {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  align-items: flex-end;
+}
+
+.link {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 26rpx;
+}
+
+
+.danger {
+  color: #e54545;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 60rpx 0;
+}
+
+.footer {
+  text-align: center;
+  color: #999;
+  font-size: 24rpx;
+  padding: 20rpx 0;
+}

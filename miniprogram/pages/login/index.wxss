@@ -1,0 +1,236 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  width: 100%;
+  padding: 0 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-btn {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 24rpx;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 80rpx;
+  border: 4rpx solid #f0f0f0;
+  display: block;
+}
+
+.avatar-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
+}
+
+.nickname-input {
+  width: 100%;
+  margin-bottom: 48rpx;
+}
+
+.input {
+  width: 100%;
+  height: 88rpx;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  padding: 0 32rpx;
+  font-size: 32rpx;
+  color: #333;
+  text-align: center;
+}
+
+.auth-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+}
+
+.auth-btn::after {
+  border: none;
+}
+
+/* 账号密码登录按钮 */
+.account-login-btn {
+  width: 100%;
+  background: #fff;
+  color: #8766F3;
+  border-radius: 16rpx;
+  padding: 32rpx 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 32rpx;
+  border: 2rpx solid #8766F3;
+}
+
+.account-login-btn::after {
+  border: none;
+}
+
+.btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+}
+
+.agreement {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #666;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.checkbox {
+  margin-right: 8rpx;
+  transform: scale(0.8);
+}
+
+.text {
+  color: #666;
+}
+
+.link {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 0 6rpx;
+  text-decoration: underline;
+}
+
+/* 弹窗遮罩 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+/* 弹窗内容 */
+.modal-content {
+  width: 100%;
+  max-width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+/* 弹窗头部 */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 40rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+  padding: 0 8rpx;
+}
+
+/* 弹窗主体 */
+.modal-body {
+  padding: 40rpx;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.modal-login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-top: 16rpx;
+  margin-bottom: 24rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+}
+
+.modal-login-btn::after {
+  border: none;
+}
+
+.register-tip {
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.tip-text {
+  color: #999;
+}
+
+.register-link {
+  color: #8766F3;
+  font-weight: 600;
+  margin-left: 8rpx;
+}
+
+

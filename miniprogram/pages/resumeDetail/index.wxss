@@ -1,0 +1,1000 @@
+.page {
+  padding: 0 10rpx;
+  padding-bottom: 140rpx;
+  margin: 0;
+  background: #F7F5FF;
+  overflow-x: hidden;
+  width: 100vw;
+  box-sizing: border-box;
+}
+
+
+
+/* 页面已统一左右 10rpx（约 5px）内边距，这里不再重复加 */
+.content-inner {
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+
+
+
+/* ========== 顶部视频/图片区域 ========== */
+.hero-wrap {
+  position: relative;
+  width: 100%;
+  height: 700rpx;
+  background: #000;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 32rpx;
+  overflow: hidden;
+}
+
+
+
+
+
+
+
+
+.hero-video,
+.hero-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+
+
+/* 播放按钮 - 使用普通 view（同层渲染） */
+.hero-video-center-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  pointer-events: auto;
+  /* 增加点击区域 - 不使用负margin */
+  padding: 30rpx;
+}
+
+.hero-video-center-play__circle {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.hero-video-center-play__circle:active {
+  transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.hero-video-center-play__triangle {
+  width: 0;
+  height: 0;
+  border-top: 16rpx solid transparent;
+  border-bottom: 16rpx solid transparent;
+  border-left: 28rpx solid #fff;
+  margin-left: 8rpx;
+}
+
+/* 静音按钮 - 使用普通 view（同层渲染） */
+.hero-video-mute {
+  position: absolute;
+  /* 右侧对齐查看全部按钮：24rpx(padding) */
+  right: 24rpx;
+  /* 放在查看全部按钮上方，间距10rpx：46rpx(底部gallery) + 120rpx(按钮高度) + 10rpx(间距) */
+  bottom: 176rpx;
+  width: 56rpx;  /* 80rpx * 0.7 = 56rpx */
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.hero-video-mute:active {
+  transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.hero-video-mute__text {
+  color: #fff;
+  font-size: 20rpx;  /* 24rpx * 0.7 ≈ 17rpx，取20rpx保持可读性 */
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+
+
+
+
+
+
+/* 左上角：收藏信息 */
+.hero-top-left {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  height: 56rpx;
+  padding: 0 16rpx;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 999rpx;
+}
+
+.mini-avatar {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid #fff;
+}
+
+.collect-text {
+  font-size: 22rpx;
+  color: #fff;
+}
+
+/* 右上角：编号 */
+.hero-top-right {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56rpx;
+  padding: 0 16rpx;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 999rpx;
+}
+
+.resume-no {
+  font-size: 22rpx;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* 视频加载提示 - 使用普通 view（同层渲染） */
+.hero-video-loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.hero-video-loading__spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero-video-loading__text {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 500;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.5);
+}
+
+/* 底部小图轮播 */
+.hero-bottom-gallery {
+  position: absolute;
+  /* info-card 会向上叠加（margin-top: -40rpx），这里控制相册条与卡片的净距 */
+  bottom: 46rpx; /* 约等于 3px 净距（46rpx - 40rpx = 6rpx ≈ 3px） */
+  left: 0;
+  right: 0;
+  padding: 0 24rpx;
+}
+
+
+
+
+.gallery-fixed-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between; /* 两端固定，中间等距 */
+  width: 100%;
+}
+
+.gallery-item {
+  flex: 0 0 auto;
+}
+
+.gallery-item.is-active .gallery-thumb {
+  border-color: rgba(166, 148, 255, 1);
+  box-shadow: none; /* 避免阴影侵占缝隙导致"视觉间距不一致" */
+}
+
+.gallery-thumb-wrap {
+  position: relative;
+  display: block;
+}
+
+.gallery-video-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 20rpx;  /* 28rpx * 0.7 ≈ 20rpx */
+  padding: 0 8rpx;  /* 12rpx * 0.7 ≈ 8rpx */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(135, 102, 243, 0.85) 0%, rgba(166, 148, 255, 0.85) 100%);
+  color: #fff;
+  font-size: 13rpx;  /* 18rpx * 0.7 ≈ 13rpx */
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;  /* 防止换行 */
+  /* 只保留右下角圆角（镶嵌效果），其余三个角直角 */
+  border-radius: 0;
+  border-bottom-right-radius: 12rpx;
+  max-width: 77rpx;  /* 110rpx * 0.7 ≈ 77rpx */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gallery-thumb {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.8);
+  box-sizing: border-box; /* 与"查看全部"一致：边框计入尺寸 */
+  display: block; /* 移除 inline 元素的底部空隙 */
+}
+
+/* 查看全部按钮 */
+.gallery-view-all {
+  flex-shrink: 0;
+  align-self: flex-start; /* 强制与滚动区顶部对齐 */
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3rpx solid rgba(255, 255, 255, 0.8);
+  box-sizing: border-box; /* 确保边框不影响尺寸 */
+}
+
+.gallery-view-all__text {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.gallery-view-all__count {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20rpx;
+}
+
+
+/* ========== 信息卡片 ========== */
+.info-card {
+  background: linear-gradient(180deg, #F7F5FF 0%, #FFF 100%);
+  width: 100%;
+  margin: -40rpx 0 24rpx 0;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 24rpx 0 20rpx 0;
+  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* 头像和基本信息 */
+.profile-header {
+  position: relative;
+  display: flex;
+  align-items: center; /* 与头像垂直居中对齐 */
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+  padding: 0 24rpx;
+}
+
+
+.avatar-wrap {
+  width: 140rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  border: 4rpx solid #fff;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 头像下工种标签 */
+.avatar-badge-wrap {
+  position: relative;
+  width: 140rpx;
+  height: 140rpx;
+}
+
+.avatar-level-pill {
+  position: absolute;
+  left: 50%;
+  bottom: -8rpx;
+  transform: translateX(-50%);
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 8rpx 20rpx rgba(255, 165, 0, 0.26);
+}
+
+
+
+
+.jobtype-pill {
+  margin-top: 0;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 8rpx 20rpx rgba(135, 102, 243, 0.28);
+}
+
+
+
+
+
+.profile-info {
+  flex: 1;
+  min-height: 140rpx; /* 以头像高度为基准 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 让姓名/信息整体在头像中线附近 */
+  padding-top: 0;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16rpx;
+  row-gap: 10rpx;
+  align-items: center;
+}
+
+/* 固定排版：姓名（左上） */
+.profile-info-grid .name {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* 工种放到姓名下方（左侧），避免与右上角认证标签冲突 */
+.profile-info-grid .jobtype-pill {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+}
+
+/* 经验与好评同一行（第三行） */
+.profile-info-grid .experience {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.profile-info-grid .rating {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: start;
+}
+
+/* 兼容旧结构（如果其它地方复用） */
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+/* 姓名旁月嫂等级标签 */
+.level-pill {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.meta-row {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+  margin-top: 10rpx;
+}
+
+
+.name {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #111;
+}
+
+/* 认证标签 */
+.verify-badge {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 36rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FFA5C0 100%);
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.25);
+}
+
+/* 悬浮到右上角，不占用其他字段空间 */
+.verify-badge--float {
+  position: absolute;
+  top: 6rpx;
+  right: 24rpx;
+}
+
+.verify-badge__icon {
+  font-size: 16rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.3);
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verify-badge__text {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.experience {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.rating {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 基本信息行 */
+.basic-info-row {
+  padding: 20rpx 24rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.basic-info-cell {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  color: #333;
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 10rpx;
+  border-right: 2rpx solid rgba(0, 0, 0, 0.10);
+  box-sizing: border-box;
+}
+
+.basic-info-cell.is-last {
+  border-right: none;
+}
+
+
+/* 旧样式保留（其它地方若复用 info-item 不会受影响） */
+.basic-info-text {
+  display: block;
+  font-size: 26rpx;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+
+/* 旧样式保留（其它地方若复用 info-item 不会受影响） */
+.info-item {
+  font-size: 26rpx;
+  color: #333;
+}
+
+
+/* "获取证书"票券（使用背景图片） */
+.cert-tickets {
+  position: relative;
+}
+
+.cert-tickets__scroll {
+  white-space: nowrap;
+}
+
+.cert-tickets__scroll-row {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 20rpx;
+  padding-right: 24rpx; /* 给右侧"往左滑动"提示留空间 */
+}
+
+.cert-ticket {
+  width: 200rpx;
+  flex: 0 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 18rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 18rpx 36rpx rgba(0, 0, 0, 0.12),
+    0 10rpx 22rpx rgba(135, 102, 243, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cert-ticket:active {
+  transform: translateY(2rpx) scale(0.99);
+  box-shadow:
+    0 10rpx 22rpx rgba(0, 0, 0, 0.10),
+    0 6rpx 14rpx rgba(135, 102, 243, 0.16);
+}
+
+.cert-ticket__bg {
+  width: 200rpx;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 0;
+  border-radius: 18rpx;
+}
+
+.cert-ticket__text {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #333;
+  line-height: 1.3;
+  text-align: center;
+  word-break: keep-all;
+  white-space: nowrap;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  padding: 0 16rpx;
+  max-width: 90%;
+}
+
+.cert-tickets__hint {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2rpx solid rgba(230, 224, 255, 1);
+  font-size: 22rpx;
+  font-weight: 800;
+  color: rgba(120, 120, 120, 1);
+  box-shadow: 0 10rpx 26rpx rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+
+
+/* ========== 证书区域 ========== */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+
+.cert-card {
+  background: #F7F5FF;
+  border-radius: 16rpx;
+  padding: 24rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.cert-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 12rpx;
+}
+
+.cert-name {
+  font-size: 22rpx;
+  color: #666;
+  text-align: center;
+}
+
+/* ========== 通用区块 ========== */
+.section {
+  background: #fff;
+  width: 100%;
+  margin: 0 0 24rpx 0;
+  border-radius: 24rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  margin-bottom: 20rpx;
+  color: #111;
+}
+
+/* 带图标的标题 */
+.section-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.section-icon {
+  width: 44rpx;
+  height: 44rpx;
+  display: block;
+  flex-shrink: 0;
+}
+
+.section-title-text {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #111;
+  line-height: 44rpx;
+}
+
+/* 自我介绍副标题 */
+.intro-subtitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 16rpx;
+}
+
+.intro {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  background: #f5f5f5;
+  padding: 24rpx;
+  border-radius: 16rpx;
+}
+
+/* 工作经历 */
+.work-item {
+  margin-bottom: 32rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.work-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 顶部标题行：月嫂 + 日期 | 订单编号 */
+.work-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+/* 月嫂标签 + 日期 */
+.work-period {
+  display: flex;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.period-icon {
+  width: 26rpx;
+  height: 26rpx;
+  flex-shrink: 0;
+  display: block;
+}
+
+.period-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 26rpx;
+}
+
+.period-date {
+  font-size: 20rpx;
+  color: #666;
+  margin-left: 4rpx;
+  line-height: 20rpx;
+  align-self: flex-end;
+}
+
+/* 订单编号（右上角，纯文字对齐右侧） */
+.work-order-tag {
+  margin-left: auto;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #999;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  text-align: right;
+}
+
+/* 客户信息行 */
+.work-customer-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: wrap;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.customer-name {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.name-icon {
+  font-size: 18rpx;
+}
+
+.customer-rating {
+  display: flex;
+  align-items: center;
+  gap: 2rpx;
+}
+
+.star {
+  font-size: 20rpx;
+  color: #FFB800;
+}
+
+.order-date {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.service-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 4rpx;
+  font-size: 20rpx;
+  color: #666;
+  margin-left: auto;
+}
+
+.area-icon {
+  width: 20rpx;
+  height: 20rpx;
+  flex-shrink: 0;
+}
+
+/* 工作照片横向滚动 - 参照证书布局 */
+.work-photos-scroll {
+  position: relative;
+  margin-bottom: 16rpx;
+  margin-left: -24rpx;
+  margin-right: -24rpx;
+  padding-left: 24rpx;
+}
+
+.work-photos-scroll__view {
+  white-space: nowrap;
+}
+
+.work-photos-scroll__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.work-photo-card {
+  /* 计算：(750rpx - 48rpx左右padding - 36rpx间距(3个gap)) / 3.5 ≈ 190rpx */
+  width: 190rpx;
+  height: 190rpx;
+  flex: 0 0 auto;
+  position: relative;
+  border-radius: 16rpx;
+  overflow: hidden;
+  background: #f5f5f5;
+  box-shadow:
+    0 4rpx 12rpx rgba(0, 0, 0, 0.08),
+    0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+}
+
+.work-photo-card__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* 工作描述 */
+.work-description {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+}
+
+.desc-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 客户评价盒子 */
+.work-review-box {
+  margin-top: 16rpx;
+  padding: 16rpx;
+  background: #FFF9F0;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #FFB800;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  margin-bottom: 8rpx;
+}
+
+.review-icon {
+  font-size: 20rpx;
+}
+
+.review-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #FF8C00;
+}
+
+.review-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+
+
+/* ========== 底部提示和操作栏 ========== */
+.safe-tip {
+  width: 100%;
+  margin: 0 0 24rpx 0;
+  color: #999;
+  font-size: 24rpx;
+  padding: 0;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16rpx 10rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  background: rgba(247, 245, 255, 0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  gap: 16rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+
+
+.bar-btn {
+  flex: 1;
+  text-align: center;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.ghost {
+  background: #fff;
+  border: 2rpx solid #8766F3;
+  color: #8766F3;
+}
+
+.primary {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.35);
+}
+
+
+.loading {
+  padding: 60rpx 0;
+  text-align: center;
+  color: #888;
+}

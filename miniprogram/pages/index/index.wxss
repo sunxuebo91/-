@@ -1,0 +1,299 @@
+/**index.wxss**/
+
+page {
+  background: linear-gradient(180deg, #FF6B6B 0%, #FFA07A 100%);
+  min-height: 100vh;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 120rpx);
+}
+
+.page {
+  min-height: 100vh;
+}
+
+/* 顶部导航栏 */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  background: transparent;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 999rpx;
+  padding: 12rpx 20rpx;
+  gap: 8rpx;
+}
+
+.location-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.location-text {
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.navbar-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+  text-align: center;
+}
+
+.navbar-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-icon {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+/* Banner轮播 */
+.banner-container {
+  margin: 20rpx 32rpx;
+}
+
+.banner-swiper {
+  height: 280rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.banner-item {
+  background: linear-gradient(135deg, #FFB3BA 0%, #FFDFBA 100%);
+  height: 100%;
+  padding: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-content {
+  z-index: 2;
+}
+
+.banner-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.banner-subtitle {
+  font-size: 28rpx;
+  color: #FF6B6B;
+  font-weight: 600;
+}
+
+.banner-image {
+  width: 280rpx;
+  height: 280rpx;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* 特色服务标签 */
+.feature-tags {
+  display: flex;
+  justify-content: space-around;
+  padding: 24rpx 32rpx;
+  gap: 16rpx;
+}
+
+.feature-tag {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex: 1;
+  justify-content: center;
+}
+
+.feature-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.feature-text {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+}
+
+/* 服务分类网格 */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24rpx;
+  padding: 0 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.service-icon {
+  width: 96rpx;
+  height: 96rpx;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 24rpx;
+  padding: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.service-name {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 专业服务卡片 */
+.pro-cards {
+  display: flex;
+  gap: 20rpx;
+  padding: 0 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.pro-card {
+  flex: 1;
+  height: 200rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-card-red {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+}
+
+.pro-card-pink {
+  background: linear-gradient(135deg, #FF6BA8 0%, #FFA3D1 100%);
+}
+
+.pro-card-content {
+  z-index: 2;
+}
+
+.pro-card-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8rpx;
+}
+
+.pro-card-subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pro-card-image {
+  width: 180rpx;
+  height: 180rpx;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* 超值服务 */
+.value-section {
+  background: #fff;
+  border-top-left-radius: 32rpx;
+  border-top-right-radius: 32rpx;
+  padding: 32rpx;
+  margin-top: 32rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.value-cards {
+  display: flex;
+  gap: 20rpx;
+}
+
+.value-card {
+  flex: 1;
+  height: 280rpx;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.value-card-orange {
+  background: linear-gradient(135deg, #FFE8CC 0%, #FFDDB3 100%);
+}
+
+.value-card-blue {
+  background: linear-gradient(135deg, #CCE5FF 0%, #B3D9FF 100%);
+}
+
+.value-tag {
+  display: inline-block;
+  background: #FF6B6B;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.value-card-blue .value-tag {
+  background: #4A90E2;
+}
+
+.value-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.value-subtitle {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.value-image {
+  width: 160rpx;
+  height: 160rpx;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}

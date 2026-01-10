@@ -1,0 +1,70 @@
+<view class="page">
+  <view class="card">
+    <view class="field">
+      <view class="label">姓名</view>
+      <input class="input" placeholder="如：张阿姨" value="{{form.name}}" data-key="name" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">年龄</view>
+      <input class="input" type="number" placeholder="如：45" value="{{form.age}}" data-key="age" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">城市</view>
+      <input class="input" placeholder="如：上海" value="{{form.city}}" data-key="city" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">经验年数</view>
+      <input class="input" type="number" placeholder="如：6" value="{{form.experienceYears}}" data-key="experienceYears" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">月薪（元）</view>
+      <input class="input" type="number" placeholder="如：12800" value="{{form.priceMonth}}" data-key="priceMonth" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">标签（逗号分隔）</view>
+      <input class="input" placeholder="如：催乳,早教,住家" value="{{form.tagsText}}" data-key="tagsText" bindinput="onInput" />
+    </view>
+    <view class="field">
+      <view class="label">状态</view>
+      <picker mode="selector" range="{{statusOptions}}" value="{{statusIndex}}" bindchange="onStatusChange">
+        <view class="picker">{{statusOptions[statusIndex]}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">封面图</view>
+    <view class="media-row">
+      <image class="cover" mode="aspectFill" src="{{form.coverFileId || '/images/default-goods-image.png'}}"></image>
+      <view class="media-actions">
+        <view class="btn" bindtap="pickCover">选择并上传</view>
+        <view class="btn danger" bindtap="clearCover" wx:if="{{form.coverFileId}}">清空</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">图片（最多6张）</view>
+    <scroll-view scroll-x class="photo-row" wx:if="{{form.photos.length}}">
+      <image class="photo" wx:for="{{form.photos}}" wx:key="*this" mode="aspectFill" src="{{item}}"></image>
+    </scroll-view>
+    <view class="btn" bindtap="pickPhotos">选择并上传</view>
+    <view class="btn danger" bindtap="clearPhotos" wx:if="{{form.photos.length}}">清空</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">视频（可选）</view>
+    <video class="video" wx:if="{{form.videoFileId}}" src="{{form.videoFileId}}" controls></video>
+    <view class="btn" bindtap="pickVideo">选择并上传</view>
+    <view class="btn danger" bindtap="clearVideo" wx:if="{{form.videoFileId}}">清空</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">文字介绍</view>
+    <textarea class="textarea" placeholder="擅长/证书/带过多少宝宝..." value="{{form.intro}}" data-key="intro" bindinput="onInput" auto-height />
+  </view>
+
+  <view class="bottom">
+    <view class="btn primary" bindtap="save">保存</view>
+  </view>
+</view>

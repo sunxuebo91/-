@@ -1,0 +1,12 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-06T10:09:30.222Z
+provider: 
+---
+
+- Do not create or modify documentation files (*.md) unless the user explicitly requests it.
+- Prefer editing existing files with minimal, targeted changes.
+- After edits, run `read_lints` on modified files and fix introduced errors.
+- Use backticks when referencing paths and symbols in messages.

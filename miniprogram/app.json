@@ -1,0 +1,54 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/message/index",
+    "pages/resumeList/index",
+    "pages/profile/index",
+    "pages/login/index",
+    "pages/register/index",
+    "pages/settings/index",
+    "pages/legal/userAgreement/index",
+    "pages/legal/privacyPolicy/index",
+
+    "pages/resumeDetail/index",
+    "pages/resumeAlbum/index",
+
+    "pages/admin/resumeManage/index",
+    "pages/admin/resumeEdit/index",
+
+    "pages/index/index",
+    "pages/example/index"
+  ],
+
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "安得褓贝",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#8a8a8a",
+    "selectedColor": "#8b5cf6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/message/index",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

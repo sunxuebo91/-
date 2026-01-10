@@ -1,0 +1,25 @@
+{
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "version": "2.0",
+  "envId": "cloud1-6gyrh73h8e8206ce",
+  "framework": {
+    "name": "admin-web",
+    "plugins": {
+      "client": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "buildCommand": "npm run build",
+          "outputPath": "dist",
+          "cloudPath": "/admin",
+          "ignore": [
+            ".git",
+            ".github",
+            "node_modules",
+            ".env"
+          ]
+        }
+      }
+    }
+  }
+}
+

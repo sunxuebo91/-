@@ -1,0 +1,302 @@
+<view class="page" wx:if="{{loaded}}">
+  <!-- 顶部视频/图片区域 -->
+  <view class="hero-wrap">
+    <!-- 主媒体区：视频/图片切换显示 -->
+    <block wx:if="{{detail.videoFileId && heroMediaType === 'video'}}">
+      <video
+        id="heroVideo"
+        class="hero-video"
+        src="{{detail.videoLocalSrc || detail.videoFileId}}"
+        poster="{{detail.videoThumbSrc || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png'}}"
+        autoplay="{{false}}"
+        loop="{{true}}"
+        muted="{{heroVideoMuted}}"
+        object-fit="cover"
+        controls="{{false}}"
+        show-progress="{{false}}"
+        show-fullscreen-btn="{{false}}"
+        show-play-btn="{{false}}"
+        show-center-play-btn="{{false}}"
+        enable-progress-gesture="{{false}}"
+        enable-play-gesture="{{true}}"
+        initial-time="0"
+        show-loading="{{true}}"
+        bindloadedmetadata="onHeroVideoLoaded"
+        bindended="onHeroVideoEnded"
+        binderror="onHeroVideoError"
+        bindwaiting="onHeroVideoWaiting"
+        bindcanplay="onHeroVideoCanPlay"
+        bindprogress="onHeroVideoProgress"
+      ></video>
+
+
+      <!-- 播放按钮：使用普通 view（同层渲染支持） -->
+      <view
+        class="hero-video-center-play"
+        wx:if="{{heroShowCenterPlayBtn}}"
+        catchtap="onTapHeroCenterPlay"
+      >
+        <view class="hero-video-center-play__circle">
+          <view class="hero-video-center-play__triangle"></view>
+        </view>
+      </view>
+
+      <!-- 静音按钮：使用普通 view（同层渲染支持） -->
+      <view class="hero-video-mute" catchtap="onTapHeroMute">
+        <view class="hero-video-mute__text">
+          {{heroVideoMuted ? '静音' : '开声'}}
+        </view>
+      </view>
+
+      <!-- 加载提示：使用普通 view（同层渲染支持） -->
+      <view class="hero-video-loading" wx:if="{{heroVideoLoading}}">
+        <view class="hero-video-loading__spinner"></view>
+        <view class="hero-video-loading__text">加载中...</view>
+      </view>
+
+    </block>
+
+    <image
+      wx:else
+      class="hero-image"
+      mode="aspectFill"
+      src="{{heroSelectedImage || detail.coverFileId || '/images/default-goods-image.png'}}"
+    ></image>
+
+
+
+
+
+
+
+
+    <!-- 左上角：收藏信息 -->
+    <view class="hero-top-left">
+      <image class="mini-avatar" src="{{detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+
+      <text class="collect-text">已有1562位用户收藏</text>
+    </view>
+
+    <!-- 右上角：编号 -->
+    <view class="hero-top-right">
+      <text class="resume-no">NO. {{detail.resumeNoText || '00000000'}}</text>
+    </view>
+
+    <!-- 底部小图轮播 -->
+    <view class="hero-bottom-gallery" wx:if="{{(heroThumbPhotosPreview && heroThumbPhotosPreview.length) || detail.videoFileId}}">
+
+      <view class="gallery-fixed-row">
+        <!-- 视频入口：可切回视频（不另开窗口） -->
+        <view
+          class="gallery-item {{heroMediaType === 'video' ? 'is-active' : ''}}"
+          wx:if="{{detail.videoFileId}}"
+          bindtap="onTapHeroThumb"
+          data-type="video"
+        >
+          <view class="gallery-thumb-wrap">
+            <image class="gallery-thumb" src="{{detail.videoThumbSrc || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+            <view class="gallery-video-badge">视频</view>
+          </view>
+        </view>
+
+        <!-- 中间固定展示 3 张：左右等距排布 -->
+        <view
+          class="gallery-item {{(heroMediaType === 'image' && heroSelectedImage === item.url) ? 'is-active' : ''}}"
+          wx:for="{{heroThumbPhotosPreview}}"
+          wx:key="url"
+          bindtap="onTapHeroThumb"
+          data-type="image"
+          data-url="{{item.url}}"
+        >
+          <view class="gallery-thumb-wrap">
+            <image class="gallery-thumb" src="{{item.url}}" mode="aspectFill"></image>
+            <view class="gallery-video-badge" wx:if="{{item.category}}">{{item.category}}</view>
+          </view>
+        </view>
+
+        <!-- 查看全部按钮（右侧固定不动） -->
+        <view class="gallery-view-all" bindtap="onTapViewAllPhotos">
+          <text class="gallery-view-all__text">查看全部</text>
+          <text class="gallery-view-all__count">({{heroTotalMediaCount}})</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 信息卡片（全宽） -->
+  <view class="info-card">
+    <!-- 头像和基本信息 -->
+    <view class="profile-header">
+      <view class="avatar-wrap">
+        <view class="avatar-badge-wrap">
+          <image class="avatar" src="{{detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+
+          <!-- 月嫂等级：覆盖在头像下沿（你画的红框位置） -->
+          <view class="avatar-level-pill" wx:if="{{detail.maternityNurseLevelText}}">{{detail.maternityNurseLevelText}}</view>
+        </view>
+      </view>
+
+
+      <view class="profile-info">
+        <view class="profile-info-grid">
+          <text class="name">{{detail.name || '未命名'}}</text>
+          <view class="jobtype-pill" wx:if="{{detail.jobTypeText}}">{{detail.jobTypeText}}</view>
+          <text class="experience">{{detail.experienceYears || 0}}年经验</text>
+          <text class="rating">{{detail.positiveReviewCount || 0}}个好评</text>
+        </view>
+      </view>
+
+      <view class="verify-badge verify-badge--float">
+        <text class="verify-badge__icon">✓</text>
+        <text class="verify-badge__text">多重认证 严格筛查</text>
+      </view>
+    </view>
+
+
+
+    <!-- 基本信息行：属相丨年龄丨星座丨籍贯（省市）丨民族丨学历（单行） -->
+    <view class="basic-info-row">
+      <view
+        class="basic-info-cell {{index === detail.basicInfoItems.length - 1 ? 'is-last' : ''}}"
+        wx:for="{{detail.basicInfoItems}}"
+        wx:key="index"
+      >{{item}}</view>
+    </view>
+
+
+
+
+
+
+  </view>
+
+  <view class="content-inner">
+  <!-- 获得证书 -->
+  <view class="section" wx:if="{{certTicketsAll && certTicketsAll.length}}">
+    <view class="section-title">获得证书：</view>
+
+    <view class="cert-tickets">
+      <scroll-view class="cert-tickets__scroll" scroll-x show-scrollbar="{{false}}">
+        <view class="cert-tickets__scroll-row">
+          <view
+            class="cert-ticket"
+            wx:for="{{certTicketsAll}}"
+            wx:key="code"
+          >
+            <image class="cert-ticket__bg" src="/images/cert-card-bg.png" mode="widthFix"></image>
+            <text class="cert-ticket__text">{{item.text}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 自我介绍 -->
+  <view class="section" wx:if="{{detail.intro}}">
+    <view class="section-title-with-icon">
+      <image class="section-icon" src="/images/icons/info-circle.svg" mode="aspectFit"></image>
+      <text class="section-title-text">自我介绍</text>
+    </view>
+    <view class="intro">{{detail.intro}}</view>
+  </view>
+
+  <!-- 工作经历 -->
+  <view class="section" wx:if="{{detail.workExperiences && detail.workExperiences.length}}">
+    <view class="section-title-with-icon">
+      <image class="section-icon" src="/images/icons/work-experience.svg" mode="aspectFit"></image>
+      <text class="section-title-text">工作经历</text>
+    </view>
+
+    <view class="work-item" wx:for="{{detail.workExperiences}}" wx:key="index">
+      <!-- 顶部标题行：月嫂 + 日期 | 订单编号 -->
+      <view class="work-header">
+        <!-- 左侧：月嫂标签 + 日期 -->
+        <view class="work-period">
+          <image class="period-icon" src="data:image/svg+xml;base64,PHN2ZyB0PSIxNzY3OTY1NDE1OTg0IiBjbGFzcz0iaWNvbiIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHAtaWQ9IjU0MTc2IiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHBhdGggZD0iTTczMC40NTMxOTEgMTAyNEgyOTMuNTQ2NTI0QTEyNC44NzExMTEgMTI0Ljg3MTExMSAwIDAgMSAxNjguOTU5ODU4IDg5Ny45OTExMTFWMzY3LjUwMjIyMmExMjQuODcxMTExIDEyNC44NzExMTEgMCAwIDEgMTI0LjU4NjY2Ni0xMjQuNTg2NjY2aDQzNi45MDY2NjdhMTI0Ljg3MTExMSAxMjQuODcxMTExIDAgMCAxIDEyNC41ODY2NjcgMTI0LjU4NjY2NnY1MzAuNDg4ODg5QTEyNC44NzExMTEgMTI0Ljg3MTExMSAwIDAgMSA3MzAuNDUzMTkxIDEwMjR6TTI5My41NDY1MjQgMzA5LjQ3NTU1NmE1Ni44ODg4ODkgNTYuODg4ODg5IDAgMCAwLTU2Ljg4ODg4OCA1Ni44ODg4ODh2NTMxLjYyNjY2N2E1Ni44ODg4ODkgNTYuODg4ODg5IDAgMCAwIDU2Ljg4ODg4OCA1Ni44ODg4ODloNDM2LjkwNjY2N2E1Ni44ODg4ODkgNTYuODg4ODg5IDAgMCAwIDU2Ljg4ODg4OS01Ni44ODg4ODlWMzY3LjUwMjIyMmE1Ni44ODg4ODkgNTYuODg4ODg5IDAgMCAwLTU2Ljg4ODg4OS01Ni44ODg4ODlIMjkzLjU0NjUyNHogbTAgMCIgZmlsbD0iIzg3NjZGMyIgcC1pZD0iNTQxNzciPjwvcGF0aD48cGF0aCBkPSJNNzE1LjY2MjA4IDMwOS40NzU1NTZBMzMuMjggMzMuMjggMCAwIDEgNjgwLjk1OTg1OCAyNzYuMTk1NTU2VjIyNy41NTU1NTZhNDEuMjQ0NDQ0IDQxLjI0NDQ0NCAwIDAgMC0zOS44MjIyMjItNDIuMzgyMjIzaC00Ni45MzMzMzRhMzMuMjggMzMuMjggMCAxIDEgMC02Ni41Nmg0Ni45MzMzMzRBMTA4LjA4ODg4OSAxMDguMDg4ODg5IDAgMCAxIDc0OC45NDIwOCAyMjcuNTU1NTU2djQ4LjY0YTMzLjI4IDMzLjI4IDAgMCAxLTMzLjI4IDMzLjI4eiBtLTQwNy4zMjQ0NDQgMGEzMy4yOCAzMy4yOCAwIDAgMS0zMy4yOC0zMy4yOFYyMjcuNTU1NTU2YTEwOC4wODg4ODkgMTA4LjA4ODg4OSAwIDAgMSAxMDcuODA0NDQ0LTEwOC4wODg4ODlINDI0Ljk1OTg1OGEzMy4yOCAzMy4yOCAwIDEgMSAwIDY1LjcwNjY2NkgzODIuODYyMDhBNDEuMjQ0NDQ0IDQxLjI0NDQ0NCAwIDAgMCAzNDEuNjE3NjM2IDIyNy41NTU1NTZ2NDguNjRhMzMuMjggMzMuMjggMCAwIDEtMzMuMjggMzMuMjh6IG0wIDAiIGZpbGw9IiM4NzY2RjMiIHAtaWQ9IjU0MTc4Ij48L3BhdGg+PHBhdGggZD0iTTU5NC4yMDQzMDIgMTg1LjE3MzMzM2EzMy4yOCAzMy4yOCAwIDAgMS0zMy4yOC0zMy4yOFYxMTguMzI4ODg5YTUwLjYzMTExMSA1MC42MzExMTEgMCAwIDAtMTQuNzkxMTExLTM2LjEyNDQ0NSA1MC45MTU1NTYgNTAuOTE1NTU2IDAgMCAwLTg3LjA0IDM2LjEyNDQ0NXYzMy41NjQ0NDRhMzMuMjggMzMuMjggMCAxIDEtNjYuNTYgMFYxMTguMzI4ODg5YTExNy40NzU1NTYgMTE3LjQ3NTU1NiAwIDAgMSAyMzUuMjM1NTU2IDB2MzMuNTY0NDQ0YTMzLjI4IDMzLjI4IDAgMCAxLTMzLjI4IDMzLjI4eiBtMCAwIiBmaWxsPSIjODc2NkYzIiBwLWlkPSI1NDE3OSI+PC9wYXRoPjxwYXRoIGQ9Ik0zNDkuODY2NTI0IDg0NC44YTMzLjI4IDMzLjI4IDAgMCAxLTMzLjI4LTMzLjI4VjQ0Ni41Nzc3NzhhMzMuMjggMzMuMjggMCAxIDEgNjYuNTYgMHYzNjQuOTQyMjIyYTMzLjI4IDMzLjI4IDAgMCAxLTMzLjI4IDMzLjI4eiBtMCAwIiBmaWxsPSIjODc2NkYzIiBwLWlkPSI1NDE4MCI+PC9wYXRoPjwvc3ZnPg=="></image>
+          <text class="period-text">月嫂</text>
+          <text class="period-date">{{item.startDate || '—'}}-{{item.endDate || '至今'}}</text>
+        </view>
+
+        <!-- 右侧：订单编号 -->
+        <view class="work-order-tag" wx:if="{{item.orderNumber}}">
+          <text>订单编号：{{item.orderNumber}}</text>
+        </view>
+      </view>
+
+      <!-- 客户信息行 -->
+      <view class="work-customer-info">
+        <!-- 客户姓名 -->
+        <view class="customer-name" wx:if="{{item.customerName}}">
+          <text class="name-icon">👤</text>
+          <text>{{item.customerName}}</text>
+        </view>
+
+        <!-- 评分（暂时用5星展示） -->
+        <view class="customer-rating">
+          <text class="star">⭐</text>
+          <text class="star">⭐</text>
+          <text class="star">⭐</text>
+          <text class="star">⭐</text>
+          <text class="star">⭐</text>
+        </view>
+
+        <!-- 服务区域 -->
+        <view class="service-area" wx:if="{{item.serviceArea}}">
+          <image class="area-icon" src="data:image/svg+xml;base64,PHN2ZyB0PSIxNzY3OTY2MzYwMzUxIiBjbGFzcz0iaWNvbiIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHAtaWQ9IjU1MjkxIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHBhdGggZD0iTTUxMiAyNDkuOTc2NDcxYy05OS4zODgyMzUgMC0xODAuNzA1ODgyIDgxLjMxNzY0Ny0xODAuNzA1ODgyIDE4MC43MDU4ODJzODEuMzE3NjQ3IDE4MC43MDU4ODIgMTgwLjcwNTg4MiAxODAuNzA1ODgyIDE4MC43MDU4ODItODEuMzE3NjQ3IDE4MC43MDU4ODItMTgwLjcwNTg4Mi04MS4zMTc2NDctMTgwLjcwNTg4Mi0xODAuNzA1ODgyLTE4MC43MDU4ODJ6IG0wIDMwMS4xNzY0N2MtNjYuMjU4ODI0IDAtMTIwLjQ3MDU4OC01NC4yMTE3NjUtMTIwLjQ3MDU4OC0xMjAuNDcwNTg4czU0LjIxMTc2NS0xMjAuNDcwNTg4IDEyMC40NzA1ODgtMTIwLjQ3MDU4OCAxMjAuNDcwNTg4IDU0LjIxMTc2NSAxMjAuNDcwNTg4IDEyMC40NzA1ODgtNTQuMjExNzY1IDEyMC40NzA1ODgtMTIwLjQ3MDU4OCAxMjAuNDcwNTg4eiIgZmlsbD0iIzg3NjZGMyIgcC1pZD0iNTUyOTIiPjwvcGF0aD48cGF0aCBkPSJNNTEyIDM5LjE1Mjk0MWMtMjE2Ljg0NzA1OSAwLTM5MS41Mjk0MTIgMTc0LjY4MjM1My0zOTEuNTI5NDEyIDM5MS41Mjk0MTIgMCAzNDkuMzY0NzA2IDM5MS41Mjk0MTIgNTcyLjIzNTI5NCAzOTEuNTI5NDEyIDU3Mi4yMzUyOTRzMzkxLjUyOTQxMi0yMjIuODcwNTg4IDM5MS41Mjk0MTItNTcyLjIzNTI5NGMwLTIxNi44NDcwNTktMTc0LjY4MjM1My0zOTEuNTI5NDEyLTM5MS41Mjk0MTItMzkxLjUyOTQxMnogbTAgODkxLjQ4MjM1M0M0MjQuNjU4ODI0IDg3My40MTE3NjUgMTgwLjcwNTg4MiA2ODYuNjgyMzUzIDE4MC43MDU4ODIgNDMwLjY4MjM1M2MwLTE4My43MTc2NDcgMTQ3LjU3NjQ3MS0zMzEuMjk0MTE4IDMzMS4yOTQxMTgtMzMxLjI5NDExOHMzMzEuMjk0MTE4IDE0Ny41NzY0NzEgMzMxLjI5NDExOCAzMzEuMjk0MTE4YzAgMjU2LTI0My45NTI5NDEgNDQyLjcyOTQxMi0zMzEuMjk0MTE4IDQ5OS45NTI5NDF6IiBmaWxsPSIjODc2NkYzIiBwLWlkPSI1NTI5MyI+PC9wYXRoPjwvc3ZnPg=="></image>
+          <text>{{item.serviceArea}}</text>
+        </view>
+      </view>
+
+      <!-- 工作照片横向滚动 -->
+      <view class="work-photos-scroll" wx:if="{{item.workPhotos && item.workPhotos.length}}">
+        <scroll-view class="work-photos-scroll__view" scroll-x show-scrollbar="{{false}}">
+          <view class="work-photos-scroll__row">
+            <view
+              class="work-photo-card"
+              wx:for="{{item.workPhotos}}"
+              wx:for-item="photo"
+              wx:key="photo"
+            >
+              <image
+                class="work-photo-card__img"
+                src="{{photo}}"
+                mode="aspectFill"
+                bindtap="onPreviewWorkPhoto"
+                binderror="onWorkPhotoError"
+                data-urls="{{item.workPhotos}}"
+                data-current="{{photo}}"
+                show-menu-by-longpress
+              ></image>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 工作描述 -->
+      <view class="work-description" wx:if="{{item.description}}">
+        <text class="desc-text">{{item.description}}</text>
+      </view>
+
+      <!-- 客户评价 -->
+      <view class="work-review-box" wx:if="{{item.customerReview}}">
+        <view class="review-header">
+          <text class="review-icon">💬</text>
+          <text class="review-title">客户评价</text>
+        </view>
+        <view class="review-text">{{item.customerReview}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-tip">安得褓贝提示：信息仅供参考，具体服务以沟通确认结果为准。</view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bar-btn ghost" bindtap="onTapConsult">咨询</view>
+    <view class="bar-btn primary" bindtap="onTapBook">预约</view>
+  </view>
+</view>
+
+<view class="loading" wx:if="{{!loaded}}">加载中...</view>

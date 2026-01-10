@@ -1,0 +1,34 @@
+<view class="page">
+  <view class="page-title">相册</view>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:if="{{!loading && (!sections || !sections.length)}}" class="empty">
+    暂无相册内容
+  </view>
+
+  <block wx:if="{{!loading && sections && sections.length}}" wx:for="{{sections}}" wx:for-item="section" wx:for-index="sectionIndex" wx:key="title">
+    <view class="section">
+      <view class="section-hd">
+        <text class="section-title">{{section.title}}</text>
+        <text class="section-count">{{section.items.length}}张</text>
+      </view>
+
+      <view class="grid">
+        <image
+          class="thumb"
+          wx:for="{{section.items}}"
+          wx:for-item="photo"
+          wx:for-index="photoIndex"
+          wx:key="url"
+          src="{{photo.thumb}}"
+          mode="aspectFill"
+          lazy-load
+          data-section-index="{{sectionIndex}}"
+          data-url="{{photo.url}}"
+          bindtap="onTapPhoto"
+        ></image>
+      </view>
+    </view>
+  </block>
+</view>

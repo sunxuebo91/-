@@ -1,0 +1,120 @@
+<view class="page">
+  <!-- Tab 筛选栏 -->
+  <view class="tabs">
+    <view class="tab {{activeTab === 'type' ? 'active' : ''}} {{selectedType ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="type">
+      {{selectedTypeText}} <text class="tab-arrow">▼</text>
+    </view>
+    <view class="tab {{activeTab === 'level' ? 'active' : ''}} {{activeTab === 'level' ? 'level-theme' : ''}} {{selectedLevel ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="level">
+      {{selectedLevelText}} <text class="tab-arrow">▼</text>
+    </view>
+    <view class="tab {{activeTab === 'sort' ? 'active' : ''}}" bindtap="onTabChange" data-tab="sort">
+      默认 <text class="tab-arrow">▼</text>
+    </view>
+  </view>
+
+  <!-- 工种类型弹层（自定义，不受 ActionSheet 条数限制） -->
+  <view wx:if="{{typeSheetVisible}}" class="sheet-mask" catchtap="closeTypeSheet" catchtouchmove="noop">
+    <view class="sheet-panel type-sheet" catchtap="noop" catchtouchmove="noop">
+      <view class="type-grid">
+        <view class="type-item" wx:for="{{typeOptions}}" wx:key="label" data-type="{{item.key}}" bindtap="onPickType">
+          <view class="type-icon {{item.iconClass}}">
+            <image wx:if="{{item.icon}}" class="icon-img" src="{{item.icon}}" mode="aspectFit"></image>
+            <text wx:else class="icon-text">{{item.emoji}}</text>
+          </view>
+          <text class="type-label">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="sheet-cancel" bindtap="closeTypeSheet">取消</view>
+    </view>
+  </view>
+
+  <!-- 服务等级弹层（自定义，不受 ActionSheet 条数限制） -->
+  <view wx:if="{{levelSheetVisible}}" class="sheet-mask" catchtap="closeLevelSheet" catchtouchmove="noop">
+    <view class="sheet-panel" catchtap="noop" catchtouchmove="noop">
+      <view class="sheet-item" wx:for="{{levelOptions}}" wx:key="label" data-level="{{item.key}}" bindtap="onPickLevel">
+        {{item.label}}
+      </view>
+      <view class="sheet-cancel" bindtap="closeLevelSheet">取消</view>
+    </view>
+  </view>
+
+  <!-- 简历列表 -->
+  <view class="list">
+    <view
+      class="card resume-card"
+      wx:for="{{resumes}}"
+      wx:key="_id"
+      bindtap="goDetail"
+      data-id="{{item._id}}"
+      data-video-url="{{item.videoUrl}}"
+    >
+      <!-- 左侧头像 -->
+      <image class="avatar" mode="aspectFill" src="{{item.coverFileId || '/images/default-goods-image.png'}}"></image>
+
+      <!-- 右侧内容 -->
+      <view class="content">
+        <!-- 姓名和标识 -->
+        <view class="name-row">
+          <text class="name">{{item.name || '未命名'}}</text>
+          <!-- 月嫂等级标签 - 只在有等级时显示 -->
+          <block wx:if="{{item.maternityNurseLevel}}">
+            <!-- 初级月嫂 -->
+            <view class="badge-junior" wx:if="{{item.maternityNurseLevel === 'junior'}}">
+              <text class="icon">🌱</text>
+              <text>初级</text>
+            </view>
+            <!-- 银牌月嫂 -->
+            <view class="badge-silver" wx:elif="{{item.maternityNurseLevel === 'silver'}}">
+              <text class="icon">🥈</text>
+              <text>银牌</text>
+            </view>
+            <!-- 金牌月嫂 -->
+            <view class="badge-gold" wx:elif="{{item.maternityNurseLevel === 'gold'}}">
+              <text class="icon">🏅</text>
+              <text>金牌</text>
+            </view>
+            <!-- 铂金月嫂（高级别，用更闪亮的图标） -->
+            <view class="badge-platinum" wx:elif="{{item.maternityNurseLevel === 'platinum'}}">
+              <text class="icon">✨</text>
+              <text>铂金</text>
+            </view>
+            <!-- 钻石月嫂 -->
+            <view class="badge-diamond" wx:elif="{{item.maternityNurseLevel === 'diamond'}}">
+              <text class="icon">💎</text>
+              <text>钻石</text>
+            </view>
+            <!-- 皇冠月嫂 -->
+            <view class="badge-crown" wx:elif="{{item.maternityNurseLevel === 'crown'}}">
+              <text class="icon">👑</text>
+              <text>皇冠</text>
+            </view>
+          </block>
+        </view>
+
+        <!-- 基本信息（单行展示，超出用省略号） -->
+        <view class="info-row">
+          <text class="info-text">{{item.infoLine}}</text>
+        </view>
+
+	        <!-- 价格：月嫂显示“/26天”，保姆显示“/月”，其他类型不显示单位；去掉“左右”文案 -->
+	        <view class="price-row">
+	          <text class="price-amount">{{item.priceMonth || 0}}</text>
+	          <text class="price-unit" wx:if="{{item.priceUnit}}">{{item.priceUnit}}</text>
+	        </view>
+
+        <!-- 技能标签 -->
+        <view class="tags" wx:if="{{item.tags && item.tags.length}}">
+          <view class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!loading && resumes.length === 0}}">暂无简历</view>
+  </view>
+
+  <!-- 底部加载状态 -->
+  <view class="footer">
+    <view class="footer-text" wx:if="{{loading}}">加载中...</view>
+    <view class="footer-text" wx:elif="{{!hasMore}}">没有更多了</view>
+  </view>
+</view>

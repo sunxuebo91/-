@@ -1,0 +1,471 @@
+.page {
+  background: #f7f7f7;
+  min-height: 100vh;
+}
+
+/* 顶部标题 */
+.header {
+  background: #ffffff;
+  padding: 24rpx 32rpx;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.header-count {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: #333;
+}
+
+/* Tab 筛选栏 */
+.tabs {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  background: #ffffff;
+  padding: 0 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+}
+
+.tab.active {
+  color: #8766f3;
+  font-weight: 600;
+}
+
+/* 有筛选条件时的样式 */
+.tab.has-filter {
+  color: #8766f3;
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background: #8766f3;
+  border-radius: 2rpx;
+}
+
+.tab-arrow {
+  font-size: 20rpx;
+  margin-left: 4rpx;
+}
+
+/* 自定义底部弹层 */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet-panel {
+  width: 100%;
+  background: #fff;
+  border-top-left-radius: 24rpx;
+  border-top-right-radius: 24rpx;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sheet-item {
+  padding: 28rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  color: #333;
+  border-bottom: 1rpx solid #f1f1f1;
+}
+
+.sheet-item:active {
+  background: #f7f5ff;
+}
+
+.sheet-cancel {
+  margin-top: 16rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  color: #666;
+  background: #fff;
+}
+
+/* 工种类型弹窗样式 */
+.type-sheet {
+  padding: 40rpx 32rpx 20rpx;
+}
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.type-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.type-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.type-item:active .type-icon {
+  transform: scale(0.95);
+}
+
+.icon-img {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.icon-text {
+  font-size: 48rpx;
+}
+
+.type-label {
+  font-size: 24rpx;
+  color: #333;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* 图标背景色 */
+.icon-all {
+  background: linear-gradient(135deg, #A0AEC0 0%, #718096 100%);
+}
+
+.icon-yuexin {
+  background: linear-gradient(135deg, #C4B5FD 0%, #8B5CF6 100%);
+}
+
+.icon-yuer {
+  background: linear-gradient(135deg, #FCA5A5 0%, #EF4444 100%);
+}
+
+.icon-baomu {
+  background: linear-gradient(135deg, #FDBA74 0%, #F97316 100%);
+}
+
+.icon-xiaoshi {
+  background: linear-gradient(135deg, #93C5FD 0%, #3B82F6 100%);
+}
+
+.icon-hulao {
+  background: linear-gradient(135deg, #86EFAC 0%, #22C55E 100%);
+}
+
+
+/* 简历列表 */
+.list {
+  padding: 20rpx 32rpx;
+  padding-top: 100rpx; /* 为固定的筛选栏留出空间 */
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  gap: 24rpx;
+  align-items: stretch; /* 改为拉伸对齐，让头像跟随内容高度 */
+}
+
+/* 头像 */
+.avatar {
+  width: 160rpx;
+  height: auto; /* 改为自适应高度 */
+  min-height: 160rpx; /* 设置最小高度 */
+  aspect-ratio: 3/4; /* 保持3:4的宽高比 */
+  border-radius: 12rpx;
+  background: #f0f0f0;
+  flex-shrink: 0;
+  object-fit: cover; /* 确保图片填充方式正确 */
+}
+
+/* 内容区域 */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-width: 0; /* 防止内容溢出 */
+  overflow: visible; /* 确保内容可见 */
+  justify-content: space-between; /* 让内容两端对齐：姓名靠上，标签靠下 */
+}
+
+/* 姓名行 */
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap; /* 允许换行 */
+  width: 100%; /* 占满父容器宽度 */
+  min-width: 0; /* 允许内容收缩 */
+}
+
+.name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  flex-shrink: 0; /* 防止姓名被压缩 */
+  line-height: 1.2; /* 调整行高，确保与徽章视觉上居中对齐 */
+}
+
+/* 初级月嫂 */
+.badge-junior {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #f0fff4 0%, #9ae6b4 100%);
+  color: #2f855a;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 与其他等级统一高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(154, 230, 180, 0.4);
+  line-height: 1.2;
+}
+
+/* 银牌月嫂 */
+.badge-silver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #e0e0e0 0%, #b0b0b0 100%);
+  color: #333;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 减小上下padding，让徽章高度更接近姓名文字高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(176, 176, 176, 0.3);
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.5);
+  line-height: 1.2; /* 添加行高，确保内部文字垂直居中 */
+}
+
+/* 金牌月嫂 */
+.badge-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 减小上下padding，让徽章高度更接近姓名文字高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(255, 165, 0, 0.3);
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  line-height: 1.2; /* 添加行高，确保内部文字垂直居中 */
+}
+
+/* 铂金月嫂 */
+.badge-platinum {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  /* 改成更有“高端感”的紫色系渐变，而不是普通灰色 */
+  background: linear-gradient(135deg, #f5f3ff 0%, #d6bcfa 45%, #9f7aea 100%);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 减小上下padding，让徽章高度更接近姓名文字高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(159, 122, 234, 0.45);
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.15);
+  line-height: 1.2; /* 添加行高，确保内部文字垂直居中 */
+}
+
+/* 钻石月嫂 */
+.badge-diamond {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #B9F2FF 0%, #00D4FF 100%);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 减小上下padding，让徽章高度更接近姓名文字高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(0, 212, 255, 0.3);
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  line-height: 1.2; /* 添加行高，确保内部文字垂直居中 */
+}
+
+/* 皇冠月嫂 */
+.badge-crown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 14rpx; /* 减小上下padding，让徽章高度更接近姓名文字高度 */
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.3);
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+  line-height: 1.2; /* 添加行高，确保内部文字垂直居中 */
+}
+
+.badge-junior .icon,
+.badge-silver .icon,
+.badge-gold .icon,
+.badge-platinum .icon,
+.badge-diamond .icon,
+.badge-crown .icon {
+  font-size: 26rpx; /* 减小图标大小，让它更容易居中 */
+  line-height: 1; /* 保持行高为1 */
+  flex-shrink: 0;
+  filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
+}
+
+/* 单独微调钻石、皇冠图标在徽章内的垂直位置（这两个 emoji 基线偏低） */
+.badge-diamond .icon,
+.badge-crown .icon {
+  display: inline-block; /* 使用 inline-block 便于位移调整 */
+  vertical-align: middle; /* 相对文字垂直对齐 */
+  transform: translateY(-2rpx); /* 向上轻微偏移，让图标在背景中视觉居中 */
+}
+
+/* 确保标签文本不被压缩 */
+.badge-junior text,
+.badge-silver text,
+.badge-gold text,
+.badge-platinum text,
+.badge-diamond text,
+.badge-crown text {
+  flex-shrink: 0;
+  letter-spacing: 0.5rpx;
+  line-height: 1; /* 统一文字行高为1，与图标保持一致 */
+}
+
+/* 基本信息行：单行展示，超出以省略号结尾 */
+.info-row {
+  width: 100%;
+  font-size: 26rpx;
+  color: #666;
+  padding: 0;
+  margin: 0;
+}
+
+.info-text {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 价格行 */
+.price-row {
+  display: flex;
+  align-items: flex-end; /* 改为底部对齐，让单位与金额底部对齐 */
+  color: #ff6b6b;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* 让价格行占据剩余空间，把标签推到底部 */
+}
+
+.price-amount {
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1; /* 设置行高为1，减少文字上下留白 */
+}
+
+.price-unit {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 4rpx;
+  line-height: 1; /* 设置行高为1，确保与金额底部对齐 */
+  padding-bottom: 2rpx; /* 微调底部位置，确保视觉上完全对齐 */
+}
+
+/* 技能标签 */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  padding: 0;
+  margin: 0;
+  /* 移除 margin-top: auto，让标签紧跟价格，整体内容通过 .content 的 justify-content: center 实现垂直居中 */
+  /* 限制最多显示3行（增加到3行以显示更多标签） */
+  overflow: hidden;
+  max-height: calc(20rpx * 1.4 * 3 + 8rpx * 2); /* 字体大小 * 行高 * 3行 + 2个gap */
+}
+
+.tag {
+  font-size: 20rpx; /* 从24rpx缩小到20rpx */
+  color: #666;
+  background: #f5f5f5;
+  padding: 4rpx 10rpx; /* 从8rpx 16rpx缩小到4rpx 10rpx */
+  border-radius: 6rpx; /* 从8rpx缩小到6rpx */
+  line-height: 1.4; /* 设置行高 */
+  white-space: nowrap; /* 防止单个标签内换行 */
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 100rpx 0;
+  font-size: 28rpx;
+}
+
+/* 底部 */
+.footer {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.footer-text {
+  font-size: 26rpx;
+  color: #999;
+}

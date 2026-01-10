@@ -1,0 +1,7 @@
+<view class="job-icon {{type}}">
+  <view class="icon-bg">
+    <text class="icon-emoji">{{emoji}}</text>
+  </view>
+  <text class="icon-label">{{label}}</text>
+</view>
+

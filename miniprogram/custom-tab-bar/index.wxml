@@ -1,0 +1,20 @@
+<view class="tab-bar">
+  <view class="tab-bar-pill">
+    <block wx:for="{{list}}" wx:key="index">
+      <view
+        class="tab-bar-item {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        data-index="{{index}}"
+        bindtap="switchTab"
+      >
+        <view class="normal-item">
+          <view class="icon-wrapper {{selected === index ? 'active' : ''}}">
+            <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit" />
+          </view>
+          <view class="text {{selected === index ? 'active' : ''}}">{{item.text}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+

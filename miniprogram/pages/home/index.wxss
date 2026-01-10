@@ -1,0 +1,89 @@
+page {
+  background: #f7f7fb;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 120rpx);
+}
+
+.home {
+  min-height: 100vh;
+}
+
+/* 顶部渐变：Banner 区域 */
+.top {
+  padding: 24rpx 0 40rpx;
+  background: radial-gradient(1200rpx 600rpx at 20% -10%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(135deg, rgba(135, 102, 243, 1) 0%, rgba(166, 148, 255, 1) 100%);
+}
+
+.banner-wrap {
+  padding: 0 24rpx;
+}
+
+.banner-placeholder {
+  width: 100%;
+  height: 260rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(135, 102, 243, 0.12);
+}
+
+/* 白底内容：只保留三个入口 */
+.content {
+  margin-top: -16rpx;
+  background: #fff;
+  border-top-left-radius: 32rpx;
+  border-top-right-radius: 32rpx;
+  padding: 28rpx 24rpx 34rpx;
+}
+
+.quick-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.quick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 18rpx 0;
+  border-radius: 20rpx;
+  background: #faf9ff;
+}
+
+.quick-btn:active {
+  transform: scale(0.98);
+}
+
+.quick-icon {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.08);
+}
+
+.quick-icon-img {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+.quick-text {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 700;
+}
+
+/* 保姆 - 橙色系背景，匹配橙红色图标 */
+.bg-1 { background: linear-gradient(135deg, #FFE8E0 0%, #FFD4C4 100%); }
+/* 月嫂 - 紫色系背景，匹配紫色图标 */
+.bg-2 { background: linear-gradient(135deg, #EDE7FF 0%, #DDD2FF 100%); }
+/* 育儿嫂 - 粉色系背景，匹配粉红色图标 */
+.bg-3 { background: linear-gradient(135deg, #FFE8F0 0%, #FFD6E5 100%); }
+/* 护老 - 橙黄色系背景，匹配橙黄色图标 */
+.bg-4 { background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%); }
+
+
