@@ -63,6 +63,10 @@ async function getOrCreateMe(openid) {
       });
       user.role = role;
     }
+    // 确保返回的用户对象包含 _openid 字段
+    if (!user._openid) {
+      user._openid = openid;
+    }
     return user;
   }
 
@@ -80,7 +84,12 @@ async function getOrCreateMe(openid) {
     .where({ _openid: openid })
     .limit(1)
     .get();
-  return (r2.data && r2.data[0]) || doc;
+  const user = (r2.data && r2.data[0]) || doc;
+  // 确保返回的用户对象包含 _openid 字段
+  if (!user._openid) {
+    user._openid = openid;
+  }
+  return user;
 }
 
 async function updateMe(openid, data) {
@@ -152,6 +161,10 @@ async function loginByPhone(openid, code, nickname, avatarUrl) {
     // 重新获取用户信息（会自动判断角色）
     const user = await getOrCreateMe(openid);
     console.log("重新获取的用户信息:", user);
+
+    // 确保返回的用户对象包含 _openid 字段
+    user._openid = openid;
+    user.phone = phone;
 
     return user;
   } catch (err) {

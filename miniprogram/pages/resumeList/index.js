@@ -1,5 +1,6 @@
 const resumeService = require('../../services/resume.js');
 
+
 // 月嫂等级映射表（与API保持一致）
 const MATERNITY_LEVEL_MAP = {
   'junior': '初级',
@@ -257,6 +258,8 @@ Page({
   onShow() {
     console.log('📋 页面 onShow');
   },
+
+
 
   onReachBottom() {
     this.loadMore();

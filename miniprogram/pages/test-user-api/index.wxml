@@ -1,0 +1,61 @@
+<view class="container">
+  <view class="header">
+    <text class="title">🧪 用户管理 API 测试</text>
+    <text class="subtitle">测试 CRM 后端接口是否正常工作</text>
+  </view>
+
+  <!-- 测试按钮 -->
+  <view class="buttons">
+    <button class="btn btn-primary" bindtap="testAllApis">🚀 测试所有接口</button>
+    <button class="btn btn-info" bindtap="testLoginApi">🔐 测试登录接口</button>
+    <button class="btn btn-success" bindtap="testRegisterApi">📝 测试注册接口</button>
+    <button class="btn btn-warning" bindtap="clearLogs">🗑️ 清空日志</button>
+  </view>
+
+  <!-- 测试结果 -->
+  <view class="results">
+    <view class="result-item">
+      <text class="result-label">登录接口:</text>
+      <text class="result-status {{testResults.loginTest}}">
+        {{testResults.loginTest === 'success' ? '✅ 成功' : testResults.loginTest === 'failed' ? '❌ 失败' : testResults.loginTest === 'error' ? '⚠️ 错误' : '⏳ 未测试'}}
+      </text>
+    </view>
+    <view class="result-item">
+      <text class="result-label">注册接口:</text>
+      <text class="result-status {{testResults.registerTest}}">
+        {{testResults.registerTest === 'success' ? '✅ 成功' : testResults.registerTest === 'failed' ? '❌ 失败' : testResults.registerTest === 'error' ? '⚠️ 错误' : '⏳ 未测试'}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 日志输出 -->
+  <view class="logs">
+    <view class="logs-header">
+      <text class="logs-title">📋 测试日志</text>
+      <text class="logs-count">({{logs.length}} 条)</text>
+    </view>
+    <scroll-view class="logs-content" scroll-y scroll-into-view="log-{{logs.length - 1}}">
+      <view 
+        wx:for="{{logs}}" 
+        wx:key="index" 
+        id="log-{{index}}"
+        class="log-item {{item.indexOf('✅') > -1 ? 'success' : item.indexOf('❌') > -1 ? 'error' : item.indexOf('⚠️') > -1 ? 'warning' : item.indexOf('🧪') > -1 ? 'test' : ''}}"
+      >
+        {{item}}
+      </view>
+      <view wx:if="{{logs.length === 0}}" class="log-empty">
+        暂无日志，点击上方按钮开始测试
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 说明 -->
+  <view class="tips">
+    <text class="tips-title">💡 测试说明</text>
+    <text class="tips-text">• 登录接口：使用 OpenID 自动登录</text>
+    <text class="tips-text">• 注册接口：使用测试数据注册用户</text>
+    <text class="tips-text">• 如果接口返回 404，说明后端接口尚未实现</text>
+    <text class="tips-text">• 如果接口返回 500，说明后端接口有错误</text>
+  </view>
+</view>
+

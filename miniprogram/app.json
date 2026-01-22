@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/articleDetail/index",
     "pages/message/index",
     "pages/resumeList/index",
     "pages/profile/index",
@@ -16,6 +17,8 @@
     "pages/admin/resumeManage/index",
     "pages/admin/resumeEdit/index",
 
+    "pages/test-article-api",
+    "pages/test-user-api/index",
     "pages/index/index",
     "pages/example/index"
   ],

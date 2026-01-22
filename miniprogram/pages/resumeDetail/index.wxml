@@ -201,6 +201,49 @@
     <view class="intro">{{detail.intro}}</view>
   </view>
 
+  <!-- 推荐理由标签 -->
+  <view class="section" wx:if="{{detail.recommendationTags && detail.recommendationTags.length > 0}}">
+    <view class="section-title-with-icon">
+      <image class="section-icon" src="/images/icons/thumbs-up.svg" mode="aspectFit"></image>
+      <text class="section-title-text">推荐理由</text>
+    </view>
+
+    <view class="recommendation-tags">
+      <view
+        class="recommendation-tag {{item._isTop ? 'recommendation-tag--top' : ''}}"
+        wx:for="{{recommendationVisibleTags}}"
+        wx:key="_rank"
+        style="grid-column: span {{item._gridSpan || 4}};"
+        bindtap="onTapRecommendationTag"
+        data-tag="{{item.tag}}"
+        data-count="{{item.count}}"
+        hover-class="recommendation-tag--pressed"
+        hover-stay-time="80"
+      >
+        <text class="tag-text">{{item.tag}}</text>
+        <text class="tag-count-badge" wx:if="{{item.count !== undefined && item.count !== null && item.count !== ''}}">{{item.count}}</text>
+      </view>
+    </view>
+
+    <view
+      class="recommendation-toggle"
+      wx:if="{{recommendationHasMore}}"
+      bindtap="onToggleRecommendationTags"
+      hover-class="recommendation-toggle--pressed"
+      hover-stay-time="80"
+    >
+      <text class="recommendation-toggle__text">{{recommendationExpanded ? '收起' : '展开全部'}}</text>
+      <text class="recommendation-toggle__count">（{{recommendationExpanded ? '共' + recommendationTotalCount + '条' : '还有' + recommendationHiddenCount + '条'}}）</text>
+    </view>
+  </view>
+  <view class="section" wx:elif="{{detail.intro}}">
+    <view class="section-title-with-icon">
+      <image class="section-icon" src="/images/icons/thumbs-up.svg" mode="aspectFit"></image>
+      <text class="section-title-text">推荐理由</text>
+    </view>
+    <view class="no-recommendation-tags">暂无推荐理由</view>
+  </view>
+
   <!-- 工作经历 -->
   <view class="section" wx:if="{{detail.workExperiences && detail.workExperiences.length}}">
     <view class="section-title-with-icon">
@@ -289,14 +332,95 @@
     </view>
   </view>
 
+  <!-- 员工评价 -->
+  <view class="section" wx:if="{{(evaluations.statistics && evaluations.statistics.totalCount > 0) || (evaluations.list && evaluations.list.length)}}">
+    <view class="section-title-with-icon">
+      <image class="section-icon" src="/images/icons/star.svg" mode="aspectFit"></image>
+      <text class="section-title-text">员工评价</text>
+    </view>
+
+    <!-- 评价统计 -->
+    <view class="evaluation-stats" wx:if="{{evaluations.statistics && evaluations.statistics.totalCount > 0}}">
+      <view class="stats-main">
+        <view class="stats-score">
+          <text class="score-number">{{evaluations.statistics.averageRating || 0}}</text>
+          <text class="score-total">/5.0</text>
+        </view>
+        <view class="stats-stars">
+          <text class="star {{evaluations.statistics.averageRating >= 1 ? 'filled' : ''}}">⭐</text>
+          <text class="star {{evaluations.statistics.averageRating >= 2 ? 'filled' : ''}}">⭐</text>
+          <text class="star {{evaluations.statistics.averageRating >= 3 ? 'filled' : ''}}">⭐</text>
+          <text class="star {{evaluations.statistics.averageRating >= 4 ? 'filled' : ''}}">⭐</text>
+          <text class="star {{evaluations.statistics.averageRating >= 5 ? 'filled' : ''}}">⭐</text>
+        </view>
+        <text class="stats-count">共{{evaluations.statistics.totalCount || 0}}条评价</text>
+      </view>
+
+      <view class="stats-details">
+        <view class="stats-item">
+          <text class="stats-label">服务态度</text>
+          <text class="stats-value">{{evaluations.statistics.averageServiceAttitude || 0}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-label">专业技能</text>
+          <text class="stats-value">{{evaluations.statistics.averageProfessionalSkill || 0}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-label">工作效率</text>
+          <text class="stats-value">{{evaluations.statistics.averageWorkEfficiency || 0}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-label">沟通能力</text>
+          <text class="stats-value">{{evaluations.statistics.averageCommunication || 0}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评价列表 -->
+    <view class="evaluation-list">
+      <view class="evaluation-item" wx:for="{{evaluations.list}}" wx:key="_id">
+        <view class="eval-header">
+          <view class="eval-user">
+            <text class="user-icon">👤</text>
+            <text class="user-name">{{item.evaluatorName || '匿名用户'}}</text>
+          </view>
+          <view class="eval-rating">
+            <text class="rating-number">{{item.overallRating}}</text>
+            <text class="star">⭐</text>
+          </view>
+        </view>
+
+        <view class="eval-tags" wx:if="{{item.tags && item.tags.length}}">
+          <text class="eval-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="tag">{{tag}}</text>
+        </view>
+
+        <view class="eval-comment" wx:if="{{item.comment}}">
+          <text>{{item.comment}}</text>
+        </view>
+
+        <view class="eval-footer">
+          <text class="eval-date">{{item.createdAtText || ''}}</text>
+          <text class="eval-type">{{item.evaluationTypeText || ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 查看更多评价 -->
+    <view class="view-more-evaluations" wx:if="{{evaluations.hasMore}}" bindtap="onViewMoreEvaluations">
+      <text>查看更多评价</text>
+      <text class="arrow">→</text>
+    </view>
+  </view>
+
   <view class="safe-tip">安得褓贝提示：信息仅供参考，具体服务以沟通确认结果为准。</view>
   </view>
 
   <!-- 底部操作栏 -->
-  <view class="bottom-bar">
-    <view class="bar-btn ghost" bindtap="onTapConsult">咨询</view>
-    <view class="bar-btn primary" bindtap="onTapBook">预约</view>
+  <view class="bottom-bar is-single">
+    <view class="bar-btn primary" bindtap="onTapConsult">咨询</view>
   </view>
+
 </view>
+
 
 <view class="loading" wx:if="{{!loaded}}">加载中...</view>

@@ -8,7 +8,8 @@
   padding-bottom: env(safe-area-inset-bottom);
   border-top-left-radius: 40rpx;
   border-top-right-radius: 40rpx;
-  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.08);
+  border-top: 1rpx solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 -10rpx 30rpx rgba(17, 24, 39, 0.10);
 }
 
 .tab-bar-pill {

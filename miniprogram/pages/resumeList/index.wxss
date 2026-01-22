@@ -190,6 +190,9 @@
 }
 
 
+
+
+
 /* 简历列表 */
 .list {
   padding: 20rpx 32rpx;
@@ -197,13 +200,15 @@
 }
 
 .card {
-  background: #fff;
-  border-radius: 16rpx;
+  background: var(--ui-surface);
+  border-radius: 20rpx;
   padding: 28rpx;
   margin-bottom: 20rpx;
   display: flex;
   gap: 24rpx;
   align-items: stretch; /* 改为拉伸对齐，让头像跟随内容高度 */
+  border: 1rpx solid var(--ui-border);
+  box-shadow: var(--ui-shadow-card);
 }
 
 /* 头像 */

@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-} 
+}
 
 button {
   background: initial;
@@ -18,12 +18,43 @@ button::after{
   border: none;
 }
 
-
+/* 全局设计基准：更柔和、更高级的层次 */
 page {
-  background: #f6f6f6;
+  /* Colors */
+  --ui-bg: #F7F5FF;
+  --ui-surface: #FFFFFF;
+  --ui-surface-2: #FAFAFF;
+  --ui-border: rgba(15, 23, 42, 0.06);
+  --ui-text: #111827;
+  --ui-text-2: #6B7280;
+
+  /* Radius */
+  --ui-radius-sm: 12rpx;
+  --ui-radius-md: 16rpx;
+  --ui-radius-lg: 24rpx;
+
+  /* Shadows (multi-layer) */
+  --ui-shadow-card: 0 12rpx 32rpx rgba(17, 24, 39, 0.06);
+  --ui-shadow-float: 0 18rpx 56rpx rgba(17, 24, 39, 0.10);
+  --ui-shadow-brand: 0 12rpx 28rpx rgba(135, 102, 243, 0.18);
+
+  background: var(--ui-bg);
+  color: var(--ui-text);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   margin: 0;
   padding: 0;
+}
+
+/* 通用卡片（可按需复用） */
+.ui-card {
+  background: var(--ui-surface);
+  border: 1rpx solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.ui-card--pressable:active {
+  transform: translateY(2rpx) scale(0.99);
 }

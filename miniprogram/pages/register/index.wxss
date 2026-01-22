@@ -67,7 +67,7 @@
   font-weight: 600;
   margin-bottom: 24rpx;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+  box-shadow: var(--ui-shadow-brand);
 }
 
 .register-btn::after {

@@ -134,7 +134,7 @@
   font-size: 30rpx;
   font-weight: 600;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+  box-shadow: var(--ui-shadow-brand);
 }
 
 .save-btn::after {

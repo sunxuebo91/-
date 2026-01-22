@@ -1,4 +1,5 @@
 const resumeService = require('../../services/resume.js');
+const employeeEvaluationService = require('../../services/employeeEvaluation.js');
 
 // 简历详情页视频缓存（用于提升手机端二次打开速度；非 Wi-Fi 不强制预下载）
 const VIDEO_CACHE_KEY = 'resumeDetailVideoCache_v1';
@@ -89,6 +90,14 @@ const SKILLS_MAP = {
   'yanglao-huli': '养老护理'
 };
 
+// 评价类型映射表
+const EVALUATION_TYPE_MAP = {
+  'daily': '日常评价',
+  'monthly': '月度评价',
+  'contract_end': '合同结束评价',
+  'special': '特殊评价'
+};
+
 /**
  * 格式化日期为 YYYY-MM（只显示年月）
  */
@@ -124,6 +133,39 @@ function formatDistrict(district) {
   return DISTRICT_MAP[district.toLowerCase()] || district;
 }
 
+// 推荐理由：生成“默认 TopN + 展开/收起”的视图数据，并让每行左右对齐铺满
+function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
+  const all = Array.isArray(tagsAll) ? tagsAll : [];
+  const total = all.length;
+  const hasMore = total > limit;
+  const visibleBase = expanded ? all : (hasMore ? all.slice(0, limit) : all);
+  const visible = visibleBase.map((x) => ({ ...x }));
+
+  // 12 列 grid，默认一行 3 个（每个 4 列）；最后一行按剩余数均分（2 个->6 列，1 个->12 列）
+  const perRow = Math.max(1, Number(itemsPerRow) || 3);
+  const baseSpan = Math.floor(12 / perRow) || 4;
+
+  visible.forEach((x) => {
+    x._gridSpan = baseSpan;
+  });
+
+  const remainder = visible.length % perRow;
+  if (remainder !== 0) {
+    const span = remainder === 1 ? 12 : Math.floor(12 / remainder);
+    const start = visible.length - remainder;
+    for (let i = start; i < visible.length; i += 1) {
+      visible[i]._gridSpan = span;
+    }
+  }
+
+  return {
+    total,
+    hasMore,
+    hiddenCount: Math.max(0, total - visibleBase.length),
+    visible
+  };
+}
+
 Page({
   onHide() {
     this.pauseHeroVideo();
@@ -138,6 +180,21 @@ Page({
     id: "",
     loaded: false,
     detail: {},
+
+    // 推荐理由展示（默认 TopN + 展开/收起）
+    recommendationExpanded: false,
+    recommendationDefaultLimit: 8,
+    recommendationTotalCount: 0,
+    recommendationHiddenCount: 0,
+    recommendationHasMore: false,
+    recommendationVisibleTags: [],
+
+    // 员工评价数据
+    evaluations: {
+      statistics: null,  // 评价统计
+      list: [],          // 评价列表
+      hasMore: false     // 是否有更多评价
+    },
 
     // 顶部视频状态
     heroVideoMuted: true,
@@ -290,6 +347,46 @@ Page({
           orderStatusText: ORDER_STATUS_MAP[data.orderStatus] || data.orderStatus,
           learningIntention: data.learningIntention,
           currentStage: data.currentStage,
+
+          // 推荐理由标签（来自客户评价和内部员工评价的自动提取）
+          // 展示策略：默认展示 TopN（详情页 8 个），可“展开/收起”；Top1-3 做强调分层。
+          recommendationTags: (() => {
+            const raw = Array.isArray(data.recommendationTags) ? data.recommendationTags : [];
+
+            const tags = raw
+              .map((t, idx) => {
+                const obj = (t && typeof t === 'object') ? t : { tag: String(t || '') };
+                const tag = (obj.tag ?? obj.text ?? obj.name ?? obj.label ?? '').toString().trim();
+                const count = obj.count ?? obj.freq ?? obj.weight;
+                if (!tag) return null;
+                return {
+                  ...obj,
+                  tag,
+                  count,
+                  _rawIndex: idx
+                };
+              })
+              .filter(Boolean);
+
+            const hasNumericCount = tags.some((x) => x.count !== undefined && x.count !== null && x.count !== '' && !isNaN(Number(x.count)));
+            if (hasNumericCount) {
+              tags.sort((a, b) => {
+                const ca = Number(a.count) || 0;
+                const cb = Number(b.count) || 0;
+                if (cb !== ca) return cb - ca;
+                return (a._rawIndex || 0) - (b._rawIndex || 0);
+              });
+            }
+
+            tags.forEach((x, i) => {
+              x._rank = i + 1;
+              x._isTop = i < 3;
+            });
+
+            return tags;
+          })(),
+
+
 
           // 工作经历：处理完整字段
           workExperiences: (data.workExperiences || []).map(exp => {
@@ -668,6 +765,11 @@ Page({
 
         console.log('🎫 证书票券数据:', certTicketsAll);
 
+        const recommendationExpanded = false;
+        const recommendationDefaultLimit = this.data.recommendationDefaultLimit || 8;
+        const recommendationTagsAll = (detailWithAvatar && detailWithAvatar.recommendationTags) ? detailWithAvatar.recommendationTags : [];
+        const recommendationVM = buildRecommendationView(recommendationTagsAll, recommendationExpanded, recommendationDefaultLimit, 3);
+
         this.setData({
           detail: detailWithAvatar,
           heroThumbPhotos,
@@ -675,6 +777,14 @@ Page({
           heroTotalMediaCount,
           certTicketsAll,
           certTicketsShowSwipeHint,
+
+          recommendationExpanded,
+          recommendationDefaultLimit,
+          recommendationTotalCount: recommendationVM.total,
+          recommendationHasMore: recommendationVM.hasMore,
+          recommendationVisibleTags: recommendationVM.visible,
+          recommendationHiddenCount: recommendationVM.hiddenCount,
+
           loaded: true,
           heroMediaType: detailWithAvatar.videoFileId ? 'video' : 'image',
           heroSelectedImage: '',
@@ -694,7 +804,8 @@ Page({
         // 视频直接使用云存储临时链接，无需预下载
         // 让微信视频组件自己处理流式加载和缓存
 
-
+        // 加载员工评价数据
+        this.loadEvaluations(resumeId);
 
       } else {
         wx.showToast({ title: resp.message || "简历不存在", icon: "none" });
@@ -797,14 +908,47 @@ Page({
     wx.previewImage({ current: url, urls });
   },
 
+  // 展开/收起推荐理由（默认 TopN，避免占满首屏）
+  onToggleRecommendationTags() {
+    const expanded = !this.data.recommendationExpanded;
+    const limit = this.data.recommendationDefaultLimit || 8;
+    const tagsAll = (this.data.detail && this.data.detail.recommendationTags) ? this.data.detail.recommendationTags : [];
+    const vm = buildRecommendationView(tagsAll, expanded, limit, 3);
+
+    this.setData({
+      recommendationExpanded: expanded,
+      recommendationHasMore: vm.hasMore,
+      recommendationVisibleTags: vm.visible,
+      recommendationTotalCount: vm.total,
+      recommendationHiddenCount: vm.hiddenCount
+    });
+  },
+
+  // 点击推荐理由标签：展示完整文案（不做“按钮式”强交互，但允许点开看完整内容）
+  onTapRecommendationTag(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const tag = (ds.tag || '').toString().trim();
+    const count = ds.count;
+
+    if (!tag) return;
+
+    const countText = (count === undefined || count === null || count === '') ? '' : `（${count}）`;
+
+    wx.showModal({
+      title: '推荐理由',
+      content: `${tag}${countText}`,
+      showCancel: false,
+      confirmText: '知道了'
+    });
+  },
+
+
 
   onTapConsult() {
-    wx.showToast({ title: "请联系安得褓贝客服", icon: "none" });
+    wx.navigateTo({ url: "/pages/login/index" });
   },
 
-  onTapBook() {
-    wx.showToast({ title: "预约功能开发中", icon: "none" });
-  },
+
 
   pauseHeroVideo() {
     try {
@@ -1038,6 +1182,170 @@ Page({
     const { current } = e.currentTarget.dataset;
     console.error('工作照片加载失败:', current, e.detail);
   },
+
+  /**
+   * 加载员工评价数据
+   */
+  async loadEvaluations(employeeId) {
+    if (!employeeId) {
+      console.warn('⭐ 员工ID为空，跳过加载评价');
+      return;
+    }
+
+    console.log('⭐ 开始加载员工评价, employeeId:', employeeId);
+
+    try {
+      // 并行加载评价统计和评价列表
+      const [statisticsResp, listResp] = await Promise.all([
+        employeeEvaluationService.getEvaluationStatistics(employeeId).catch(err => {
+          console.error('⭐ 获取评价统计失败:', err);
+          return { success: false, error: err };
+        }),
+        employeeEvaluationService.getEvaluationList({
+          employeeId: employeeId,
+          page: 1,
+          pageSize: 5  // 只显示前5条评价
+        }).catch(err => {
+          console.error('⭐ 获取评价列表失败:', err);
+          return { success: false, error: err };
+        })
+      ]);
+
+      console.log('⭐ 评价统计响应:', JSON.stringify(statisticsResp));
+      console.log('⭐ 评价列表响应:', JSON.stringify(listResp));
+
+      // 处理统计数据
+      let statistics = null;
+      if (statisticsResp.success && statisticsResp.data) {
+        console.log('⭐ 统计数据原始值:', JSON.stringify(statisticsResp.data));
+
+        const data = statisticsResp.data;
+
+        // 兼容不同的字段名格式
+        const totalCount = data.totalCount || data.total || 0;
+        const averageRating = data.averageRating || data.averageOverallRating || data.average_rating || 0;
+        const averageServiceAttitude = data.averageServiceAttitude || data.averageServiceAttitudeRating || data.average_service_attitude || 0;
+        const averageProfessionalSkill = data.averageProfessionalSkill || data.averageProfessionalSkillRating || data.average_professional_skill || 0;
+        const averageWorkEfficiency = data.averageWorkEfficiency || data.averageWorkEfficiencyRating || data.average_work_efficiency || 0;
+        const averageCommunication = data.averageCommunication || data.averageCommunicationRating || data.average_communication || 0;
+
+        statistics = {
+          totalCount: totalCount,
+          averageRating: averageRating ? Number(averageRating).toFixed(1) : '0.0',
+          averageServiceAttitude: averageServiceAttitude ? Number(averageServiceAttitude).toFixed(1) : '0.0',
+          averageProfessionalSkill: averageProfessionalSkill ? Number(averageProfessionalSkill).toFixed(1) : '0.0',
+          averageWorkEfficiency: averageWorkEfficiency ? Number(averageWorkEfficiency).toFixed(1) : '0.0',
+          averageCommunication: averageCommunication ? Number(averageCommunication).toFixed(1) : '0.0'
+        };
+        console.log('⭐ 统计数据处理后:', JSON.stringify(statistics));
+      } else {
+        console.warn('⭐ 统计数据加载失败或无数据:', {
+          success: statisticsResp.success,
+          hasData: !!statisticsResp.data,
+          response: JSON.stringify(statisticsResp)
+        });
+      }
+
+      // 处理评价列表
+      let list = [];
+      let hasMore = false;
+      if (listResp.success && listResp.data) {
+        const items = listResp.data.items || listResp.data.list || [];
+        list = items.map(item => ({
+          ...item,
+          evaluationTypeText: EVALUATION_TYPE_MAP[item.evaluationType] || item.evaluationType,
+          createdAtText: this.formatEvaluationDate(item.createdAt)
+        }));
+
+        const total = listResp.data.total || 0;
+        hasMore = total > list.length;
+      }
+
+      // 如果统计接口失败但有评价列表，从列表中计算统计数据
+      if (!statistics && list.length > 0) {
+        console.log('⭐ 统计接口失败，从评价列表计算统计数据');
+
+        const totalRating = list.reduce((sum, item) => sum + (item.overallRating || 0), 0);
+        const totalServiceAttitude = list.reduce((sum, item) => sum + (item.serviceAttitudeRating || 0), 0);
+        const totalProfessionalSkill = list.reduce((sum, item) => sum + (item.professionalSkillRating || 0), 0);
+        const totalWorkEfficiency = list.reduce((sum, item) => sum + (item.workEfficiencyRating || 0), 0);
+        const totalCommunication = list.reduce((sum, item) => sum + (item.communicationRating || 0), 0);
+
+        statistics = {
+          totalCount: list.length,
+          averageRating: list.length > 0 ? (totalRating / list.length).toFixed(1) : '0.0',
+          averageServiceAttitude: list.length > 0 ? (totalServiceAttitude / list.length).toFixed(1) : '0.0',
+          averageProfessionalSkill: list.length > 0 ? (totalProfessionalSkill / list.length).toFixed(1) : '0.0',
+          averageWorkEfficiency: list.length > 0 ? (totalWorkEfficiency / list.length).toFixed(1) : '0.0',
+          averageCommunication: list.length > 0 ? (totalCommunication / list.length).toFixed(1) : '0.0'
+        };
+        console.log('⭐ 从列表计算的统计数据:', JSON.stringify(statistics));
+      }
+
+      // 更新页面数据
+      this.setData({
+        evaluations: {
+          statistics,
+          list,
+          hasMore
+        }
+      });
+
+      console.log('⭐ 评价数据加载完成:', {
+        statisticsLoaded: !!statistics,
+        listCount: list.length,
+        hasMore
+      });
+
+    } catch (e) {
+      console.error('⭐ 加载评价数据失败:', e);
+      // 不显示错误提示，静默失败
+    }
+  },
+
+  /**
+   * 格式化评价日期
+   */
+  formatEvaluationDate(dateStr) {
+    if (!dateStr) return '';
+
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (days === 0) {
+        return '今天';
+      } else if (days === 1) {
+        return '昨天';
+      } else if (days < 7) {
+        return `${days}天前`;
+      } else if (days < 30) {
+        const weeks = Math.floor(days / 7);
+        return `${weeks}周前`;
+      } else if (days < 365) {
+        const months = Math.floor(days / 30);
+        return `${months}个月前`;
+      } else {
+        const years = Math.floor(days / 365);
+        return `${years}年前`;
+      }
+    } catch (e) {
+      console.error('格式化评价日期失败:', e);
+      return dateStr;
+    }
+  },
+
+  /**
+   * 查看更多评价
+   */
+  onViewMoreEvaluations() {
+    // TODO: 跳转到评价列表页
+    wx.showToast({ title: '评价列表页开发中', icon: 'none' });
+  }
 });
 
 

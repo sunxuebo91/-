@@ -1,4 +1,28 @@
 <view class="page">
+  <!-- Banner轮播 -->
+  <view class="banner-container" wx:if="{{bannerList && bannerList.length > 0}}">
+    <swiper
+      class="banner-swiper"
+      indicator-dots
+      indicator-color="rgba(255,255,255,0.5)"
+      indicator-active-color="#fff"
+      autoplay
+      circular
+      interval="5000"
+      duration="500"
+    >
+      <swiper-item wx:for="{{bannerList}}" wx:key="_id">
+        <image
+          class="banner-image"
+          src="{{item.imageUrl}}"
+          mode="aspectFill"
+        ></image>
+      </swiper-item>
+    </swiper>
+  </view>
+
+
+
   <!-- Tab 筛选栏 -->
   <view class="tabs">
     <view class="tab {{activeTab === 'type' ? 'active' : ''}} {{selectedType ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="type">

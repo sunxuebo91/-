@@ -97,7 +97,7 @@
   padding: 20rpx 32rpx;
   font-size: 28rpx;
   line-height: 1;
-  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+  box-shadow: var(--ui-shadow-brand);
 }
 
 .hint-text {
@@ -171,6 +171,17 @@
 
 .menu-btn::after {
   border: none;
+}
+
+/* 退出登录按钮 */
+.logout-item {
+  justify-content: center;
+}
+
+.logout-label {
+  color: #e74c3c;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* 调试区域 */

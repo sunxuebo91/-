@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="header">
+    <text class="title">📋 文章接口测试</text>
+    <text class="subtitle">诊断文章接口是否正常工作</text>
+  </view>
+
+  <view class="button-group">
+    <button class="test-btn" bindtap="testAll" type="primary">🚀 测试所有接口</button>
+    <button class="test-btn" bindtap="testBannerApi">🎨 测试 Banner 接口</button>
+    <button class="test-btn" bindtap="testArticleList">📰 测试文章列表</button>
+    <button class="test-btn" bindtap="testArticleDetail">📄 测试文章详情</button>
+    <button class="test-btn" bindtap="clearLog" type="warn">🗑️ 清空日志</button>
+    <button class="test-btn" bindtap="copyLog">📋 复制日志</button>
+  </view>
+
+  <view class="results">
+    <view class="result-title">测试结果：</view>
+    <scroll-view class="result-content" scroll-y>
+      <text class="result-text" wx:for="{{testResults}}" wx:key="index">{{item}}</text>
+    </scroll-view>
+  </view>
+</view>
+
