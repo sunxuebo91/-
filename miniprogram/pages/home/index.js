@@ -15,12 +15,14 @@ Page({
   },
 
   async onLoad() {
-    // 首次启动时自动初始化阅读量
-    await this.autoInitializeViewCounts();
-    // 加载Banner数据
-    this.loadBanners();
-    // 加载文章列表
-    this.loadArticles();
+    // 并行加载所有数据，不等待初始化阅读量完成
+    Promise.all([
+      this.autoInitializeViewCounts(), // 后台初始化，不阻塞
+      this.loadBanners(),
+      this.loadArticles()
+    ]).catch(err => {
+      console.error('❌ 页面加载出错:', err);
+    });
   },
 
   /**
@@ -104,6 +106,34 @@ Page({
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
+    });
+  },
+
+  // 跳转到透明服务页面
+  goTransparentService() {
+    wx.navigateTo({
+      url: '/pages/transparentService/index',
+      fail: (err) => {
+        console.error('跳转失败:', err);
+        wx.showToast({
+          title: '页面跳转失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 跳转到答疑解惑页面
+  goQA() {
+    wx.navigateTo({
+      url: '/pages/qaService/index',
+      fail: (err) => {
+        console.error('跳转失败:', err);
+        wx.showToast({
+          title: '页面跳转失败',
+          icon: 'none'
+        });
+      }
     });
   },
 

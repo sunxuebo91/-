@@ -1,0 +1,83 @@
+<view class="test-page">
+  <view class="test-title">企业微信客服测试页面</view>
+  
+  <view class="test-section">
+    <view class="section-title">配置信息</view>
+    <view class="info-item">
+      <text class="label">小程序 AppID:</text>
+      <text class="value selectable">{{appId}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">企业ID:</text>
+      <text class="value selectable">{{corpId}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">客服链接:</text>
+      <text class="value selectable">{{serviceUrl}}</text>
+    </view>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">环境检测</view>
+    <view class="info-item">
+      <text class="label">微信版本:</text>
+      <text class="value">{{systemInfo.version}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">基础库版本:</text>
+      <text class="value">{{systemInfo.SDKVersion}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">系统:</text>
+      <text class="value">{{systemInfo.system}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">API支持:</text>
+      <text class="value {{apiSupported ? 'success' : 'error'}}">
+        {{apiSupported ? '✓ 支持' : '✗ 不支持'}}
+      </text>
+    </view>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">测试日志</view>
+    <scroll-view class="log-container" scroll-y>
+      <view class="log-item" wx:for="{{logs}}" wx:key="index">
+        <text class="log-time">{{item.time}}</text>
+        <text class="log-text {{item.type}}">{{item.text}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="button-group">
+    <button class="test-button" bindtap="testAPI">测试 API 可用性</button>
+    <button class="test-button primary" bindtap="openCustomerService">打开客服会话</button>
+    <button class="test-button" bindtap="copyServiceUrl">复制客服链接</button>
+    <button class="test-button" bindtap="clearLogs">清空日志</button>
+  </view>
+
+  <!-- 说明文字 -->
+  <view class="test-section">
+    <view class="section-title">💡 重要说明</view>
+    <view class="info-content">
+      <text class="info-text">• 企业微信客服必须使用 wx.openCustomerServiceChat API</text>
+      <text class="info-text">• extInfo.url 参数应该填写客服链接（不能为空）</text>
+      <text class="info-text">• Button 的 open-type="contact" 只能打开微信小程序客服，不支持企业微信客服</text>
+      <text class="info-text">• 必须在企业微信后台的「微信客服-接入场景」中添加小程序</text>
+    </view>
+  </view>
+
+  <!-- 鸿蒙系统提示 -->
+  <view class="test-section" wx:if="{{systemInfo.system && systemInfo.system.indexOf('OpenHarmony') > -1}}">
+    <view class="section-title warning">⚠️ 鸿蒙系统兼容性提示</view>
+    <view class="warning-content">
+      <text>检测到您使用的是鸿蒙系统（OpenHarmonyOS）。</text>
+      <text>企业微信客服功能在鸿蒙系统上可能存在兼容性问题。</text>
+      <text>\n建议：</text>
+      <text>1. 在 iOS 或 Android 原生系统上测试</text>
+      <text>2. 更新微信到最新版本</text>
+      <text>3. 如果问题持续，可以使用"复制客服链接"在浏览器中打开</text>
+    </view>
+  </view>
+</view>
+

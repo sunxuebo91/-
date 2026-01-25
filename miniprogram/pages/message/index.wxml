@@ -1,7 +1,39 @@
 <view class="message-page">
-  <view class="empty-state">
+  <!-- 客服快捷入口 -->
+  <view class="customer-service-card contact-card">
+    <view class="cs-left">
+      <image class="cs-icon" src="/images/icons/customer-service.svg" mode="aspectFit"></image>
+      <view class="cs-info">
+        <view class="cs-title">联系客服</view>
+        <view class="cs-subtitle">专业解答 贴心服务</view>
+      </view>
+    </view>
+    <view class="cs-arrow">›</view>
+    <!-- 透明按钮覆盖整卡，保留 open-type 能力且样式一致 -->
+    <button class="contact-overlay" open-type="contact" hover-class="none"></button>
+  </view>
+
+  <!-- 消息列表 -->
+  <view class="message-list" wx:if="{{messages.length > 0}}">
+    <view class="message-item" wx:for="{{messages}}" wx:key="id" bindtap="onMessageTap" data-id="{{item.id}}">
+      <view class="message-icon-wrapper">
+        <image class="message-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <view class="unread-badge" wx:if="{{!item.read}}"></view>
+      </view>
+      <view class="message-content">
+        <view class="message-header">
+          <view class="message-title">{{item.title}}</view>
+          <view class="message-time">{{item.time}}</view>
+        </view>
+        <view class="message-desc">{{item.content}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{messages.length === 0}}">
     <image class="empty-icon" src="/images/icons/message-empty.svg" mode="aspectFit"></image>
     <text class="empty-text">暂无消息</text>
+    <text class="empty-hint">系统通知和服务消息将在这里显示</text>
   </view>
 </view>
-

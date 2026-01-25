@@ -1,0 +1,173 @@
+page {
+  background: linear-gradient(180deg, #8766F3 0%, #A694FF 100%);
+  min-height: 100vh;
+}
+
+.house-rules-page {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+/* 顶部装饰背景 */
+.header-bg {
+  background: transparent;
+  padding: 40rpx 32rpx 50rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-bg::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -15%;
+  width: 300rpx;
+  height: 300rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.header-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 250rpx;
+  height: 250rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-icon {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 16rpx;
+  filter: drop-shadow(0 2rpx 8rpx rgba(0, 0, 0, 0.1));
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8rpx;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.header-subtitle {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* 内容区域 */
+.content-container {
+  margin-top: -20rpx;
+  padding: 0 24rpx;
+}
+
+/* 规则列表 */
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+/* 规则项 */
+.rule-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(135, 102, 243, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rule-item:active {
+  transform: translateY(1rpx);
+  box-shadow: 0 1rpx 4rpx rgba(135, 102, 243, 0.15);
+}
+
+/* 规则头部 */
+.rule-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.rule-number {
+  width: 48rpx;
+  height: 48rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(135, 102, 243, 0.25);
+}
+
+.rule-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #333;
+  flex: 1;
+}
+
+/* 规则内容 */
+.rule-content {
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #666;
+  padding-left: 60rpx;
+}
+
+/* 重要规则（红色强调） */
+.rule-item-important {
+  background: rgba(255, 245, 245, 0.95);
+  border: 1rpx solid rgba(255, 107, 107, 0.3);
+}
+
+.rule-item-important .rule-number {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8787 100%);
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 107, 0.25);
+}
+
+.rule-item-important .rule-title {
+  color: #FF6B6B;
+}
+
+.rule-item-important .rule-content {
+  color: #D63031;
+  font-weight: 500;
+}
+
+/* 高亮规则（温馨提示） */
+.rule-item-highlight {
+  background: rgba(255, 249, 230, 0.95);
+  border: 1rpx solid rgba(255, 184, 0, 0.3);
+}
+
+.rule-item-highlight .rule-number {
+  background: linear-gradient(135deg, #FFB800 0%, #FFA500 100%);
+  box-shadow: 0 2rpx 8rpx rgba(255, 184, 0, 0.25);
+}
+
+.rule-item-highlight .rule-title {
+  color: #FFB800;
+}
+
+.rule-item-highlight .rule-content {
+  color: #E67E22;
+  font-weight: 500;
+}
+

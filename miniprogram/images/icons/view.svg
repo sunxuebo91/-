@@ -1,0 +1,14 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 眼睛外轮廓 -->
+  <path d="M60 35C35 35 15 55 10 60C15 65 35 85 60 85C85 85 105 65 110 60C105 55 85 35 60 35Z" fill="#4A90E2" stroke="#4A90E2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- 眼球 -->
+  <circle cx="60" cy="60" r="18" fill="white"/>
+  
+  <!-- 瞳孔 -->
+  <circle cx="60" cy="60" r="10" fill="#4A90E2"/>
+  
+  <!-- 高光 -->
+  <circle cx="65" cy="55" r="4" fill="white" opacity="0.8"/>
+</svg>
+

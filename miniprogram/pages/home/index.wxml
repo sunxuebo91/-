@@ -2,7 +2,14 @@
   <!-- 顶部渐变背景：Banner 轮播 -->
   <view class="top">
     <view class="banner-wrap">
+      <!-- Banner骨架屏 -->
+      <view wx:if="{{bannerList.length === 0}}" class="banner-skeleton">
+        <view class="skeleton-shimmer"></view>
+      </view>
+
+      <!-- Banner轮播 -->
       <swiper
+        wx:else
         class="banner-swiper"
         indicator-dots="{{indicatorDots}}"
         autoplay="{{autoplay}}"
@@ -14,7 +21,7 @@
       >
         <swiper-item wx:for="{{bannerList}}" wx:key="_id" bindtap="onBannerTap" data-item="{{item}}">
           <view class="banner-item">
-            <image class="banner-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
+            <image class="banner-image" src="{{item.imageUrl}}" mode="aspectFill" lazy-load="{{true}}"></image>
           </view>
         </swiper-item>
       </swiper>
@@ -50,6 +57,24 @@
       </view>
     </view>
 
+    <!-- 透明服务和答疑解惑卡片 -->
+    <view class="service-cards">
+      <view class="service-card service-card-blue" bindtap="goTransparentService">
+        <view class="service-card-content">
+          <view class="service-card-title">透明服务</view>
+          <view class="service-card-subtitle">价格透明 服务透明</view>
+        </view>
+        <image class="service-card-image" src="/images/icons/transparent-service.svg" mode="aspectFit"></image>
+      </view>
+      <view class="service-card service-card-green" bindtap="goQA">
+        <view class="service-card-content">
+          <view class="service-card-title">答疑解惑</view>
+          <view class="service-card-subtitle">专业解答 贴心服务</view>
+        </view>
+        <image class="service-card-image" src="/images/icons/qa-service.svg" mode="aspectFit"></image>
+      </view>
+    </view>
+
     <!-- 褓贝分享模块 -->
     <view class="articles-section">
       <view class="section-header">
@@ -66,7 +91,22 @@
 
 
 
-      <view class="articles-grid" wx:if="{{articles && articles.length > 0}}">
+      <!-- 文章加载中骨架屏 -->
+      <view class="articles-grid" wx:if="{{articlesLoading}}">
+        <view class="article-card article-skeleton" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+          <view class="skeleton-cover"></view>
+          <view class="article-info">
+            <view class="skeleton-title"></view>
+            <view class="skeleton-footer">
+              <view class="skeleton-text"></view>
+              <view class="skeleton-text"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 文章列表 -->
+      <view class="articles-grid" wx:elif="{{articles && articles.length > 0}}">
         <view
           class="article-card"
           wx:for="{{articles}}"
@@ -79,6 +119,7 @@
             class="article-cover"
             src="{{item.coverImage || '/images/default-goods-image.png'}}"
             mode="aspectFill"
+            lazy-load="{{true}}"
           ></image>
 
           <!-- 文章信息 -->
@@ -93,7 +134,7 @@
       </view>
 
       <!-- 无数据提示 -->
-      <view wx:if="{{!articles || articles.length === 0}}" style="padding: 40rpx; text-align: center; color: #999;">
+      <view wx:else style="padding: 40rpx; text-align: center; color: #999;">
         <text>暂无文章</text>
       </view>
     </view>

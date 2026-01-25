@@ -1,0 +1,9 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 答疑解惑图标：对话气泡+问号 -->
+  <circle cx="60" cy="60" r="50" fill="white" opacity="0.3"/>
+  <rect x="25" y="30" width="60" height="50" rx="8" fill="white"/>
+  <path d="M 55 80 L 60 90 L 65 80" fill="white"/>
+  <circle cx="60" cy="50" r="12" stroke="#5FD4A0" stroke-width="3" fill="none"/>
+  <path d="M 60 50 Q 60 45 55 45" stroke="#5FD4A0" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="60" cy="62" r="2" fill="#5FD4A0"/>
+</svg>

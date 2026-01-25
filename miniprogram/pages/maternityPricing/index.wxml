@@ -1,0 +1,105 @@
+<view class="pricing-page">
+  <!-- 顶部装饰背景 -->
+  <view class="header-bg">
+    <!-- 装饰元素 -->
+    <view class="decoration-leaf decoration-leaf-1">🌸</view>
+    <view class="decoration-leaf decoration-leaf-2">🌸</view>
+    <view class="decoration-leaf decoration-leaf-3">🌸</view>
+    <view class="decoration-star decoration-star-1">✨</view>
+    <view class="decoration-star decoration-star-2">✨</view>
+
+    <!-- 标题区域 -->
+    <view class="title-section">
+      <view class="title-badge">
+        <text class="title-icon">⭐</text>
+        <text class="title-text">星级价格体系</text>
+        <text class="title-icon">⭐</text>
+      </view>
+    </view>
+
+    <!-- 等级说明 -->
+    <view class="level-description">
+      <view class="desc-title">月嫂的等级区别：</view>
+      <view class="desc-content">
+        根据月嫂<text class="highlight">从业年限、技能储备、服务意识、客户反馈、安得褓贝专业测评</text>等多维度制定星级和工资待遇。
+      </view>
+    </view>
+  </view>
+
+  <!-- 等级卡片列表 -->
+  <view class="levels-container">
+    <view class="level-card" wx:for="{{levels}}" wx:key="id" style="background: {{item.bgColor}};">
+      <!-- 卡片头部 -->
+      <view class="card-header">
+        <view class="level-badge" style="background: {{item.color}};">
+          <text class="level-name">{{item.name}}</text>
+        </view>
+        <view class="price-tag">
+          <text class="price">{{item.price}}</text>
+          <text class="price-suffix">/起</text>
+        </view>
+      </view>
+
+      <!-- 经验标签 -->
+      <view class="experience-tag" style="background: {{item.color}}20; color: {{item.color}};">
+        <text class="experience-icon">⭐</text>
+        <text>行业经验：{{item.experience}}</text>
+      </view>
+
+      <!-- 技能网格 -->
+      <view class="skills-grid">
+        <view class="skill-item" wx:for="{{item.skills}}" wx:key="name" wx:for-item="skill">
+          <view class="skill-icon">{{skill.icon}}</view>
+          <view class="skill-name">{{skill.name}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 专业能力定向匹配 -->
+  <view class="special-ability-section">
+    <view class="special-ability-header">
+      <view class="special-ability-title">同时根据客户需求</view>
+      <view class="special-ability-subtitle">可针对具备以下能力的月嫂进行定向匹配</view>
+      <view class="special-ability-note">*此类具备专业能力的月嫂价格上浮20%及以上</view>
+    </view>
+
+    <view class="special-ability-cards">
+      <view class="special-ability-card">
+        <view class="special-ability-icon-box">
+          <text class="special-ability-icon">👥</text>
+        </view>
+        <view class="special-ability-name">照护双胞胎或多胞胎</view>
+      </view>
+
+      <view class="special-ability-card">
+        <view class="special-ability-icon-box">
+          <text class="special-ability-icon">💙</text>
+        </view>
+        <view class="special-ability-name">照护特殊新生儿</view>
+        <view class="special-ability-desc">（如早产、宫内发育迟缓、患有先天性疾病等）</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部说明 -->
+  <view class="bottom-info">
+    <view class="info-icon">ℹ️</view>
+    <view class="info-text">
+      <view class="info-title">服务说明</view>
+      <view class="info-desc">月嫂服务周期一般为26天，具体服务内容和价格以实际签约为准。我们承诺所有月嫂均经过专业培训，持证上岗，为您和宝宝提供最优质的服务。</view>
+    </view>
+  </view>
+
+  <!-- 底部留白 -->
+  <view class="bottom-space"></view>
+
+  <!-- 底部悬浮分享（发送给朋友） -->
+  <view class="share-fab">
+    <button class="share-fab-btn" open-type="share" hover-class="share-fab-btn-hover">
+      <image class="share-fab-icon" src="/images/icons/share.svg" mode="aspectFit"></image>
+      <text class="share-fab-text">分享</text>
+    </button>
+  </view>
+</view>
+

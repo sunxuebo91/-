@@ -1101,12 +1101,13 @@
 
 /* 单按钮：居中显示（不再强制撑满整行，避免看起来“不居中”） */
 .bottom-bar.is-single {
-  justify-content: center;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
 }
 
 .bottom-bar.is-single .bar-btn {
-  flex: 0 1 520rpx;
-  width: 520rpx;
+  flex: 1;
+  width: 100%;
   max-width: 100%;
 }
 

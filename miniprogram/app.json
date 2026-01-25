@@ -11,6 +11,18 @@
     "pages/legal/userAgreement/index",
     "pages/legal/privacyPolicy/index",
 
+    "pages/transparentService/index",
+    "pages/childcarePricing/index",
+    "pages/maternityPricing/index",
+    "pages/nannyPricing/index",
+    "pages/eldercarePricing/index",
+
+    "pages/qaService/index",
+    "pages/houseRules/index",
+    "pages/contractPreview/index",
+    "pages/hourlyContractPreview/index",
+    "pages/childcareContractPreview/index",
+
     "pages/resumeDetail/index",
     "pages/resumeAlbum/index",
 
@@ -19,6 +31,7 @@
 
     "pages/test-article-api",
     "pages/test-user-api/index",
+    "pages/test-customer-service/index",
     "pages/index/index",
     "pages/example/index"
   ],

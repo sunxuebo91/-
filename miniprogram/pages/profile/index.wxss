@@ -116,6 +116,47 @@
   border-bottom: 1rpx solid #f0f0f0;
 }
 
+/* 联系客服：用透明按钮覆盖整行，避免 button 默认样式导致“变形” */
+.contact-menu-item {
+  position: relative;
+}
+
+.contact-menu-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  opacity: 0;
+}
+
+.contact-menu-btn::after {
+  border: none;
+}
+
+/* 重置 button 样式 */
+.menu-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-button::after {
+  border: none;
+}
+
 .menu-item:first-child {
   padding-top: 24rpx;
 }
@@ -135,6 +176,8 @@
   color: #ccc;
   font-weight: 300;
 }
+
+
 
 /* 微信头像昵称授权按钮 */
 .wx-profile-btn {

@@ -22,12 +22,13 @@
   </view>
 
   <view class="section">
-    <view class="menu-item">
-      <button class="menu-btn" open-type="contact" session-from="from=profile" show-message-card="true" send-message-title="安得褓贝客服" send-message-path="/pages/profile/index">
-        <view class="menu-label">联系客服</view>
-        <view class="menu-arrow">›</view>
-      </button>
-    </view>
+    <view class="menu-item contact-menu-item">
+
+	      <view class="menu-label">联系客服</view>
+	      <view class="menu-arrow">›</view>
+	      <!-- 用透明 button 覆盖整行：保持外观=普通菜单项，同时具备 open-type="contact" 能力 -->
+	      <button class="contact-menu-btn" open-type="contact" bindcontact="handleContact" hover-class="none"></button>
+	    </view>
 
     <view class="menu-item" bindtap="onTapHelp">
       <view class="menu-label">帮助</view>

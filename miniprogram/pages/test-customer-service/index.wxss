@@ -1,0 +1,177 @@
+page {
+  background: #f5f5f5;
+  padding-bottom: 40rpx;
+}
+
+.test-page {
+  padding: 32rpx;
+}
+
+.test-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.test-section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 24rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #666;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+
+.value {
+  font-size: 28rpx;
+  color: #333;
+  text-align: right;
+  flex: 1;
+  word-break: break-all;
+}
+
+.value.selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.section-title.warning {
+  color: #ff9800;
+}
+
+.warning-content {
+  padding: 20rpx;
+  background: #fff3e0;
+  border-radius: 8rpx;
+  line-height: 1.8;
+}
+
+.warning-content text {
+  display: block;
+  font-size: 28rpx;
+  color: #e65100;
+  margin-bottom: 10rpx;
+}
+
+.value.success {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.value.error {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+.info-content {
+  padding: 20rpx;
+  background-color: #f0f9ff;
+  border-radius: 8rpx;
+  border-left: 4rpx solid #3b82f6;
+}
+
+.info-text {
+  display: block;
+  font-size: 28rpx;
+  color: #1e40af;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+}
+
+.log-container {
+  max-height: 400rpx;
+  background: #f9f9f9;
+  border-radius: 8rpx;
+  padding: 16rpx;
+}
+
+.log-item {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.log-time {
+  color: #999;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.log-text {
+  flex: 1;
+  word-break: break-all;
+}
+
+.log-text.info {
+  color: #666;
+}
+
+.log-text.success {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.log-text.error {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.test-button {
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  background: #fff;
+  color: #333;
+  border: 2rpx solid #e0e0e0;
+}
+
+.test-button.primary {
+  background: linear-gradient(135deg, #F5222D 0%, #FF4D4F 100%);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+.test-button::after {
+  border: none;
+}
+

@@ -1,0 +1,95 @@
+<view class="pricing-page">
+  <!-- 顶部装饰背景 -->
+  <view class="header-bg">
+    <!-- 装饰元素 -->
+    <view class="decoration-leaf decoration-leaf-1">🏠</view>
+    <view class="decoration-leaf decoration-leaf-2">🏠</view>
+    <view class="decoration-leaf decoration-leaf-3">🏠</view>
+    <view class="decoration-star decoration-star-1">✨</view>
+    <view class="decoration-star decoration-star-2">✨</view>
+
+    <!-- 标题区域 -->
+    <view class="title-section">
+      <view class="title-badge">
+        <text class="title-icon">⭐</text>
+        <text class="title-text">星级价格体系</text>
+        <text class="title-icon">⭐</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 说明文字 -->
+  <view class="description">
+    <view class="desc-title">家政服务人员的等级区别：</view>
+    <view class="desc-content">
+      根据家政服务人员<text class="highlight">从业年限、技能储备、服务意识、客户反馈、安得褓贝专业测评</text>等多维度制定星级和工资待遇。
+    </view>
+  </view>
+
+  <!-- 等级卡片列表 -->
+  <view class="levels-container">
+    <view class="level-card" wx:for="{{levels}}" wx:key="id" style="background: {{item.bgColor}};">
+      <!-- 卡片头部 -->
+      <view class="card-header">
+        <view class="level-badge" style="background: {{item.color}};">
+          <text class="level-name">{{item.name}}</text>
+        </view>
+        <view class="price-tag">
+          <text class="price">{{item.price}}</text>
+          <text class="price-unit">/元起</text>
+        </view>
+      </view>
+
+      <!-- 经验标签 -->
+      <view class="experience-tag" style="background: {{item.color}}20; color: {{item.color}};">
+        <text class="experience-icon">💼</text>
+        <text>{{item.experience}}</text>
+      </view>
+
+      <!-- 技能列表 -->
+      <view class="skills-grid">
+        <view class="skill-item" wx:for="{{item.skills}}" wx:key="name" wx:for-item="skill">
+          <view class="skill-icon">{{skill.icon}}</view>
+          <view class="skill-name">{{skill.name}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部额外服务 -->
+  <view class="extra-section">
+    <view class="extra-title">
+      <text>同时根据客户需求</text>
+    </view>
+    <view class="extra-subtitle">可针对具备以下能力的家政服务人员进行定向匹配</view>
+
+    <view class="extra-note">
+      *此类具备专业能力的家政服务人员价格会有一定上浮
+    </view>
+
+    <view class="extra-services">
+      <view class="extra-item" wx:for="{{extraServices}}" wx:key="name">
+        <view class="extra-icon-box">
+          <text>{{item.icon}}</text>
+        </view>
+        <view class="extra-name">
+          <text>{{item.name}}</text>
+          <text wx:if="{{item.name2}}">{{item.name2}}</text>
+        </view>
+        <view class="extra-desc" wx:if="{{item.desc}}">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部留白（避免被底部悬浮按钮遮挡） -->
+  <view class="bottom-space"></view>
+
+  <!-- 底部悬浮分享（发送给朋友） -->
+  <view class="share-fab">
+    <button class="share-fab-btn" open-type="share" hover-class="share-fab-btn-hover">
+      <image class="share-fab-icon" src="/images/icons/share.svg" mode="aspectFit"></image>
+      <text class="share-fab-text">分享</text>
+    </button>
+  </view>
+</view>
+

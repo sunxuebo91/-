@@ -1,0 +1,10 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 透明服务图标：文档+勾选 -->
+  <circle cx="60" cy="60" r="50" fill="white" opacity="0.3"/>
+  <rect x="35" y="25" width="50" height="65" rx="4" fill="white" stroke="white" stroke-width="2"/>
+  <line x1="45" y1="40" x2="75" y2="40" stroke="#4F9EFF" stroke-width="3" stroke-linecap="round"/>
+  <line x1="45" y1="52" x2="75" y2="52" stroke="#4F9EFF" stroke-width="3" stroke-linecap="round"/>
+  <line x1="45" y1="64" x2="65" y2="64" stroke="#4F9EFF" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="85" cy="75" r="18" fill="#4F9EFF"/>
+  <path d="M75 75 L82 82 L95 68" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

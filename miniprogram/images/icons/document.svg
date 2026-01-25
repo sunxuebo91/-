@@ -1,0 +1,19 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 文档背景 -->
+  <rect x="25" y="15" width="70" height="90" rx="8" fill="white" opacity="0.95"/>
+  
+  <!-- 文档折角 -->
+  <path d="M 75 15 L 95 15 L 95 35 L 75 15 Z" fill="white" opacity="0.7"/>
+  <path d="M 75 15 L 95 35 L 75 35 L 75 15 Z" fill="#E8E8E8"/>
+  
+  <!-- 文档线条 -->
+  <line x1="35" y1="45" x2="75" y2="45" stroke="#4A90E2" stroke-width="3" stroke-linecap="round"/>
+  <line x1="35" y1="55" x2="85" y2="55" stroke="#4A90E2" stroke-width="3" stroke-linecap="round"/>
+  <line x1="35" y1="65" x2="80" y2="65" stroke="#4A90E2" stroke-width="3" stroke-linecap="round"/>
+  <line x1="35" y1="75" x2="70" y2="75" stroke="#4A90E2" stroke-width="3" stroke-linecap="round"/>
+  <line x1="35" y1="85" x2="75" y2="85" stroke="#4A90E2" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- 文档边框 -->
+  <rect x="25" y="15" width="70" height="90" rx="8" stroke="white" stroke-width="2" fill="none"/>
+</svg>
+

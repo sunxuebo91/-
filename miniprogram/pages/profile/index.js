@@ -58,6 +58,18 @@ Page({
     wx.navigateTo({ url: "/pages/login/index" });
   },
 
+  // 小程序客服回调
+  handleContact(e) {
+    console.log('客服消息回调:', e.detail);
+    // 可以在这里处理用户从客服消息返回的情况
+    if (e.detail.path) {
+      console.log('用户点击的消息路径:', e.detail.path);
+    }
+    if (e.detail.query) {
+      console.log('用户点击的消息参数:', e.detail.query);
+    }
+  },
+
   onTapHelp() {
     wx.showToast({ title: "请联系客服", icon: "none" });
   },
@@ -68,6 +80,13 @@ Page({
 
   goResumeManage() {
     wx.navigateTo({ url: "/pages/admin/resumeManage/index" });
+  },
+
+  // 跳转到测试页面
+  goTestPage() {
+    wx.navigateTo({
+      url: '/pages/test-customer-service/index'
+    });
   },
 
   // 退出登录

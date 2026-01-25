@@ -1,0 +1,92 @@
+page {
+  background: #f7f7fb;
+}
+
+.transparent-service {
+  min-height: 100vh;
+}
+
+/* 内容区域 */
+.content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* 报价卡片通用样式 */
+.price-card {
+  border-radius: 24rpx;
+  padding: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.price-card:active {
+  transform: translateY(4rpx);
+}
+
+/* 月嫂报价卡片 - 粉色 */
+.price-card-pink {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FFA8C5 100%);
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.3);
+}
+
+.price-card-pink:active {
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.2);
+}
+
+/* 育儿报价卡片 - 紫色 */
+.price-card-purple {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
+}
+
+.price-card-purple:active {
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.2);
+}
+
+/* 保姆报价卡片 - 橙色 */
+.price-card-orange {
+  background: linear-gradient(135deg, #FF9A56 0%, #FF6B35 100%);
+  box-shadow: 0 8rpx 24rpx rgba(255, 154, 86, 0.3);
+}
+
+.price-card-orange:active {
+  box-shadow: 0 4rpx 12rpx rgba(255, 154, 86, 0.2);
+}
+
+/* 护老报价卡片 - 橙黄色 */
+.price-card-yellow {
+  background: linear-gradient(135deg, #FFB800 0%, #FFA500 100%);
+  box-shadow: 0 8rpx 24rpx rgba(255, 184, 0, 0.3);
+}
+
+.price-card-yellow:active {
+  box-shadow: 0 4rpx 12rpx rgba(255, 184, 0, 0.2);
+}
+
+.price-card-content {
+  flex: 1;
+}
+
+.price-card-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12rpx;
+}
+
+.price-card-subtitle {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.price-card-image {
+  width: 120rpx;
+  height: 120rpx;
+  margin-left: 24rpx;
+}
+

@@ -1,0 +1,160 @@
+<view class="house-rules-page">
+  <!-- 顶部装饰背景 -->
+  <view class="header-bg">
+    <view class="header-content">
+      <image class="header-icon" src="/images/icons/info-circle.svg" mode="aspectFit"></image>
+      <view class="header-title">上户需知</view>
+      <view class="header-subtitle">安得阿姨专业服务指南</view>
+    </view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content-container">
+    <!-- 规则列表 -->
+    <view class="rules-list">
+      <!-- 规则1 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">1</view>
+          <view class="rule-title">守时是第一要务</view>
+        </view>
+        <view class="rule-content">
+          不要迟到！请准时到客户家里，客户对你的第一印象从时间观念开始。
+        </view>
+      </view>
+
+      <!-- 规则2 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">2</view>
+          <view class="rule-title">自我介绍</view>
+        </view>
+        <view class="rule-content">
+          上户第一件事：自我介绍 (太太 / 先生您好，我是安得家政的服务人员 XXX, 我会尽心的为您服务好，我做的不够好的地方，还请您多多指教) 迅速洗手换衣服，熟悉家庭环境，并做好记录。
+        </view>
+      </view>
+
+      <!-- 规则3 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">3</view>
+          <view class="rule-title">做好服务笔记</view>
+        </view>
+        <view class="rule-content">
+          做好服务笔记，记录客户的生活习惯，饮食喜好，多注意细节地方，一份日常工作表可以让客户看到你的专业，必要时候还能保护你。
+        </view>
+      </view>
+
+      <!-- 规则4 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">4</view>
+          <view class="rule-title">多点微笑</view>
+        </view>
+        <view class="rule-content">
+          上户期间多点微笑，你的微笑会让客户家人更喜欢你。
+        </view>
+      </view>
+
+      <!-- 规则5 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">5</view>
+          <view class="rule-title">积极主动</view>
+        </view>
+        <view class="rule-content">
+          用心对待家里的每一个人，积极主动是一个家政服务人员的好品质。
+        </view>
+      </view>
+
+      <!-- 规则6 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">6</view>
+          <view class="rule-title">切勿长时间看手机</view>
+        </view>
+        <view class="rule-content">
+          请不要频繁的，长时间的玩手机，你的努力很可能因为手机问题而白费。
+        </view>
+      </view>
+
+      <!-- 规则7 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">7</view>
+          <view class="rule-title">切勿推销</view>
+        </view>
+        <view class="rule-content">
+          请不要向客户销售任何的产品，这个行为会让客户心理很不舒服。
+        </view>
+      </view>
+
+      <!-- 规则8 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">8</view>
+          <view class="rule-title">及时询问</view>
+        </view>
+        <view class="rule-content">
+          遇到不懂得，不能确定的，不要擅自做主，可以咨询公司的老师再做决定。
+        </view>
+      </view>
+
+      <!-- 规则9 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">9</view>
+          <view class="rule-title">学会忍耐</view>
+        </view>
+        <view class="rule-content">
+          不管受了多大的委屈，您可以找个地方和公司的人诉诉苦，不要在客户家发脾气，你代表的是公司和你个人的品牌，学会忍和坚持，把每一个服务当成咱们家政生涯的挑战和里程碑，你的价值提升将远远超乎你的想象。
+        </view>
+      </view>
+
+      <!-- 规则10 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">10</view>
+          <view class="rule-title">坚持就是胜利</view>
+        </view>
+        <view class="rule-content">
+          服务期内，每一天都要做到像第一天去的时候一样，坚持到最后一刻，不要因为最后的懈怠而白费了您前面所有的努力。
+        </view>
+      </view>
+
+      <!-- 规则11 -->
+      <view class="rule-item rule-item-important">
+        <view class="rule-header">
+          <view class="rule-number">11</view>
+          <view class="rule-title">切勿私自下户</view>
+        </view>
+        <view class="rule-content">
+          请不要私自下户，如果有重大事情需要下户，请提前 7 天联系您的销售老师，等到新的服务人员上户和您做好交接工作以后再下户，这是一份责任！如果未经允许私自下户，最后一个月的薪资我们将只发放 50%, 且不退还上户保证金，请您知晓！
+        </view>
+      </view>
+
+      <!-- 规则12 -->
+      <view class="rule-item">
+        <view class="rule-header">
+          <view class="rule-number">12</view>
+          <view class="rule-title">保护自己</view>
+        </view>
+        <view class="rule-content">
+          下户后请打开行李箱给客户检查，让客户在物品确认无误单子上签字，保护自己，以避免不必要的误会。
+        </view>
+      </view>
+
+      <!-- 规则13 -->
+      <view class="rule-item rule-item-highlight">
+        <view class="rule-header">
+          <view class="rule-number">13</view>
+          <view class="rule-title">安得就是你的家</view>
+        </view>
+        <view class="rule-content">
+          安得就是你的家，下户后记得回家充电哦。
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
