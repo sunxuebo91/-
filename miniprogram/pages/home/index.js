@@ -2,6 +2,23 @@
 
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
 
+// 提取图片 URL（兼容字符串/对象/数组）
+function normalizeImageUrl(input) {
+  if (!input) return '';
+  if (typeof input === 'string') return input;
+  if (Array.isArray(input)) {
+    for (const v of input) {
+      const u = normalizeImageUrl(v);
+      if (u) return u;
+    }
+    return '';
+  }
+  if (typeof input === 'object') {
+    return input.url || input.fileUrl || input.path || input.src || '';
+  }
+  return '';
+}
+
 Page({
   data: {
     // 轮播图配置
@@ -28,6 +45,21 @@ Page({
     ]).catch(err => {
       console.error('❌ 页面加载出错:', err);
     });
+  },
+
+  // 下拉刷新
+  async onPullDownRefresh() {
+    try {
+      await Promise.allSettled([
+        this.loadBanners(),
+        this.loadArticles(),
+        this.loadShareLogo()
+      ]);
+    } catch (err) {
+      console.error('下拉刷新异常:', err);
+    } finally {
+      wx.stopPullDownRefresh();
+    }
   },
 
   /**
@@ -85,27 +117,30 @@ Page({
     };
   },
 
-  // 加载Banner列表
+  // 加载Banner列表（返回Promise便于下拉刷新等待）
   loadBanners() {
     console.log('🎨 开始加载Banner列表');
-    wx.request({
-      url: 'https://crm.andejiazheng.com/api/banners/miniprogram/active',
-      method: 'GET',
-      success: (res) => {
-        console.log('🎨 Banner API响应:', res);
-        if (res.data && res.data.success) {
-          const banners = res.data.data || [];
-          console.log('🎨 获取到', banners.length, '个Banner');
-          // 按order字段排序
-          banners.sort((a, b) => (a.order || 0) - (b.order || 0));
-          this.setData({ bannerList: banners });
-        } else {
-          console.warn('🎨 Banner API返回失败:', res.data?.message);
-        }
-      },
-      fail: (err) => {
-        console.error('🎨 Banner API请求失败:', err);
-      }
+    return new Promise((resolve) => {
+      wx.request({
+        url: 'https://crm.andejiazheng.com/api/banners/miniprogram/active',
+        method: 'GET',
+        success: (res) => {
+          console.log('🎨 Banner API响应:', res);
+          if (res.data && res.data.success) {
+            const banners = res.data.data || [];
+            console.log('🎨 获取到', banners.length, '个Banner');
+            // 按order字段排序
+            banners.sort((a, b) => (a.order || 0) - (b.order || 0));
+            this.setData({ bannerList: banners });
+          } else {
+            console.warn('🎨 Banner API返回失败:', res.data?.message);
+          }
+        },
+        fail: (err) => {
+          console.error('🎨 Banner API请求失败:', err);
+        },
+        complete: () => resolve()
+      });
     });
   },
 
@@ -181,8 +216,10 @@ Page({
         return;
       }
 
-      const articles = resp.data.list || [];
+      // API返回的是 data.items，不是 data.list
+      const articles = resp.data.items || resp.data.list || [];
       console.log('📰 获取到', articles.length, '篇文章');
+      console.log('📰 文章数据示例:', articles[0]);
 
       if (articles.length === 0) {
         console.warn('📰 ⚠️ 数据库中没有已发布的文章！');
@@ -227,20 +264,48 @@ Page({
         const viewCount = normalizedId ? (viewCountMap[normalizedId] || 0) : 0;
         console.log(`📰 文章 ${article.title} (id=${normalizedId || 'N/A'}) 阅读量: ${viewCount}`);
 
+        // 提取封面图：优先 imageUrls（API已提取），其次 coverImage，最后从 HTML 提取
+        let coverImage = normalizeImageUrl(article.imageUrls);
+        if (coverImage) {
+          console.log(`📰 文章 ${article.title} 使用 imageUrls[0]:`, coverImage);
+        }
+
+        if (!coverImage) {
+          coverImage = normalizeImageUrl(article.coverImage);
+          if (coverImage) {
+            console.log(`📰 文章 ${article.title} 使用 coverImage:`, coverImage);
+          }
+        }
+
+        // 如果还是没有封面图，尝试从 HTML 内容中提取第一张图片（含 data-src/data-original）
+        if (!coverImage) {
+          const content = article.content || article.contentHtml || article.htmlContent || article.contentRaw || '';
+          if (content) {
+            const imgMatch = content.match(/<img[^>]+?(?:src|data-src|data-original)=["']([^"']+)["']/i);
+            if (imgMatch && imgMatch[1]) {
+              coverImage = imgMatch[1];
+              console.log(`📰 文章 ${article.title} 从HTML提取:`, coverImage);
+            }
+          }
+        }
+
         return {
           _id: normalizedId,
           title: article.title || '无标题',
           author: article.author || '安得褓贝',
           source: article.source || '',
           summary: article.summary || '',
-          coverImage: article.coverImage || (article.imageUrls && article.imageUrls[0]) || '',
+          coverImage: coverImage,
           publishedAt: article.publishedAt || article.createdAt,
           viewCount: viewCount
         };
       });
 
-      console.log('📰 最终文章数据:', formattedArticles);
-      this.setData({ articles: formattedArticles });
+      // 处理 cloud:// 封面图，转临时链接
+      const articlesWithCovers = await this.resolveCoverImages(formattedArticles);
+
+      console.log('📰 最终文章数据:', articlesWithCovers);
+      this.setData({ articles: articlesWithCovers });
 
     } catch (e) {
       console.error('📰 加载文章列表异常:', e);
@@ -263,6 +328,35 @@ Page({
     wx.navigateTo({
       url: `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}`
     });
+  },
+
+  // 将 cloud:// 封面转换为临时链接
+  async resolveCoverImages(list = []) {
+    const fileIds = Array.from(
+      new Set(
+        list
+          .map((a) => a.coverImage)
+          .filter((u) => u && typeof u === 'string' && u.startsWith('cloud://'))
+      )
+    );
+    if (!fileIds.length) return list;
+
+    try {
+      const res = await wx.cloud.getTempFileURL({ fileList: fileIds });
+      const map = {};
+      (res?.fileList || []).forEach((item) => {
+        if (item.fileID && item.tempFileURL) {
+          map[item.fileID] = item.tempFileURL;
+        }
+      });
+      return list.map((a) => ({
+        ...a,
+        coverImage: map[a.coverImage] || a.coverImage
+      }));
+    } catch (err) {
+      console.error('封面图转临时链接失败，使用原图:', err);
+      return list;
+    }
   },
 
   // 轮播图点击事件

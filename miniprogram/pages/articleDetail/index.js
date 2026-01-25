@@ -215,7 +215,31 @@ function pickContent(raw) {
 }
 
 function pickCover(raw) {
-  return raw?.coverImage || (Array.isArray(raw?.imageUrls) ? raw.imageUrls[0] : '') || '';
+  // 1. 优先使用 imageUrls 数组的第一张图（API返回的字段）
+  if (Array.isArray(raw?.imageUrls) && raw.imageUrls.length > 0) {
+    console.log('📰 使用 imageUrls[0]:', raw.imageUrls[0]);
+    return raw.imageUrls[0];
+  }
+
+  // 2. 兜底：使用 coverImage 字段
+  if (raw?.coverImage) {
+    console.log('📰 使用 coverImage:', raw.coverImage);
+    return raw.coverImage;
+  }
+
+  // 3. 最后尝试从 HTML 内容中提取第一张图片
+  const content = pickContent(raw);
+  if (content) {
+    // 匹配 <img> 标签的 src 属性
+    const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1]) {
+      console.log('📰 从HTML提取图片:', imgMatch[1]);
+      return imgMatch[1];
+    }
+  }
+
+  console.log('📰 未找到封面图');
+  return '';
 }
 
 Page({
@@ -272,6 +296,10 @@ Page({
       }
 
       const raw = resp.data;
+
+      // 检查是否有独立的封面图字段（不是从HTML提取的）
+      const hasExplicitCover = !!(raw?.coverImage || (Array.isArray(raw?.imageUrls) && raw.imageUrls.length > 0));
+
       const coverImage = pickCover(raw);
       const article = {
         _id: raw?._id || raw?.id || raw?.articleId || id,
@@ -284,8 +312,9 @@ Page({
       };
 
       const content = pickContent(raw);
-      // 有封面图时：过滤正文内图片，避免同一张图重复出现
-      const contentNodes = toRichTextNodes(content, { skipImages: !!coverImage });
+      // 只有当有独立封面图字段时才过滤正文图片，避免重复
+      // 如果封面图是从HTML提取的，则保留正文中的所有图片
+      const contentNodes = toRichTextNodes(content, { skipImages: hasExplicitCover });
 
       this.setData({
         article,
@@ -325,7 +354,8 @@ Page({
     const article = this.data.article || {};
     const id = article._id || this.data.id || '';
     const title = article.title || '安得褓贝 · 文章';
-    const imageUrl = this.data.shareLogo || article.coverImage || '/images/default-goods-image.png';
+    // 优先使用文章封面图，没有封面图时才使用默认Logo
+    const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
     return {
       title,
       path: `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}`,
@@ -338,7 +368,8 @@ Page({
     const article = this.data.article || {};
     const id = article._id || this.data.id || '';
     const title = article.title || '安得褓贝 · 文章';
-    const imageUrl = this.data.shareLogo || article.coverImage || '/images/default-goods-image.png';
+    // 优先使用文章封面图，没有封面图时才使用默认Logo
+    const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
     return {
       title,
       query: `id=${encodeURIComponent(String(id))}`,
