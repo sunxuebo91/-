@@ -45,19 +45,9 @@ Page({
     });
   },
 
-  // 小程序客服回调
-  handleContact(e) {
-    console.log('客服消息回调:', e.detail);
-    // 可以在这里处理用户从客服消息返回的情况
-    if (e.detail.path) {
-      console.log('用户点击的消息路径:', e.detail.path);
-    }
-    if (e.detail.query) {
-      console.log('用户点击的消息参数:', e.detail.query);
-    }
-  },
 
   // 预览合同文档（保留，供详情页使用）
+
   previewContract() {
     console.log('点击了合同预览卡片');
 

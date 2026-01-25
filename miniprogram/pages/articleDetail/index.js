@@ -1,6 +1,8 @@
 const articleService = require('../../services/article.js');
+const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
 
 function decodeHtmlEntities(str) {
+
   let s = String(str || '');
 
   // 处理双重编码（例如 "&amp;lt;"）：最多解码 3 次
@@ -222,10 +224,12 @@ Page({
     loading: true,
     article: {},
     contentNodes: [],
-    viewCount: 0
+    viewCount: 0,
+    shareLogo: ''
   },
 
   async onLoad(options) {
+
     const id = options?.id ? decodeURIComponent(options.id) : '';
     this.setData({ id });
 
@@ -235,8 +239,12 @@ Page({
       return;
     }
 
+    // 预取分享 LOGO
+    this.loadShareLogo();
+
     await this.reloadAll();
   },
+
 
   async onPullDownRefresh() {
     await this.reloadAll();
@@ -310,5 +318,47 @@ Page({
         // ignore
       }
     }
+  },
+
+  // 分享给好友
+  onShareAppMessage() {
+    const article = this.data.article || {};
+    const id = article._id || this.data.id || '';
+    const title = article.title || '安得褓贝 · 文章';
+    const imageUrl = this.data.shareLogo || article.coverImage || '/images/default-goods-image.png';
+    return {
+      title,
+      path: `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}`,
+      imageUrl
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    const article = this.data.article || {};
+    const id = article._id || this.data.id || '';
+    const title = article.title || '安得褓贝 · 文章';
+    const imageUrl = this.data.shareLogo || article.coverImage || '/images/default-goods-image.png';
+    return {
+      title,
+      query: `id=${encodeURIComponent(String(id))}`,
+      imageUrl
+    };
+  },
+
+  // 预取云存储 Logo 的临时链接
+  async loadShareLogo() {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [SHARE_LOGO_FILE_ID]
+      });
+      const temp = res?.fileList?.[0]?.tempFileURL;
+      if (temp) {
+        this.setData({ shareLogo: temp });
+      }
+    } catch (err) {
+      console.error('获取分享LOGO失败，使用默认图:', err);
+    }
   }
 });
+

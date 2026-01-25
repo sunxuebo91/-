@@ -166,6 +166,8 @@ function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
   };
 }
 
+const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+
 Page({
   onHide() {
     this.pauseHeroVideo();
@@ -175,11 +177,17 @@ Page({
     this.pauseHeroVideo();
   },
 
+  onShow() {
+    // 检查是否有待处理的客服联系请求（登录后自动调起客服）
+    this.checkPendingContact();
+  },
+
   data: {
 
     id: "",
     loaded: false,
     detail: {},
+
 
     // 推荐理由展示（默认 TopN + 展开/收起）
     recommendationExpanded: false,
@@ -215,6 +223,8 @@ Page({
     // 证书（用于"获取证书"票券展示）
     certTicketsAll: [],
     certTicketsShowSwipeHint: false,
+    // 分享 LOGO 临时链接
+    shareLogo: ''
   },
 
 
@@ -223,10 +233,14 @@ Page({
   onLoad(options) {
     this.setData({ id: options.id || "" });
 
+    // 预取分享 LOGO 的临时链接
+    this.loadShareLogo();
+
     console.log('📄 详情页加载, ID:', options.id);
 
     // 尝试从列表页获取预加载的视频路径
     const pages = getCurrentPages();
+
     console.log('📚 当前页面栈:', pages.length, '层');
 
     if (pages.length >= 2) {
@@ -944,8 +958,63 @@ Page({
 
 
 
+  // 点击咨询按钮：先判断登录，再拉起客服
   onTapConsult() {
-    wx.navigateTo({ url: "/pages/login/index" });
+    console.log('🔔 点击咨询按钮');
+
+    if (!this.isLoggedIn()) {
+      console.log('⚠️ 未登录，跳转到登录页');
+      wx.setStorageSync('pendingContact', '1');
+      wx.showToast({ title: '请先登录后联系客服', icon: 'none' });
+      wx.navigateTo({ url: '/pages/login/index' });
+      return;
+    }
+
+    console.log('✅ 已登录，调起客服');
+    this.openCustomerService();
+  },
+
+  // 检查是否已登录
+  isLoggedIn() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo');
+    const isLoggedIn = !!(crmUserInfo && (crmUserInfo.phone || crmUserInfo.nickname));
+    console.log('🔐 登录状态检查:', isLoggedIn, crmUserInfo);
+    return isLoggedIn;
+  },
+
+  // 登录后自动进入客服（检查待处理标记）
+  checkPendingContact() {
+    const pending = wx.getStorageSync('pendingContact');
+    console.log('🔍 检查待处理客服请求:', pending);
+
+    if (pending && this.isLoggedIn()) {
+      console.log('✅ 有待处理请求且已登录，自动调起客服');
+      wx.removeStorageSync('pendingContact');
+      this.openCustomerService();
+    }
+  },
+
+  // 拉起小程序客服（优先使用 openCustomerServiceChat）
+  openCustomerService() {
+    console.log('📞 开始调起客服');
+
+    if (wx.openCustomerServiceChat) {
+      console.log('✅ 使用 openCustomerServiceChat API');
+      wx.openCustomerServiceChat({
+        extInfo: {},
+        success: () => {
+          console.log('✅ 客服调起成功');
+        },
+        fail: (err) => {
+          console.error('❌ openCustomerServiceChat 失败', err);
+          wx.showToast({ title: '客服暂时不可用', icon: 'none' });
+        }
+      });
+      return;
+    }
+
+    console.warn('⚠️ 当前微信版本不支持客服功能');
+    wx.showToast({ title: '当前微信版本不支持客服', icon: 'none' });
   },
 
 
@@ -1345,7 +1414,52 @@ Page({
   onViewMoreEvaluations() {
     // TODO: 跳转到评价列表页
     wx.showToast({ title: '评价列表页开发中', icon: 'none' });
+  },
+
+  // 分享给好友（右上角转发按钮）
+  onShareAppMessage() {
+    const detail = this.data.detail || {};
+    const id = detail._id || this.data.id || '';
+    const titleBase = detail.name ? `${detail.name} · ${detail.jobTypeText || '家政服务'}` : '安得褓贝 · 家政简历';
+    const imageUrl = this.data.shareLogo || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png';
+
+    return {
+      title: titleBase,
+      path: `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}`,
+      imageUrl
+    };
+  },
+
+  // 转发到朋友圈
+  onShareTimeline() {
+    const detail = this.data.detail || {};
+    const id = detail._id || this.data.id || '';
+    const titleBase = detail.name ? `${detail.name} · ${detail.jobTypeText || '家政服务'}` : '安得褓贝 · 家政简历';
+    const imageUrl = this.data.shareLogo || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png';
+
+    return {
+      title: titleBase,
+      query: `id=${encodeURIComponent(String(id))}`,
+      imageUrl
+    };
+  },
+
+  // 预取云存储 Logo 的临时链接
+  async loadShareLogo() {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [SHARE_LOGO_FILE_ID]
+      });
+      const temp = res?.fileList?.[0]?.tempFileURL;
+      if (temp) {
+        this.setData({ shareLogo: temp });
+      }
+    } catch (err) {
+      console.error('获取分享LOGO失败，使用默认图:', err);
+    }
   }
 });
+
+
 
 

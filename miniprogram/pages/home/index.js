@@ -1,5 +1,7 @@
 ﻿const articleService = require('../../services/article.js');
 
+const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+
 Page({
   data: {
     // 轮播图配置
@@ -11,7 +13,9 @@ Page({
     bannerList: [],
     // 文章相关数据
     articles: [],
-    articlesLoading: false
+    articlesLoading: false,
+    // 分享用 LOGO（云文件临时链接）
+    shareLogo: ''
   },
 
   async onLoad() {
@@ -19,7 +23,8 @@ Page({
     Promise.all([
       this.autoInitializeViewCounts(), // 后台初始化，不阻塞
       this.loadBanners(),
-      this.loadArticles()
+      this.loadArticles(),
+      this.loadShareLogo()
     ]).catch(err => {
       console.error('❌ 页面加载出错:', err);
     });
@@ -58,6 +63,26 @@ Page({
         selected: 0
       });
     }
+  },
+
+  // 分享给好友（右上角转发按钮）
+  onShareAppMessage() {
+    const title = '安得褓贝 · 专业家政服务平台';
+    const path = '/pages/home/index';
+    const imageUrl = this.data.shareLogo || this.data.bannerList[0]?.imageUrl || '/images/default-goods-image.png';
+
+    return { title, path, imageUrl };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    const title = '安得褓贝 · 专业家政服务平台';
+    const imageUrl = this.data.shareLogo || '/images/default-goods-image.png';
+    return {
+      title,
+      query: '',
+      imageUrl
+    };
   },
 
   // 加载Banner列表
@@ -303,6 +328,21 @@ Page({
         // 无跳转
         console.log('🖼️ Banner 无跳转');
         break;
+    }
+  },
+
+  // 拉取云存储 Logo 的临时链接
+  async loadShareLogo() {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [SHARE_LOGO_FILE_ID]
+      });
+      const temp = res?.fileList?.[0]?.tempFileURL;
+      if (temp) {
+        this.setData({ shareLogo: temp });
+      }
+    } catch (err) {
+      console.error('获取分享LOGO失败，使用默认图:', err);
     }
   }
 });

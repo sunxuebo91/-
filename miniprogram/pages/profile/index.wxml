@@ -22,13 +22,12 @@
   </view>
 
   <view class="section">
-    <view class="menu-item contact-menu-item">
-
-	      <view class="menu-label">联系客服</view>
-	      <view class="menu-arrow">›</view>
-	      <!-- 用透明 button 覆盖整行：保持外观=普通菜单项，同时具备 open-type="contact" 能力 -->
-	      <button class="contact-menu-btn" open-type="contact" bindcontact="handleContact" hover-class="none"></button>
-	    </view>
+    <view class="menu-item contact-menu-item" bindtap="onContactTap">
+      <view class="menu-label">联系客服</view>
+      <view class="menu-arrow">›</view>
+      <!-- 透明点击层：统一入口，先校验登录再拉起客服 -->
+      <view class="contact-menu-btn"></view>
+    </view>
 
     <view class="menu-item" bindtap="onTapHelp">
       <view class="menu-label">帮助</view>

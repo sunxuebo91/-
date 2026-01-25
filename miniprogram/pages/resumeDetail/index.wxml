@@ -417,7 +417,7 @@
 
   <!-- 底部操作栏 -->
   <view class="bottom-bar is-single">
-    <view class="bar-btn primary" bindtap="onTapConsult">咨询</view>
+    <view class="bar-btn primary" bindtap="onTapConsult">咨询客服</view>
   </view>
 
 </view>

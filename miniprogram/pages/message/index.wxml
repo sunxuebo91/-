@@ -1,6 +1,6 @@
 <view class="message-page">
   <!-- 客服快捷入口 -->
-  <view class="customer-service-card contact-card">
+  <view class="customer-service-card contact-card" bindtap="onContactTap">
     <view class="cs-left">
       <image class="cs-icon" src="/images/icons/customer-service.svg" mode="aspectFit"></image>
       <view class="cs-info">
@@ -9,8 +9,8 @@
       </view>
     </view>
     <view class="cs-arrow">›</view>
-    <!-- 透明按钮覆盖整卡，保留 open-type 能力且样式一致 -->
-    <button class="contact-overlay" open-type="contact" hover-class="none"></button>
+    <!-- 透明点击层：统一入口，先校验登录再拉起客服 -->
+    <view class="contact-overlay"></view>
   </view>
 
   <!-- 消息列表 -->

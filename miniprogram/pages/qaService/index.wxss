@@ -82,15 +82,8 @@ page {
   box-shadow: 0 4rpx 12rpx rgba(250, 140, 22, 0.2);
 }
 
-/* 主题色：红色（联系客服） */
-.price-card-red {
-  background: linear-gradient(135deg, #F5222D 0%, #FF4D4F 100%);
-  box-shadow: 0 8rpx 24rpx rgba(245, 34, 45, 0.3);
-}
 
-.price-card-red:active {
-  box-shadow: 0 4rpx 12rpx rgba(245, 34, 45, 0.2);
-}
+
 
 .price-card-content {
   flex: 1;

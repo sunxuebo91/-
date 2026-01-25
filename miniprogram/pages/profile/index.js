@@ -4,6 +4,7 @@ Page({
       nickname: "",
       avatarUrl: "",
     },
+    isLoggedIn: false,
   },
 
   onShow() {
@@ -14,7 +15,10 @@ Page({
       });
     }
     this.loadMe();
+    this.refreshLoginStatus();
+    this.checkPendingContact();
   },
+
 
   async loadMe() {
     try {
@@ -58,21 +62,62 @@ Page({
     wx.navigateTo({ url: "/pages/login/index" });
   },
 
-  // 小程序客服回调
-  handleContact(e) {
-    console.log('客服消息回调:', e.detail);
-    // 可以在这里处理用户从客服消息返回的情况
-    if (e.detail.path) {
-      console.log('用户点击的消息路径:', e.detail.path);
+  // 点击联系客服：先判断登录，再拉起客服
+  onContactTap() {
+    if (!this.isLoggedIn()) {
+      wx.setStorageSync('pendingContact', '1');
+      wx.showToast({ title: '请先登录后联系客服', icon: 'none' });
+      wx.navigateTo({ url: '/pages/login/index' });
+      return;
     }
-    if (e.detail.query) {
-      console.log('用户点击的消息参数:', e.detail.query);
+
+    this.setData({ isLoggedIn: true });
+    this.openCustomerService();
+  },
+
+  // 同步登录状态
+  refreshLoginStatus() {
+    const loggedIn = this.isLoggedIn();
+    if (loggedIn !== this.data.isLoggedIn) {
+      this.setData({ isLoggedIn: loggedIn });
     }
+  },
+
+  isLoggedIn() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo');
+    return !!(crmUserInfo && (crmUserInfo.phone || crmUserInfo.nickname));
+  },
+
+  // 登录后自动进入客服
+  checkPendingContact() {
+    const pending = wx.getStorageSync('pendingContact');
+    if (pending && this.isLoggedIn()) {
+      wx.removeStorageSync('pendingContact');
+      this.openCustomerService();
+    }
+  },
+
+  // 拉起小程序客服（优先使用 openCustomerServiceChat）
+  openCustomerService() {
+    if (wx.openCustomerServiceChat) {
+      wx.openCustomerServiceChat({
+        extInfo: {},
+        success: () => {},
+        fail: (err) => {
+          console.error('openCustomerServiceChat 失败', err);
+          wx.showToast({ title: '客服暂时不可用', icon: 'none' });
+        }
+      });
+      return;
+    }
+
+    wx.showToast({ title: '当前微信版本不支持客服', icon: 'none' });
   },
 
   onTapHelp() {
     wx.showToast({ title: "请联系客服", icon: "none" });
   },
+
 
   onTapSettings() {
     wx.navigateTo({ url: "/pages/settings/index" });

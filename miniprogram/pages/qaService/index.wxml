@@ -33,12 +33,7 @@
       <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
     </view>
 
-    <button class="price-card price-card-red price-card-button" open-type="contact" bindcontact="handleContact">
-      <view class="price-card-content">
-        <view class="price-card-title">联系客服</view>
-        <view class="price-card-subtitle">专业解答 贴心服务</view>
-      </view>
-      <image class="price-card-image" src="/images/icons/customer-service.svg" mode="aspectFit"></image>
-    </button>
+
+
   </view>
 </view>
