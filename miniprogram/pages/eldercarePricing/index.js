@@ -1,3 +1,5 @@
+const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+
 Page({
   data: {
     // 护老服务人员等级列表
@@ -61,24 +63,41 @@ Page({
       { icon: '🍲', name: '慢病配餐' },
       { icon: '🌙', name: '夜间陪护' },
       { icon: '🚗', name: '驾驶陪同' }
-    ]
+    ],
+    shareLogo: ''
   },
 
   onShareAppMessage() {
     return {
       title: '护老报价｜星级价格体系',
-      path: '/pages/eldercarePricing/index'
+      path: '/pages/eldercarePricing/index',
+      imageUrl: this.data.shareLogo || '/images/default-goods-image.png'
     };
   },
 
   onShareTimeline() {
     return {
-      title: '护老报价｜星级价格体系'
+      title: '护老报价｜星级价格体系',
+      imageUrl: this.data.shareLogo || '/images/default-goods-image.png'
     };
   },
 
   onLoad() {
-    // 页面加载
+    this.loadShareLogo();
+  },
+
+  async loadShareLogo() {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [SHARE_LOGO_FILE_ID]
+      });
+      const temp = res?.fileList?.[0]?.tempFileURL;
+      if (temp) {
+        this.setData({ shareLogo: temp });
+      }
+    } catch (err) {
+      console.error('获取分享LOGO失败:', err);
+    }
   }
 });
 

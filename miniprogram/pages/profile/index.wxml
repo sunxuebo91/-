@@ -22,11 +22,11 @@
   </view>
 
   <view class="section">
-    <view class="menu-item contact-menu-item" bindtap="onContactTap">
+    <view class="menu-item contact-menu-item">
       <view class="menu-label">联系客服</view>
       <view class="menu-arrow">›</view>
-      <!-- 透明点击层：统一入口，先校验登录再拉起客服 -->
-      <view class="contact-menu-btn"></view>
+      <!-- 透明按钮覆盖整行：未登录仅走 bindtap；已登录时 open-type=contact 打开客服 -->
+      <button class="contact-menu-btn" open-type="{{isLoggedIn ? 'contact' : ''}}" bindtap="onContactTap" bindcontact="handleContact" hover-class="none"></button>
     </view>
 
     <view class="menu-item" bindtap="onTapHelp">

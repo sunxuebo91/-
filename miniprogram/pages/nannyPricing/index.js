@@ -1,3 +1,5 @@
+const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+
 Page({
   data: {
     // 家政服务人员等级列表
@@ -63,24 +65,41 @@ Page({
         desc: '(如失能人员、先天性疾病人员、孤独症儿童等)'
       },
       { icon: '🧤', name: '特殊服务', desc: '(如徒手清洁地面等)' }
-    ]
+    ],
+    shareLogo: ''
   },
 
   onShareAppMessage() {
     return {
       title: '保姆报价｜星级价格体系',
-      path: '/pages/nannyPricing/index'
+      path: '/pages/nannyPricing/index',
+      imageUrl: this.data.shareLogo || '/images/default-goods-image.png'
     };
   },
 
   onShareTimeline() {
     return {
-      title: '保姆报价｜星级价格体系'
+      title: '保姆报价｜星级价格体系',
+      imageUrl: this.data.shareLogo || '/images/default-goods-image.png'
     };
   },
 
   onLoad() {
-    // 页面加载
+    this.loadShareLogo();
+  },
+
+  async loadShareLogo() {
+    try {
+      const res = await wx.cloud.getTempFileURL({
+        fileList: [SHARE_LOGO_FILE_ID]
+      });
+      const temp = res?.fileList?.[0]?.tempFileURL;
+      if (temp) {
+        this.setData({ shareLogo: temp });
+      }
+    } catch (err) {
+      console.error('获取分享LOGO失败:', err);
+    }
   }
 });
 

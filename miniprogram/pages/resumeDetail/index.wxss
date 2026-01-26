@@ -1097,7 +1097,13 @@
   align-items: center;
   justify-content: center;
   min-height: 88rpx;
+  border: none;
 }
+
+.bar-btn::after {
+  border: none;
+}
+
 
 /* 单按钮：居中显示（不再强制撑满整行，避免看起来“不居中”） */
 .bottom-bar.is-single {

@@ -417,8 +417,9 @@
 
   <!-- 底部操作栏 -->
   <view class="bottom-bar is-single">
-    <view class="bar-btn primary" bindtap="onTapConsult">咨询客服</view>
+    <button class="bar-btn primary" open-type="{{isLoggedIn ? 'contact' : ''}}" bindtap="onTapConsult" bindcontact="handleContact" hover-class="none">咨询客服</button>
   </view>
+
 
 </view>
 

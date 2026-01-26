@@ -18,6 +18,9 @@ App({
       });
     }
 
+    // 检查小程序新版本（有新版本则提示用户立即重启更新）
+    this.checkForUpdates();
+
     // 小程序启动时自动登录（使用 OpenID）
     this.autoLogin();
   },
@@ -26,6 +29,46 @@ App({
    * 自动登录：使用 OpenID 调用 CRM 后端登录接口
    * 无需用户授权，静默登录
    */
+  checkForUpdates() {
+    try {
+      if (!wx.getUpdateManager) {
+        console.log('ℹ️ 当前微信版本不支持 getUpdateManager');
+        return;
+      }
+
+      const updateManager = wx.getUpdateManager();
+
+      updateManager.onCheckForUpdate((res) => {
+        console.log('🔄 检测新版本:', res && res.hasUpdate ? '有' : '无');
+      });
+
+      updateManager.onUpdateReady(() => {
+        wx.showModal({
+          title: '发现新版本',
+          content: '新版本已准备好，是否立即重启更新？',
+          confirmText: '立即更新',
+          cancelText: '稍后',
+          success: (res) => {
+            if (res.confirm) {
+              updateManager.applyUpdate();
+            }
+          }
+        });
+      });
+
+      updateManager.onUpdateFailed(() => {
+        wx.showModal({
+          title: '更新失败',
+          content: '新版本下载失败，请检查网络后重试，或稍后重新打开小程序。',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+      });
+    } catch (e) {
+      console.error('检查更新失败(忽略):', e);
+    }
+  },
+
   async autoLogin() {
     try {
       console.log('🔐 开始自动登录...');

@@ -178,9 +178,11 @@ Page({
   },
 
   onShow() {
-    // 检查是否有待处理的客服联系请求（登录后自动调起客服）
+    this.refreshLoginStatus();
+    // 检查是否有待处理的客服联系请求
     this.checkPendingContact();
   },
+
 
   data: {
 
@@ -224,8 +226,12 @@ Page({
     certTicketsAll: [],
     certTicketsShowSwipeHint: false,
     // 分享 LOGO 临时链接
-    shareLogo: ''
+    shareLogo: '',
+
+    // 登录态：用于控制 open-type="contact" 是否生效
+    isLoggedIn: false
   },
+
 
 
 
@@ -958,7 +964,7 @@ Page({
 
 
 
-  // 点击咨询按钮：先判断登录，再拉起客服
+  // 点击咨询按钮：未登录先去登录；已登录由 open-type="contact" 打开客服
   onTapConsult() {
     console.log('🔔 点击咨询按钮');
 
@@ -970,8 +976,15 @@ Page({
       return;
     }
 
-    console.log('✅ 已登录，调起客服');
-    this.openCustomerService();
+    console.log('✅ 已登录，点击按钮将打开客服');
+    this.setData({ isLoggedIn: true });
+  },
+
+  refreshLoginStatus() {
+    const loggedIn = this.isLoggedIn();
+    if (loggedIn !== this.data.isLoggedIn) {
+      this.setData({ isLoggedIn: loggedIn });
+    }
   },
 
   // 检查是否已登录
@@ -982,40 +995,23 @@ Page({
     return isLoggedIn;
   },
 
-  // 登录后自动进入客服（检查待处理标记）
+  // 登录后提醒用户再点一次（open-type="contact" 无法代码中自动触发）
   checkPendingContact() {
     const pending = wx.getStorageSync('pendingContact');
     console.log('🔍 检查待处理客服请求:', pending);
 
     if (pending && this.isLoggedIn()) {
-      console.log('✅ 有待处理请求且已登录，自动调起客服');
       wx.removeStorageSync('pendingContact');
-      this.openCustomerService();
+      this.setData({ isLoggedIn: true });
+      wx.showToast({ title: '登录成功，请点击咨询客服进入客服', icon: 'none' });
     }
   },
 
-  // 拉起小程序客服（优先使用 openCustomerServiceChat）
-  openCustomerService() {
-    console.log('📞 开始调起客服');
-
-    if (wx.openCustomerServiceChat) {
-      console.log('✅ 使用 openCustomerServiceChat API');
-      wx.openCustomerServiceChat({
-        extInfo: {},
-        success: () => {
-          console.log('✅ 客服调起成功');
-        },
-        fail: (err) => {
-          console.error('❌ openCustomerServiceChat 失败', err);
-          wx.showToast({ title: '客服暂时不可用', icon: 'none' });
-        }
-      });
-      return;
-    }
-
-    console.warn('⚠️ 当前微信版本不支持客服功能');
-    wx.showToast({ title: '当前微信版本不支持客服', icon: 'none' });
+  // 小程序客服回调（用户从客服消息进入/返回）
+  handleContact(e) {
+    console.log('客服消息回调:', e.detail);
   },
+
 
 
 

@@ -62,7 +62,7 @@ Page({
     wx.navigateTo({ url: "/pages/login/index" });
   },
 
-  // 点击联系客服：先判断登录，再拉起客服
+  // 点击联系客服：未登录先去登录；已登录由 open-type="contact" 打开客服
   onContactTap() {
     if (!this.isLoggedIn()) {
       wx.setStorageSync('pendingContact', '1');
@@ -72,8 +72,8 @@ Page({
     }
 
     this.setData({ isLoggedIn: true });
-    this.openCustomerService();
   },
+
 
   // 同步登录状态
   refreshLoginStatus() {
@@ -88,31 +88,21 @@ Page({
     return !!(crmUserInfo && (crmUserInfo.phone || crmUserInfo.nickname));
   },
 
-  // 登录后自动进入客服
+  // 登录后提醒用户再点一次（open-type="contact" 无法代码中自动触发）
   checkPendingContact() {
     const pending = wx.getStorageSync('pendingContact');
     if (pending && this.isLoggedIn()) {
       wx.removeStorageSync('pendingContact');
-      this.openCustomerService();
+      this.setData({ isLoggedIn: true });
+      wx.showToast({ title: '登录成功，请点击联系客服进入客服', icon: 'none' });
     }
   },
 
-  // 拉起小程序客服（优先使用 openCustomerServiceChat）
-  openCustomerService() {
-    if (wx.openCustomerServiceChat) {
-      wx.openCustomerServiceChat({
-        extInfo: {},
-        success: () => {},
-        fail: (err) => {
-          console.error('openCustomerServiceChat 失败', err);
-          wx.showToast({ title: '客服暂时不可用', icon: 'none' });
-        }
-      });
-      return;
-    }
-
-    wx.showToast({ title: '当前微信版本不支持客服', icon: 'none' });
+  // 小程序客服回调（用户从客服消息进入/返回）
+  handleContact(e) {
+    console.log('客服消息回调:', e.detail);
   },
+
 
   onTapHelp() {
     wx.showToast({ title: "请联系客服", icon: "none" });
