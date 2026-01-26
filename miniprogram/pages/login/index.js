@@ -118,8 +118,8 @@ Page({
                 nickname: this.data.nickname.trim(),
                 avatar: cloudAvatarUrl || '',
                 gender: 0,  // 0未知 1男 2女，可以后续添加性别选择
-                city: city,
-                province: province
+                city: '',
+                province: ''
               },
               header: {
                 'Content-Type': 'application/json'
