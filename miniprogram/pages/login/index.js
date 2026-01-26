@@ -106,24 +106,6 @@ Page({
 
         // 3. 调用 CRM 后端注册接口，同步用户信息
         try {
-          // 获取用户地理位置信息（可选）
-          let city = '';
-          let province = '';
-          try {
-            const locationRes = await new Promise((resolve) => {
-              wx.getLocation({
-                type: 'wgs84',
-                success: resolve,
-                fail: () => resolve(null)
-              });
-            });
-            if (locationRes) {
-              // 这里可以根据经纬度反查城市，暂时留空
-              console.log('📍 获取到位置信息:', locationRes);
-            }
-          } catch (locErr) {
-            console.log('📍 获取位置信息失败（不影响注册）:', locErr);
-          }
 
           // 调用 CRM 后端注册接口
           const crmRes = await new Promise((resolve, reject) => {
