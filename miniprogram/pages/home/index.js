@@ -1,4 +1,6 @@
 ﻿const articleService = require('../../services/article.js');
+const babyDiaryService = require('../../services/babyDiary.js');
+const userService = require('../../services/userService.js');
 
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
 
@@ -32,7 +34,12 @@ Page({
     articles: [],
     articlesLoading: false,
     // 分享用 LOGO（云文件临时链接）
-    shareLogo: ''
+    shareLogo: '',
+
+    // 宝贝日记入口（仅 staff）
+    me: {},
+    showBabyDiaryEntry: false,
+    todayDiaryCount: 0
   },
 
   async onLoad() {
@@ -41,7 +48,8 @@ Page({
       this.autoInitializeViewCounts(), // 后台初始化，不阻塞
       this.loadBanners(),
       this.loadArticles(),
-      this.loadShareLogo()
+      this.loadShareLogo(),
+      this.loadMeAndDiaryEntry()
     ]).catch(err => {
       console.error('❌ 页面加载出错:', err);
     });
@@ -187,6 +195,56 @@ Page({
   goQA() {
     wx.navigateTo({
       url: '/pages/qaService/index',
+      fail: (err) => {
+        console.error('跳转失败:', err);
+        wx.showToast({
+          title: '页面跳转失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 载入用户与宝贝日记入口状态
+  async loadMeAndDiaryEntry() {
+    try {
+      const me = await userService.getOrCreateMe();
+      const isStaff = me?.role === 'staff';
+
+      this.setData({
+        me: me || {},
+        showBabyDiaryEntry: !!isStaff
+      });
+
+      if (!isStaff) return;
+
+      // 今日已记录条数（使用 listDiaries 的 total）
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const today = `${y}-${m}-${day}`;
+
+      const r = await babyDiaryService.listDiaries({ serviceDate: today, page: 0, pageSize: 1 });
+      const total = r?.data?.total || 0;
+      this.setData({ todayDiaryCount: total });
+
+    } catch (e) {
+      // 不影响首页展示
+      console.warn('宝贝日记入口加载失败(忽略):', e);
+    }
+  },
+
+  goBabyDiary() {
+    wx.navigateTo({
+      url: '/pages/babyDiary/list/index'
+    });
+  },
+
+  // 跳转到文章列表页
+  goArticleList() {
+    wx.navigateTo({
+      url: '/pages/articleList/index',
       fail: (err) => {
         console.error('跳转失败:', err);
         wx.showToast({

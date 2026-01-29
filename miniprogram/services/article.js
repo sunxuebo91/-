@@ -6,14 +6,62 @@
 const { publicRequest } = require('../utils/request.js');
 
 /**
+ * 为文章自动添加 AI 分类标签
+ * @param {Object} article 文章对象
+ * @returns {Promise<Array>} AI 分类的标签数组
+ */
+const autoClassifyArticle = async (article) => {
+  try {
+    // 如果文章已有有效标签，跳过分类
+    const validTags = ['备孕好孕', '孕期呵护', '产后恢复', '新生儿养护', '婴幼护理', '亲子早教'];
+    if (article.tags && Array.isArray(article.tags) && article.tags.length > 0) {
+      const hasValidTag = article.tags.some(tag => validTags.includes(tag));
+      if (hasValidTag) {
+        console.log('📰 文章已有有效标签，跳过 AI 分类:', article.title, article.tags);
+        return article.tags;
+      }
+    }
+
+    console.log('🤖 开始 AI 分类:', article.title);
+
+    // 调用云函数进行 AI 分类
+    const res = await wx.cloud.callFunction({
+      name: 'articleService',
+      data: {
+        action: 'classifyByAI',
+        article: {
+          title: article.title || '',
+          summary: article.summary || article.description || '',
+          content: article.content || ''
+        }
+      }
+    });
+
+    if (res.result && res.result.success) {
+      const tags = res.result.data.tags || [];
+      console.log('✅ AI 分类成功:', article.title, '→', tags);
+      return tags;
+    } else {
+      console.log('⚠️ AI 分类失败，返回空标签:', res.result?.errMsg);
+      return [];
+    }
+  } catch (error) {
+    console.error('❌ AI 分类出错:', error);
+    return [];
+  }
+};
+
+/**
  * 获取文章列表（公开接口，无需登录）
+ * 自动为没有标签的文章添加 AI 分类
  * @param {Object} params 查询参数
  * @param {number} params.page 页码（从 1 开始）
  * @param {number} params.pageSize 每页数量
  * @param {string} params.keyword 搜索关键词（可选）
+ * @param {boolean} params.autoClassify 是否自动分类（默认 true）
  * @returns {Promise<Object>} 文章列表
  */
-const getArticleList = (params = {}) => {
+const getArticleList = async (params = {}) => {
   console.log('📰 获取文章列表（公开接口）:', params);
 
   // 构建查询参数
@@ -32,28 +80,98 @@ const getArticleList = (params = {}) => {
 
   const queryString = queryParams.join('&');
 
-  return publicRequest({
-    url: `/articles/miniprogram/list?${queryString}`,
-    method: 'GET'
-  });
+  try {
+    // 获取文章列表
+    const result = await publicRequest({
+      url: `/articles/miniprogram/list?${queryString}`,
+      method: 'GET'
+    });
+
+    // 是否自动分类（默认开启）
+    const autoClassify = params.autoClassify !== false;
+
+    // 提取文章数组（兼容不同的返回格式）
+    let articles = [];
+    if (result.data) {
+      if (Array.isArray(result.data)) {
+        articles = result.data;
+      } else if (result.data.items && Array.isArray(result.data.items)) {
+        articles = result.data.items;
+      } else if (result.data.list && Array.isArray(result.data.list)) {
+        articles = result.data.list;
+      }
+    }
+
+    if (autoClassify && articles.length > 0) {
+      console.log(`🤖 开始自动分类 ${articles.length} 篇文章...`);
+
+      // 为每篇文章添加 AI 分类（并发处理，提高速度）
+      const classifyPromises = articles.map(async (article) => {
+        const tags = await autoClassifyArticle(article);
+        if (tags && tags.length > 0) {
+          article.tags = tags;
+          article.primaryTag = tags[0];
+        }
+        return article;
+      });
+
+      // 等待所有分类完成
+      const classifiedArticles = await Promise.all(classifyPromises);
+
+      // 更新 result 中的文章数据
+      if (Array.isArray(result.data)) {
+        result.data = classifiedArticles;
+      } else if (result.data.items) {
+        result.data.items = classifiedArticles;
+      } else if (result.data.list) {
+        result.data.list = classifiedArticles;
+      }
+
+      console.log('✅ 文章自动分类完成');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('❌ 获取文章列表失败:', error);
+    throw error;
+  }
 };
 
 /**
  * 获取文章详情（公开接口，无需登录）
+ * 自动为没有标签的文章添加 AI 分类
  * @param {string} id 文章ID
+ * @param {boolean} autoClassify 是否自动分类（默认 true）
  * @returns {Promise<Object>} 文章详情
  */
-const getArticleDetail = (id) => {
+const getArticleDetail = async (id, autoClassify = true) => {
   console.log('📰 获取文章详情（公开接口）:', id);
 
   if (!id) {
     return Promise.reject(new Error('文章ID不能为空'));
   }
 
-  return publicRequest({
-    url: `/articles/miniprogram/${id}`,
-    method: 'GET'
-  });
+  try {
+    // 获取文章详情
+    const result = await publicRequest({
+      url: `/articles/miniprogram/${id}`,
+      method: 'GET'
+    });
+
+    // 自动分类
+    if (autoClassify && result.data) {
+      const tags = await autoClassifyArticle(result.data);
+      if (tags && tags.length > 0) {
+        result.data.tags = tags;
+        result.data.primaryTag = tags[0];
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error('❌ 获取文章详情失败:', error);
+    throw error;
+  }
 };
 
 /**
@@ -156,6 +274,7 @@ module.exports = {
   getArticleDetail,
   incrementViewCount,
   batchInitializeViewCounts,
-  batchGetViewCounts
+  batchGetViewCounts,
+  autoClassifyArticle  // 导出供其他地方使用
 };
 

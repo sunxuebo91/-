@@ -1,0 +1,82 @@
+<view class="page">
+  <view class="filters">
+    <view class="search-bar">
+      <text class="search-icon-text">🔍</text>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="搜索标题 / 作者 / 摘要"
+        placeholder-class="search-placeholder"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearchConfirm"
+      />
+      <text wx:if="{{keyword}}" class="clear" bindtap="clearSearch">✕</text>
+    </view>
+
+
+    <scroll-view class="tag-scroll" scroll-x="true" enable-flex="true">
+      <view class="tag-list">
+        <view
+          class="tag-chip {{activeTag === item ? 'active' : ''}}"
+          wx:for="{{tags}}"
+          wx:key="*this"
+          bindtap="onTagTap"
+          data-tag="{{item}}"
+        >
+          {{item}}
+        </view>
+        <view wx:if="{{!tags || tags.length === 0}}" class="tag-chip active">全部</view>
+      </view>
+    </scroll-view>
+
+  </view>
+
+  <!-- 骨架屏（加载且无数据时） -->
+  <view class="articles-grid" wx:if="{{loading && (!articles || articles.length === 0)}}">
+    <view class="article-card skeleton" wx:for="{{[1,2,3,4,5,6,7,8]}}" wx:key="*this">
+      <view class="cover skeleton-block"></view>
+      <view class="info">
+        <view class="title skeleton-block"></view>
+        <view class="meta">
+          <view class="meta-left skeleton-block"></view>
+          <view class="meta-right skeleton-block"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 文章列表 -->
+  <view class="articles-grid" wx:elif="{{articles && articles.length}}">
+    <view
+      class="article-card"
+      wx:for="{{articles}}"
+      wx:key="_id"
+      bindtap="goArticleDetail"
+      data-id="{{item._id}}"
+    >
+      <view class="cover-wrapper">
+        <image class="cover" src="{{item.coverImage || '/images/default-goods-image.png'}}" mode="aspectFill" lazy-load="{{true}}"></image>
+        <view class="tag-overlay" wx:if="{{item.displayTags && item.displayTags.length}}">
+          <text class="tag-overlay-item" wx:for="{{item.displayTags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+        </view>
+      </view>
+      <view class="info">
+        <view class="title">{{item.title}}</view>
+        <view class="meta">
+          <text class="meta-left">{{item.author}}</text>
+          <text class="meta-right">{{item.viewCount}}阅读</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="load-tip" wx:if="{{loading}}">加载中...</view>
+    <view class="load-tip" wx:elif="{{!hasMore}}">没有更多了</view>
+  </view>
+
+  <!-- 无数据 -->
+  <view class="empty" wx:else>
+    <text>暂无文章</text>
+  </view>
+</view>

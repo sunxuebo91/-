@@ -219,8 +219,34 @@ page {
   flex-shrink: 0;
 }
 
+/* 宝贝日记入口卡片 */
+.diary-entry-card{
+  margin-top: 24rpx;
+  border-radius: 22rpx;
+  padding: 18rpx 18rpx;
+  background: linear-gradient(135deg, #FFE8F0 0%, #EDE7FF 100%);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow: 0 10rpx 28rpx rgba(17, 24, 39, 0.08);
+}
+
+.diary-entry-card:active{
+  transform: translateY(2rpx) scale(0.99);
+}
+
+.diary-left{display:flex;align-items:center;gap:16rpx}
+.diary-icon{width:84rpx;height:84rpx;border-radius:24rpx;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;border:1rpx solid rgba(255,255,255,0.8)}
+.diary-icon-img{width:56rpx;height:56rpx}
+.diary-title{font-size:30rpx;font-weight:800;color:#2b1b5a}
+.diary-subtitle{margin-top:6rpx;font-size:22rpx;color:rgba(43,27,90,0.75)}
+.diary-right{display:flex;align-items:center;gap:10rpx}
+.diary-badge{padding:10rpx 14rpx;border-radius:999rpx;background:rgba(139,92,246,0.12);color:#6d28d9;font-size:22rpx;font-weight:700}
+.diary-arrow{font-size:46rpx;color:rgba(43,27,90,0.35);font-weight:300}
+
 /* 育儿宝典模块 */
 .articles-section {
+
   margin-top: 32rpx;
   padding-top: 24rpx;
   border-top: 1rpx solid #f0f0f0;

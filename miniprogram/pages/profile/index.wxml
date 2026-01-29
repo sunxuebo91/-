@@ -22,6 +22,11 @@
   </view>
 
   <view class="section">
+    <view class="menu-item" bindtap="goBabyDiary">
+      <view class="menu-label">宝贝日记</view>
+      <view class="menu-arrow">›</view>
+    </view>
+
     <view class="menu-item contact-menu-item">
       <view class="menu-label">联系客服</view>
       <view class="menu-arrow">›</view>

@@ -75,18 +75,37 @@
       </view>
     </view>
 
+    <!-- 宝贝日记入口（仅 staff） -->
+    <view class="diary-entry-card" wx:if="{{showBabyDiaryEntry}}" bindtap="goBabyDiary">
+      <view class="diary-left">
+        <view class="diary-icon">
+          <image class="diary-icon-img" src="/images/icons/baby-diary.svg" mode="aspectFit"></image>
+        </view>
+        <view class="diary-info">
+          <view class="diary-title">宝贝日记</view>
+          <view class="diary-subtitle">记录宝宝成长每一天</view>
+        </view>
+      </view>
+      <view class="diary-right">
+        <view class="diary-badge" wx:if="{{todayDiaryCount > 0}}">今日已记录 {{todayDiaryCount}} 条</view>
+        <text class="diary-arrow">›</text>
+      </view>
+    </view>
+
     <!-- 褓贝分享模块 -->
     <view class="articles-section">
+
       <view class="section-header">
         <view class="section-title">
           <image class="title-icon" src="/images/icons/baobei-share.svg" mode="aspectFit"></image>
           <text class="title-text">褓贝分享</text>
         </view>
-        <view class="section-more">
+        <view class="section-more" bindtap="goArticleList">
           <text>更多</text>
           <text class="arrow">›</text>
         </view>
       </view>
+
 
 
 

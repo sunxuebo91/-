@@ -249,7 +249,10 @@ Page({
     article: {},
     contentNodes: [],
     viewCount: 0,
-    shareLogo: ''
+    shareLogo: '',
+    images: [],  // 小红书风格：多图数组
+    currentImageIndex: 0,  // 当前图片索引
+    swiperHeight: 0  // 动态计算的轮播图高度
   },
 
   async onLoad(options) {
@@ -316,9 +319,15 @@ Page({
       // 如果封面图是从HTML提取的，则保留正文中的所有图片
       const contentNodes = toRichTextNodes(content, { skipImages: hasExplicitCover });
 
+      // 小红书风格：提取多图
+      const images = this.extractImages(raw);
+      console.log('📸 提取到的图片数组:', images);
+
       this.setData({
         article,
-        contentNodes
+        contentNodes,
+        images,
+        currentImageIndex: 0
       });
 
       if (article.title) {
@@ -375,6 +384,98 @@ Page({
       query: `id=${encodeURIComponent(String(id))}`,
       imageUrl
     };
+  },
+
+  // 小红书风格：提取多图
+  extractImages(raw) {
+    const images = [];
+
+    // 1. 优先使用 imageUrls 数组（API返回的多图字段）
+    if (Array.isArray(raw?.imageUrls) && raw.imageUrls.length > 0) {
+      images.push(...raw.imageUrls);
+    }
+
+    // 2. 如果没有 imageUrls，使用 coverImage
+    if (images.length === 0 && raw?.coverImage) {
+      images.push(raw.coverImage);
+    }
+
+    // 3. 如果还是没有图片，从 HTML 内容中提取所有图片
+    if (images.length === 0) {
+      const content = pickContent(raw);
+      if (content) {
+        const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+        let match;
+        while ((match = imgRegex.exec(content)) !== null) {
+          if (match[1]) {
+            images.push(match[1]);
+          }
+        }
+      }
+    }
+
+    // 4. 过滤和处理图片URL
+    return images
+      .filter(url => url && typeof url === 'string')
+      .map(url => {
+        // 将 http:// 转换为 https://
+        if (/^http:\/\//i.test(url)) {
+          return url.replace(/^http:\/\//i, 'https://');
+        }
+        return url;
+      })
+      .slice(0, 9);  // 最多显示9张图片（小红书风格）
+  },
+
+  // 图片轮播切换
+  onSwiperChange(e) {
+    const current = e?.detail?.current || 0;
+    this.setData({ currentImageIndex: current });
+  },
+
+  // 图片预览
+  previewImage(e) {
+    const index = e?.currentTarget?.dataset?.index || 0;
+    const images = this.data.images || [];
+
+    if (images.length === 0) return;
+
+    wx.previewImage({
+      current: images[index],
+      urls: images
+    });
+  },
+
+  // 图片加载完成，动态计算容器高度
+  onImageLoad(e) {
+    const { width, height } = e.detail;
+    if (!width || !height) return;
+
+    // 获取屏幕宽度
+    const systemInfo = wx.getSystemInfoSync();
+    const screenWidth = systemInfo.windowWidth;
+
+    // 计算图片宽高比
+    const ratio = height / width;
+
+    // 计算容器高度（单位：px）
+    let swiperHeight = screenWidth * ratio;
+
+    // 限制最大高度为屏幕高度的 70%
+    const maxHeight = systemInfo.windowHeight * 0.7;
+    if (swiperHeight > maxHeight) {
+      swiperHeight = maxHeight;
+    }
+
+    // 限制最小高度为屏幕宽度的 50%（避免横图太矮）
+    const minHeight = screenWidth * 0.5;
+    if (swiperHeight < minHeight) {
+      swiperHeight = minHeight;
+    }
+
+    console.log('📐 图片尺寸:', { width, height, ratio, swiperHeight, screenWidth });
+
+    this.setData({ swiperHeight });
   },
 
   // 预取云存储 Logo 的临时链接

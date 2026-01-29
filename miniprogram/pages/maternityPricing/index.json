@@ -2,8 +2,5 @@
   "navigationBarTitleText": "月嫂报价",
   "navigationBarBackgroundColor": "#FF6B9D",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#FFF5F8",
-  "enableShareAppMessage": true,
-  "enableShareTimeline": true
+  "backgroundColor": "#FFF5F8"
 }
-

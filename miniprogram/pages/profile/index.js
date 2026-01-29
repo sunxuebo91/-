@@ -117,6 +117,11 @@ Page({
     wx.navigateTo({ url: "/pages/admin/resumeManage/index" });
   },
 
+  goBabyDiary() {
+    wx.navigateTo({ url: "/pages/babyDiary/list/index" });
+  },
+
+
   // 跳转到测试页面
   goTestPage() {
     wx.navigateTo({

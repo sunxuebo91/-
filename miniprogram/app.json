@@ -1,7 +1,13 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/articleList/index",
     "pages/articleDetail/index",
+
+    "pages/babyDiary/list/index",
+    "pages/babyDiary/edit/index",
+    "pages/babyDiary/detail/index",
+
     "pages/message/index",
     "pages/resumeList/index",
     "pages/profile/index",
@@ -32,6 +38,7 @@
     "pages/test-article-api",
     "pages/test-user-api/index",
     "pages/test-customer-service/index",
+    "pages/test-ai-classify",
     "pages/index/index",
     "pages/example/index"
   ],

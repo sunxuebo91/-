@@ -1,0 +1,40 @@
+<view class="container">
+  <view class="header">
+    <text class="title">🤖 AI 分类功能测试</text>
+    <text class="subtitle">测试 DeepSeek-V3 智能分类</text>
+  </view>
+
+  <view class="actions">
+    <button class="btn-primary" bindtap="testAllArticles" disabled="{{testing}}">
+      {{testing ? '测试中...' : '批量测试所有文章'}}
+    </button>
+  </view>
+
+  <view class="test-articles">
+    <view class="section-title">测试文章列表</view>
+    <view class="article-item" wx:for="{{testArticles}}" wx:key="index">
+      <view class="article-header">
+        <text class="article-title">{{item.title}}</text>
+        <button class="btn-test" size="mini" bindtap="testSingleArticle" data-index="{{index}}">
+          测试
+        </button>
+      </view>
+      <text class="article-summary">{{item.summary}}</text>
+    </view>
+  </view>
+
+  <view class="results" wx:if="{{results.length > 0}}">
+    <view class="section-title">分类结果</view>
+    <view class="result-item" wx:for="{{results}}" wx:key="index">
+      <view class="result-header">
+        <text class="result-icon">{{item.success ? '✅' : '❌'}}</text>
+        <text class="result-article">{{item.article}}</text>
+      </view>
+      <view class="result-tags" wx:if="{{item.success}}">
+        <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="tag">{{tag}}</text>
+      </view>
+      <text class="result-error" wx:if="{{!item.success}}">{{item.error}}</text>
+    </view>
+  </view>
+</view>
+

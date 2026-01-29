@@ -1,7 +1,7 @@
 const cloud = require("wx-server-sdk");
 
 // 用于快速确认“云函数是否已重新部署/生效”
-const VERSION = "2026-01-16-articleService-v2";
+const VERSION = "2026-01-27-articleService-v3-ai-classify";
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
@@ -155,6 +155,145 @@ async function batchInitializeViewCounts() {
 }
 
 /**
+ * 使用 AI 为文章智能分类
+ * @param {Object} article - 文章对象 { title, summary, content }
+ * @returns {Promise<Array<string>>} - 标签数组，如 ['孕期呵护', '备孕好孕']
+ */
+async function classifyArticleByAI(article) {
+  const { title, summary, content } = article;
+
+  // 添加调试日志
+  console.log('📝 文章数据:', {
+    title,
+    summaryLength: summary?.length || 0,
+    contentLength: content?.length || 0,
+    summaryPreview: summary?.substring(0, 100),
+    contentPreview: content?.substring(0, 100)
+  });
+
+  // 构建 prompt
+  const prompt = `你是一个母婴育儿内容分类专家。请根据文章内容，从以下6个分类中选择最合适的1-2个标签：
+
+【分类说明】
+1. 备孕好孕 - 备孕准备、孕前检查、叶酸补充、排卵受孕等
+2. 孕期呵护 - 孕期保健、产检、胎动、孕期饮食、孕期不适等
+3. 产后恢复 - 月子护理、产后修复、哺乳催乳、产后抑郁、侧切撕裂等
+4. 新生儿养护 - 0-3个月宝宝护理、新生儿喂养、黄疸、脐带护理等
+5. 婴幼护理 - 4个月以上宝宝护理、辅食添加、生长发育、常见疾病、腹泻感冒等
+6. 亲子早教 - 早教启蒙、亲子互动、绘本阅读、习惯培养、长高发育等
+
+【文章信息】
+标题：${title}
+摘要：${summary || '无'}
+内容：${content ? content.substring(0, 500) : '无'}
+
+【输出要求】
+1. 只输出标签名称，用逗号分隔，如：孕期呵护,备孕好孕
+2. 最多选择2个标签
+3. 必须从上述6个分类中选择，不要输出"未分类"
+4. 不要输出任何解释说明`;
+
+  try {
+    console.log('🤖 调用 AI 分类:', title);
+
+    // 调用微信云开发 AI 接口
+    const result = await cloud.openapi.ai.chat({
+      model: 'deepseek-v3',
+      messages: [{
+        role: 'user',
+        content: prompt
+      }],
+      temperature: 0.3,  // 降低随机性，提高一致性
+      maxTokens: 50
+    });
+
+    const response = result.choices[0]?.message?.content || '';
+    console.log('🤖 AI 返回:', response);
+
+    // 解析返回的标签
+    const validTags = ['备孕好孕', '孕期呵护', '产后恢复', '新生儿养护', '婴幼护理', '亲子早教'];
+    const tags = response
+      .split(/[,，、]/)
+      .map(t => t.trim())
+      .filter(t => validTags.includes(t));
+
+    if (tags.length > 0) {
+      console.log('✅ AI 分类成功:', tags);
+      return tags;
+    }
+
+    console.log('⚠️ AI 返回无效标签，使用降级方案');
+    return fallbackClassify(article);
+
+  } catch (error) {
+    console.error('❌ AI 分类失败:', error);
+    console.log('⚠️ 使用降级方案');
+    return fallbackClassify(article);
+  }
+}
+
+/**
+ * 降级方案：简单关键词匹配
+ * 当 AI 调用失败时使用
+ * @param {Object} article - 文章对象
+ * @returns {Array<string>} - 标签数组
+ */
+function fallbackClassify(article) {
+  const text = `${article.title || ''} ${article.summary || ''}`.toLowerCase();
+
+  console.log('🔍 降级分类，文本内容:', text.substring(0, 200));
+
+  const rules = [
+    {
+      keywords: ['备孕', '孕前', '叶酸', '排卵', '受孕', '好孕', '验孕', '怀孕准备', '高龄备孕', '备孕检查'],
+      tag: '备孕好孕'
+    },
+    {
+      keywords: ['孕期', '孕妇', '产检', '胎动', '唐筛', '四维', 'b超', '妊娠', '孕吐', '胎教', '怀孕', '长胎', '孕期饮食'],
+      tag: '孕期呵护'
+    },
+    {
+      keywords: ['产后', '月子', '坐月子', '哺乳', '母乳', '催乳', '开奶', '追奶', '产褥', '侧切', '撕裂', '恶露', '产后恢复', '分娩'],
+      tag: '产后恢复'
+    },
+    {
+      keywords: ['新生儿', '满月', '百天', '黄疸', '脐带', '0-3个月', '拍嗝', '新生宝宝'],
+      tag: '新生儿养护'
+    },
+    {
+      keywords: ['辅食', '断奶', '湿疹', '积食', '腹泻', '感冒', '发育', '4个月', '6个月', '8个月', '1岁', '2岁', '宝宝', '婴儿', '幼儿'],
+      tag: '婴幼护理'
+    },
+    {
+      keywords: ['早教', '启蒙', '绘本', '亲子', '互动', '专注力', '语言', '习惯', '长高', '身高', '智力'],
+      tag: '亲子早教'
+    }
+  ];
+
+  const matchedTags = [];
+  for (const rule of rules) {
+    const matched = rule.keywords.filter(kw => text.includes(kw));
+    if (matched.length > 0) {
+      console.log(`✅ 匹配到关键词 [${matched.join(', ')}] → ${rule.tag}`);
+      matchedTags.push(rule.tag);
+      if (matchedTags.length >= 2) break;  // 最多2个标签
+    }
+  }
+
+  if (matchedTags.length === 0) {
+    console.log('⚠️ 未匹配到任何关键词，返回默认标签');
+    // 根据标题长度和内容猜测一个默认分类
+    if (text.includes('痛经') || text.includes('月经')) {
+      return ['孕期呵护'];  // 痛经相关归到孕期呵护
+    }
+    return ['婴幼护理'];  // 默认归到婴幼护理
+  }
+
+  console.log('✅ 降级分类结果:', matchedTags);
+  return matchedTags;
+}
+
+/**
  * 批量获取文章阅读量
  * @param {Array<string>} articleIds 文章ID数组
  * @returns {Object} 阅读量映射 { articleId: viewCount }
@@ -266,6 +405,10 @@ exports.main = async (event, context) => {
       case "batchGetViewCounts": {
         const viewCountMap = await batchGetViewCounts(event.articleIds);
         return { success: true, data: viewCountMap, meta: { version: VERSION } };
+      }
+      case "classifyByAI": {
+        const tags = await classifyArticleByAI(event.article);
+        return { success: true, data: { tags }, meta: { version: VERSION } };
       }
       default:
         return { success: false, errMsg: "unknown action", meta: { version: VERSION } };

@@ -1,0 +1,324 @@
+<view class="page">
+  <view class="topbar">
+    <view class="title">{{pageTitle}}</view>
+    <view class="meta">{{serviceDate}} · 第 {{dayNumber || '-'}} 天</view>
+  </view>
+
+  <scroll-view class="scroll" scroll-y="true" enhanced="true">
+    <!-- 宝宝记录 -->
+    <view class="section">
+      <view class="section-title">👶 宝宝记录</view>
+
+      <view class="group">
+        <view class="group-title">基础指标</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">体重(kg)</view>
+            <input class="input" type="digit" placeholder="3.5" value="{{form.baby.basics.weight}}" bindinput="onInput" data-path="form.baby.basics.weight" />
+          </view>
+          <view class="field">
+            <view class="label">身高(cm)</view>
+            <input class="input" type="number" placeholder="50" value="{{form.baby.basics.height}}" bindinput="onInput" data-path="form.baby.basics.height" />
+          </view>
+          <view class="field">
+            <view class="label">头围(cm)</view>
+            <input class="input" type="number" placeholder="34" value="{{form.baby.basics.headCircumference}}" bindinput="onInput" data-path="form.baby.basics.headCircumference" />
+          </view>
+          <view class="field">
+            <view class="label">体温(℃)*</view>
+            <input class="input" type="digit" placeholder="36.5" value="{{form.baby.basics.temperature}}" bindinput="onInput" data-path="form.baby.basics.temperature" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">喂养记录</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">母乳次数</view>
+            <input class="input" type="number" placeholder="8" value="{{form.baby.feeding.breastfeeding.times}}" bindinput="onInput" data-path="form.baby.feeding.breastfeeding.times" />
+          </view>
+          <view class="field">
+            <view class="label">每次时长</view>
+            <input class="input" placeholder="15-20分钟" value="{{form.baby.feeding.breastfeeding.duration}}" bindinput="onInput" data-path="form.baby.feeding.breastfeeding.duration" />
+          </view>
+          <view class="field">
+            <view class="label">奶粉次数</view>
+            <input class="input" type="number" placeholder="2" value="{{form.baby.feeding.formulaFeeding.times}}" bindinput="onInput" data-path="form.baby.feeding.formulaFeeding.times" />
+          </view>
+          <view class="field">
+            <view class="label">每次奶量</view>
+            <input class="input" placeholder="60ml" value="{{form.baby.feeding.formulaFeeding.amount}}" bindinput="onInput" data-path="form.baby.feeding.formulaFeeding.amount" />
+          </view>
+          <view class="field">
+            <view class="label">喝水量</view>
+            <input class="input" placeholder="50ml" value="{{form.baby.feeding.water}}" bindinput="onInput" data-path="form.baby.feeding.water" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">排泄记录</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">小便次数*</view>
+            <input class="input" type="number" placeholder="6" value="{{form.baby.excretion.urine}}" bindinput="onInput" data-path="form.baby.excretion.urine" />
+          </view>
+          <view class="field">
+            <view class="label">大便次数*</view>
+            <input class="input" type="number" placeholder="2" value="{{form.baby.excretion.stool}}" bindinput="onInput" data-path="form.baby.excretion.stool" />
+          </view>
+          <view class="field">
+            <view class="label">性状</view>
+            <input class="input" placeholder="黄色软便" value="{{form.baby.excretion.stoolType}}" bindinput="onInput" data-path="form.baby.excretion.stoolType" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">睡眠记录</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">总睡眠(小时)*</view>
+            <input class="input" type="number" placeholder="16" value="{{form.baby.sleep.totalHours}}" bindinput="onInput" data-path="form.baby.sleep.totalHours" />
+          </view>
+          <view class="field full">
+            <view class="label">睡眠质量*</view>
+            <radio-group class="radios" bindchange="onRadio" data-path="form.baby.sleep.quality">
+              <label class="radio" wx:for="{{sleepQualityOptions}}" wx:key="*this">
+                <radio value="{{item}}" checked="{{form.baby.sleep.quality === item}}" color="#8b5cf6" />
+                <text>{{item}}</text>
+              </label>
+            </radio-group>
+          </view>
+          <view class="field full">
+            <view class="label">备注</view>
+            <input class="input" placeholder="夜间醒来2次" value="{{form.baby.sleep.notes}}" bindinput="onInput" data-path="form.baby.sleep.notes" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">护理记录</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">洗澡*</view>
+            <switch checked="{{form.baby.care.bath}}" bindchange="onSwitch" data-path="form.baby.care.bath" color="#8b5cf6" />
+          </view>
+          <view class="field">
+            <view class="label">脐带情况</view>
+            <input class="input" placeholder="已脱落/正常" value="{{form.baby.care.umbilicalCord}}" bindinput="onInput" data-path="form.baby.care.umbilicalCord" />
+          </view>
+          <view class="field">
+            <view class="label">皮肤状况*</view>
+            <picker mode="selector" range="{{skinOptions}}" bindchange="onPickSkin">
+              <view class="picker">{{form.baby.care.skinCondition || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">黄疸情况</view>
+            <picker mode="selector" range="{{jaundiceOptions}}" bindchange="onPickJaundice">
+              <view class="picker">{{form.baby.care.jaundice || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field full">
+            <view class="label">特殊护理</view>
+            <checkbox-group class="checks" bindchange="onCheckbox" data-path="form.baby.care.specialCare">
+              <label class="check" wx:for="{{specialCareOptions}}" wx:key="*this">
+                <checkbox value="{{item}}" checked="{{specialCareChecked[item]}}" color="#8b5cf6" />
+
+                <text>{{item}}</text>
+              </label>
+            </checkbox-group>
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">今日照片（最多9张）</view>
+        <view class="photo-grid">
+          <view class="photo" wx:for="{{form.baby.photos}}" wx:key="*this" bindtap="previewPhoto" data-url="{{item}}">
+            <image class="photo-img" src="{{photoTempMap[item] || item}}" mode="aspectFill" />
+            <view class="photo-del" catchtap="removePhoto" data-url="{{item}}">×</view>
+          </view>
+          <view class="photo add" wx:if="{{form.baby.photos.length < 9}}" bindtap="addPhotos">
+
+            <view class="plus">+</view>
+            <view class="plus-text">添加</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">备注</view>
+        <textarea class="textarea" placeholder="宝宝今天状态..." value="{{form.baby.notes}}" bindinput="onInput" data-path="form.baby.notes" />
+      </view>
+    </view>
+
+    <!-- 宝妈记录 -->
+    <view class="section">
+      <view class="section-title">🤱 宝妈记录</view>
+
+      <view class="group">
+        <view class="group-title">基础指标</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">体温(℃)*</view>
+            <input class="input" type="digit" placeholder="36.8" value="{{form.mother.basics.temperature}}" bindinput="onInput" data-path="form.mother.basics.temperature" />
+          </view>
+          <view class="field">
+            <view class="label">血压</view>
+            <input class="input" placeholder="120/80" value="{{form.mother.basics.bloodPressure}}" bindinput="onInput" data-path="form.mother.basics.bloodPressure" />
+          </view>
+          <view class="field">
+            <view class="label">脉搏</view>
+            <input class="input" type="number" placeholder="72" value="{{form.mother.basics.pulse}}" bindinput="onInput" data-path="form.mother.basics.pulse" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">恶露情况*</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">量</view>
+            <picker mode="selector" range="{{lochiaAmountOptions}}" bindchange="onPickLochiaAmount">
+              <view class="picker">{{form.mother.lochia.amount || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">颜色</view>
+            <picker mode="selector" range="{{lochiaColorOptions}}" bindchange="onPickLochiaColor">
+              <view class="picker">{{form.mother.lochia.color || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">气味</view>
+            <picker mode="selector" range="{{lochiaSmellOptions}}" bindchange="onPickLochiaSmell">
+              <view class="picker">{{form.mother.lochia.smell || '请选择'}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">乳房护理*</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">乳房状况</view>
+            <picker mode="selector" range="{{breastConditionOptions}}" bindchange="onPickBreastCondition">
+              <view class="picker">{{form.mother.breast.condition || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">奶量</view>
+            <picker mode="selector" range="{{milkSupplyOptions}}" bindchange="onPickMilkSupply">
+              <view class="picker">{{form.mother.breast.milkSupply || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field full">
+            <view class="label">问题（可多选）</view>
+            <checkbox-group class="checks" bindchange="onCheckbox" data-path="form.mother.breast.issues">
+              <label class="check" wx:for="{{breastIssueOptions}}" wx:key="*this">
+                <checkbox value="{{item}}" checked="{{breastIssueChecked[item]}}" color="#8b5cf6" />
+
+                <text>{{item}}</text>
+              </label>
+            </checkbox-group>
+          </view>
+          <view class="field full">
+            <view class="label">护理措施</view>
+            <input class="input" placeholder="热敷、按摩" value="{{form.mother.breast.care}}" bindinput="onInput" data-path="form.mother.breast.care" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">饮食记录*</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">早餐</view>
+            <input class="input" placeholder="小米粥、鸡蛋" value="{{form.mother.diet.breakfast}}" bindinput="onInput" data-path="form.mother.diet.breakfast" />
+          </view>
+          <view class="field">
+            <view class="label">午餐</view>
+            <input class="input" placeholder="鲫鱼汤、米饭" value="{{form.mother.diet.lunch}}" bindinput="onInput" data-path="form.mother.diet.lunch" />
+          </view>
+          <view class="field">
+            <view class="label">晚餐</view>
+            <input class="input" placeholder="排骨汤、面条" value="{{form.mother.diet.dinner}}" bindinput="onInput" data-path="form.mother.diet.dinner" />
+          </view>
+          <view class="field">
+            <view class="label">加餐</view>
+            <input class="input" placeholder="水果、坚果" value="{{form.mother.diet.snacks}}" bindinput="onInput" data-path="form.mother.diet.snacks" />
+          </view>
+          <view class="field">
+            <view class="label">饮水量</view>
+            <input class="input" placeholder="2000ml" value="{{form.mother.diet.waterIntake}}" bindinput="onInput" data-path="form.mother.diet.waterIntake" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">情绪与睡眠*</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">情绪</view>
+            <picker mode="selector" range="{{moodOptions}}" bindchange="onPickMood">
+              <view class="picker">{{form.mother.mood.mood || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">睡眠(小时)</view>
+            <input class="input" type="number" placeholder="8" value="{{form.mother.mood.sleep.hours}}" bindinput="onInput" data-path="form.mother.mood.sleep.hours" />
+          </view>
+          <view class="field full">
+            <view class="label">睡眠质量</view>
+            <radio-group class="radios" bindchange="onRadio" data-path="form.mother.mood.sleep.quality">
+              <label class="radio" wx:for="{{sleepQualityOptions}}" wx:key="*this">
+                <radio value="{{item}}" checked="{{form.mother.mood.sleep.quality === item}}" color="#8b5cf6" />
+                <text>{{item}}</text>
+              </label>
+            </radio-group>
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">伤口恢复*</view>
+        <view class="grid">
+          <view class="field">
+            <view class="label">分娩方式</view>
+            <picker mode="selector" range="{{woundTypeOptions}}" bindchange="onPickWoundType">
+              <view class="picker">{{form.mother.wound.type || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="label">伤口情况</view>
+            <input class="input" placeholder="恢复良好" value="{{form.mother.wound.condition}}" bindinput="onInput" data-path="form.mother.wound.condition" />
+          </view>
+          <view class="field">
+            <view class="label">护理措施</view>
+            <input class="input" placeholder="每日消毒" value="{{form.mother.wound.care}}" bindinput="onInput" data-path="form.mother.wound.care" />
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="group-title">备注</view>
+        <textarea class="textarea" placeholder="产妇精神状态..." value="{{form.mother.notes}}" bindinput="onInput" data-path="form.mother.notes" />
+      </view>
+    </view>
+
+    <view style="height: 180rpx;"></view>
+  </scroll-view>
+
+  <view class="bottom">
+    <view class="hint" wx:if="{{lastSavedAt}}">已保存：{{lastSavedAt}}</view>
+    <view class="actions">
+      <view class="btn ghost" bindtap="saveDraft" wx:if="{{!saving}}">保存草稿</view>
+      <view class="btn" bindtap="publish" wx:if="{{!saving}}">发布日记</view>
+      <view class="btn disabled" wx:else>保存中...</view>
+    </view>
+  </view>
+</view>

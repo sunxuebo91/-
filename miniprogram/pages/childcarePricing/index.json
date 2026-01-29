@@ -2,8 +2,5 @@
   "navigationBarTitleText": "育儿报价",
   "navigationBarBackgroundColor": "#8766F3",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#F7F5FF",
-  "enableShareAppMessage": true,
-  "enableShareTimeline": true
+  "backgroundColor": "#F7F5FF"
 }
-

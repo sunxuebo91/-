@@ -1,0 +1,141 @@
+<view class="page">
+  <view class="header">
+    <view class="title">{{diary.serviceDate || ''}} · 第 {{diary.dayNumber || '-'}} 天</view>
+    <view class="subtitle">状态：{{diary.status === 'published' ? '已发布' : '草稿'}}</view>
+  </view>
+
+  <view class="content" wx:if="{{!loading}}">
+    <view class="section">
+      <view class="section-title">👶 宝宝记录</view>
+      <view class="kv">
+        <view class="row"><text class="k">体温</text><text class="v">{{diary.baby.basics.temperature || '-' }}℃</text></view>
+        <view class="row"><text class="k">体重</text><text class="v">{{diary.baby.basics.weight || '-' }}kg</text></view>
+        <view class="row"><text class="k">身高</text><text class="v">{{diary.baby.basics.height || '-' }}cm</text></view>
+        <view class="row"><text class="k">头围</text><text class="v">{{diary.baby.basics.headCircumference || '-' }}cm</text></view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">喂养</view>
+        <view class="kv">
+          <view class="row"><text class="k">母乳</text><text class="v">{{diary.baby.feeding.breastfeeding.times || '-' }} 次 · {{diary.baby.feeding.breastfeeding.duration || '-'}}</text></view>
+          <view class="row"><text class="k">奶粉</text><text class="v">{{diary.baby.feeding.formulaFeeding.times || '-' }} 次 · {{diary.baby.feeding.formulaFeeding.amount || '-'}}</text></view>
+          <view class="row"><text class="k">喝水</text><text class="v">{{diary.baby.feeding.water || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">排泄</view>
+        <view class="kv">
+          <view class="row"><text class="k">小便</text><text class="v">{{diary.baby.excretion.urine || '-' }} 次</text></view>
+          <view class="row"><text class="k">大便</text><text class="v">{{diary.baby.excretion.stool || '-' }} 次 · {{diary.baby.excretion.stoolType || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">睡眠</view>
+        <view class="kv">
+          <view class="row"><text class="k">总时长</text><text class="v">{{diary.baby.sleep.totalHours || '-' }} 小时</text></view>
+          <view class="row"><text class="k">质量</text><text class="v">{{diary.baby.sleep.quality || '-'}}</text></view>
+          <view class="row" wx:if="{{diary.baby.sleep.notes}}"><text class="k">备注</text><text class="v">{{diary.baby.sleep.notes}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">护理</view>
+        <view class="kv">
+          <view class="row"><text class="k">洗澡</text><text class="v">{{diary.baby.care.bath ? '是' : '否'}}</text></view>
+          <view class="row"><text class="k">脐带</text><text class="v">{{diary.baby.care.umbilicalCord || '-'}}</text></view>
+          <view class="row"><text class="k">皮肤</text><text class="v">{{diary.baby.care.skinCondition || '-'}}</text></view>
+          <view class="row"><text class="k">黄疸</text><text class="v">{{diary.baby.care.jaundice || '-'}}</text></view>
+          <view class="row" wx:if="{{diary.baby.care.specialCareText}}"><text class="k">特殊护理</text><text class="v">{{diary.baby.care.specialCareText}}</text></view>
+        </view>
+      </view>
+
+      <view class="card" wx:if="{{diary.baby.photos.length}}">
+        <view class="card-title">今日照片</view>
+        <view class="photo-grid">
+          <view class="photo" wx:for="{{diary.baby.photos}}" wx:key="*this" bindtap="previewPhoto" data-url="{{item}}">
+            <image class="photo-img" src="{{photoTempMap[item] || item}}" mode="aspectFill" />
+          </view>
+        </view>
+      </view>
+
+      <view class="card" wx:if="{{diary.baby.notes}}">
+        <view class="card-title">备注</view>
+        <view class="text">{{diary.baby.notes}}</view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">🤱 宝妈记录</view>
+      <view class="kv">
+        <view class="row"><text class="k">体温</text><text class="v">{{diary.mother.basics.temperature || '-'}}℃</text></view>
+        <view class="row"><text class="k">血压</text><text class="v">{{diary.mother.basics.bloodPressure || '-'}}</text></view>
+        <view class="row"><text class="k">脉搏</text><text class="v">{{diary.mother.basics.pulse || '-'}}</text></view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">恶露</view>
+        <view class="kv">
+          <view class="row"><text class="k">量</text><text class="v">{{diary.mother.lochia.amount || '-'}}</text></view>
+          <view class="row"><text class="k">颜色</text><text class="v">{{diary.mother.lochia.color || '-'}}</text></view>
+          <view class="row"><text class="k">气味</text><text class="v">{{diary.mother.lochia.smell || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">乳房护理</view>
+        <view class="kv">
+          <view class="row"><text class="k">状况</text><text class="v">{{diary.mother.breast.condition || '-'}}</text></view>
+          <view class="row"><text class="k">奶量</text><text class="v">{{diary.mother.breast.milkSupply || '-'}}</text></view>
+          <view class="row" wx:if="{{diary.mother.breast.issuesText}}"><text class="k">问题</text><text class="v">{{diary.mother.breast.issuesText}}</text></view>
+          <view class="row" wx:if="{{diary.mother.breast.care}}"><text class="k">护理</text><text class="v">{{diary.mother.breast.care}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">饮食</view>
+        <view class="kv">
+          <view class="row"><text class="k">早餐</text><text class="v">{{diary.mother.diet.breakfast || '-'}}</text></view>
+          <view class="row"><text class="k">午餐</text><text class="v">{{diary.mother.diet.lunch || '-'}}</text></view>
+          <view class="row"><text class="k">晚餐</text><text class="v">{{diary.mother.diet.dinner || '-'}}</text></view>
+          <view class="row"><text class="k">加餐</text><text class="v">{{diary.mother.diet.snacks || '-'}}</text></view>
+          <view class="row"><text class="k">饮水</text><text class="v">{{diary.mother.diet.waterIntake || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">情绪与睡眠</view>
+        <view class="kv">
+          <view class="row"><text class="k">情绪</text><text class="v">{{diary.mother.mood.mood || '-'}}</text></view>
+          <view class="row"><text class="k">睡眠</text><text class="v">{{diary.mother.mood.sleep.hours || '-' }} 小时 · {{diary.mother.mood.sleep.quality || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">伤口恢复</view>
+        <view class="kv">
+          <view class="row"><text class="k">分娩方式</text><text class="v">{{diary.mother.wound.type || '-'}}</text></view>
+          <view class="row"><text class="k">情况</text><text class="v">{{diary.mother.wound.condition || '-'}}</text></view>
+          <view class="row"><text class="k">护理</text><text class="v">{{diary.mother.wound.care || '-'}}</text></view>
+        </view>
+      </view>
+
+      <view class="card" wx:if="{{diary.mother.notes}}">
+        <view class="card-title">备注</view>
+        <view class="text">{{diary.mother.notes}}</view>
+      </view>
+    </view>
+
+    <view style="height: 180rpx;"></view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <view class="bottom" wx:if="{{!loading && canEdit}}">
+    <view class="actions">
+      <view class="btn ghost" bindtap="goEdit">编辑</view>
+      <view class="btn danger" bindtap="onDelete">删除</view>
+    </view>
+  </view>
+</view>
