@@ -362,7 +362,7 @@ Page({
           summary: article.summary || '',
           tags,
           primaryTag,
-          displayTags: tags.slice(0, 2)
+          displayTags: tags.slice(0, 1)  // 只显示1个标签
         };
       });
 
