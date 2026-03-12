@@ -28,6 +28,7 @@
     "pages/contractPreview/index",
     "pages/hourlyContractPreview/index",
     "pages/childcareContractPreview/index",
+    "pages/nannyChildcareContractPreview/index",
 
     "pages/resumeDetail/index",
     "pages/resumeAlbum/index",

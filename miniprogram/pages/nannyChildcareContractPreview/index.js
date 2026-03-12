@@ -1,7 +1,6 @@
 Page({
   data: {
-    // 云文件ID - 注意：需要确保这个文件在云存储中存在
-    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政保姆服务合同20260121.docx'
+    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政服务合同-爱签.docx'
   },
 
   onLoad() {
@@ -11,39 +10,15 @@ Page({
   // 分享给好友
   onShareAppMessage() {
     return {
-      title: '安得家政保姆服务合同',
-      path: '/pages/qaService/index',
+      title: '安得家政保姆育儿服务合同',
+      path: '/pages/nannyChildcareContractPreview/index',
       imageUrl: '/images/icons/document.svg'
     };
   },
 
-  // 跳转到上户须知页面
-  goHouseRules() {
-    wx.navigateTo({
-      url: '/pages/houseRules/index'
-    });
-  },
-
-  // 跳转到小时工合同预览详情页
-  goHourlyContractPreview() {
-    wx.navigateTo({
-      url: '/pages/hourlyContractPreview/index'
-    });
-  },
-
-  // 跳转到保姆育儿合同预览详情页
-  goNannyChildcareContractPreview() {
-    wx.navigateTo({
-      url: '/pages/nannyChildcareContractPreview/index'
-    });
-  },
-
-
-
-  // 预览合同文档（保留，供详情页使用）
-
+  // 预览合同文档
   previewContract() {
-    console.log('点击了合同预览卡片');
+    console.log('点击了查看按钮');
 
     wx.showLoading({
       title: '加载中...',
