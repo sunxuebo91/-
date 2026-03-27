@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /mnt/d -maxdepth 3 -type d -name *家政*)",
+      "Bash(find /mnt/d -maxdepth 3 -type d -name *ji*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(echo \"=== $f ===\")",
+      "Read(//mnt/d/安得褓贝/miniprogram/pages/resumeList/**)",
+      "Bash(done)"
+    ]
+  }
+}

@@ -1,3 +1,5 @@
+const userService = require('../../services/userService.js');
+
 Page({
   data: {
     messages: [
@@ -28,6 +30,9 @@ Page({
   },
 
   onShow() {
+    // 登录保护
+    if (!userService.requireLogin()) return;
+
     // 更新自定义 tabBar 选中状态（消息是索引1）
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({
@@ -85,8 +90,7 @@ Page({
   },
 
   isLoggedIn() {
-    const crmUserInfo = wx.getStorageSync('crmUserInfo');
-    return !!(crmUserInfo && (crmUserInfo.phone || crmUserInfo.nickname));
+    return userService.isLoggedIn();
   },
 
   // 登录后提醒用户再点一次（open-type="contact" 无法代码中自动触发）

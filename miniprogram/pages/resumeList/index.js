@@ -1,4 +1,5 @@
 const resumeService = require('../../services/resume.js');
+const userService = require('../../services/userService.js');
 
 
 // 月嫂等级映射表（与API保持一致）
@@ -212,14 +213,16 @@ Page({
     typeSheetVisible: false,
     typeOptions: TYPE_OPTIONS,
     levelSheetVisible: false,
-    levelOptions: LEVEL_OPTIONS
+    levelOptions: LEVEL_OPTIONS,
+    isStaff: false  // 员工标识（非员工看脱敏名字）
   },
 
   // 页面显示时的观察器
   intersectionObserver: null,
 
-  onLoad(options) {
+  async onLoad(options) {
     console.log('📋 页面 onLoad, options:', options);
+    if (!userService.requireLogin()) return;
 
     // 从 URL 参数获取工种
     const jobType = options?.jobType;
@@ -251,7 +254,8 @@ Page({
       }
     }
 
-    // 加载数据
+    // 必须先确认员工身份，再加载数据（避免脱敏竞争条件）
+    await this.checkStaffRole();
     this.reload();
   },
 
@@ -390,10 +394,11 @@ Page({
         const formattedList = list.map(item => {
           console.log('📋 简历数据:', item._id, item.name);
 
-          // 处理 personalPhoto 数组
-          const photos = Array.isArray(item.personalPhoto)
-            ? item.personalPhoto.map(p => p.url || p)
-            : [];
+          // 处理 personalPhoto：兼容单个对象/字符串或数组
+          const rawPhotos = Array.isArray(item.personalPhoto)
+            ? item.personalPhoto
+            : (item.personalPhoto ? [item.personalPhoto] : []);
+          const photos = rawPhotos.map(p => (typeof p === 'string' ? p : (p.url || p.fileUrl || p.path || ''))).filter(Boolean);
 
 	      // 格式化工作类型
 	      const formatJobType = (jobType) => {
@@ -522,9 +527,14 @@ Page({
               console.log('🎬 简历有视频:', item._id, item.name, videoUrl.substring(0, 50) + '...');
             }
 
+            // 非员工显示脱敏名字
+            const maskedName = this.data.isStaff
+              ? item.name
+              : (item.name ? `${item.name.charAt(0)}阿姨` : '未命名');
+
             return {
             _id: item._id,  // 使用 _id 而不是 id
-            name: item.name,
+            name: maskedName,
             age: item.age,
             city: item.currentAddress || item.nativePlace,
             nativePlace: item.nativePlace,
@@ -533,7 +543,7 @@ Page({
 	            priceUnit,
             tags: formatSkills(item.skills || []),  // 使用格式化后的标签
             intro: item.selfIntroduction,
-            coverFileId: photos[0] || '',
+            coverFileId: photos[0] || item.avatarUrl || '',
             photos: photos,
             videoUrl: videoUrl,  // 添加视频 URL
             videoLocalPath: '',  // 预加载后的本地路径
@@ -546,11 +556,9 @@ Page({
             infoLine,
             updatedAt: item.updatedAt
           };
-        })
-        // 过滤掉没有头像的简历
-        .filter(item => item.coverFileId);
+        });
 
-        console.log('📋 过滤后剩余', formattedList.length, '条有头像的简历');
+        console.log('📋 共获取', formattedList.length, '条简历');
 
         this.setData({
           resumes: this.data.resumes.concat(formattedList),
@@ -696,5 +704,14 @@ Page({
   // 关闭工种类型弹窗
   closeTypeSheet() {
     this.setData({ typeSheetVisible: false, activeTab: '' });
+  },
+
+  // 检查当前用户是否为员工
+  // 直接读登录时缓存的 isStaff 字段，无需再发云函数请求
+  checkStaffRole() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const isStaff = crmUserInfo.isStaff === true;
+    this.setData({ isStaff });
+    console.log('👤 用户角色（缓存）:', isStaff ? '员工' : '客户');
   }
 });

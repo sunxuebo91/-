@@ -1,3 +1,5 @@
+const userService = require('../../services/userService.js');
+
 Page({
   data: {
     // 云文件ID - 注意：需要确保这个文件在云存储中存在
@@ -5,6 +7,7 @@ Page({
   },
 
   onLoad() {
+    if (!userService.requireLogin()) return;
     // 页面加载
   },
 

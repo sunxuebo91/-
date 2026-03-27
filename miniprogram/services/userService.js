@@ -24,7 +24,21 @@ async function updateMe(data) {
   return r.data || {};
 }
 
+function isLoggedIn() {
+  const crmUserInfo = wx.getStorageSync('crmUserInfo');
+  return !!(crmUserInfo && crmUserInfo.phone);
+}
+
+// 检查登录，未登录则跳转登录页，返回 false 表示需要中断
+function requireLogin() {
+  if (isLoggedIn()) return true;
+  wx.navigateTo({ url: '/pages/login/index' });
+  return false;
+}
+
 module.exports = {
   getOrCreateMe,
   updateMe,
+  isLoggedIn,
+  requireLogin,
 };

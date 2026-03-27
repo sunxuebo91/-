@@ -1,4 +1,5 @@
 const articleService = require('../../services/article.js');
+const userService = require('../../services/userService.js');
 
 // 提取图片 URL（兼容字符串/对象/数组）
 function normalizeImageUrl(input) {
@@ -206,6 +207,7 @@ Page({
   },
 
   onLoad() {
+    if (!userService.requireLogin()) return;
     this.loadArticles({ reset: true });
   },
 

@@ -59,12 +59,6 @@ Page({
       return;
     }
 
-    // 检查是否设置了昵称
-    if (!this.data.nickname || !this.data.nickname.trim()) {
-      wx.showToast({ title: "请先输入昵称", icon: "none" });
-      return;
-    }
-
     wx.showLoading({ title: "登录中..." });
 
     try {
@@ -91,7 +85,7 @@ Page({
         data: {
           action: "loginByPhone",
           code: e.detail.code,
-          nickname: this.data.nickname.trim(),
+          nickname: (this.data.nickname || '').trim() || '用户',
           avatarUrl: cloudAvatarUrl,
         },
       });
@@ -115,7 +109,7 @@ Page({
               data: {
                 openid: openid,
                 phone: phone,
-                nickname: this.data.nickname.trim(),
+                nickname: (this.data.nickname || '').trim() || '用户',
                 avatar: cloudAvatarUrl || '',
                 gender: 0,  // 0未知 1男 2女，可以后续添加性别选择
                 city: '',
@@ -135,12 +129,14 @@ Page({
             console.log('✅ 用户信息已同步到 CRM 后端');
 
             // 构建完整的用户信息对象
+            // isStaff 由后端通过手机号查员工表返回，直接存入缓存供权限判断
             const userInfo = {
               ...crmRes.data.data,
               phone: phone,
-              nickname: this.data.nickname.trim(),
+              nickname: (this.data.nickname || '').trim() || '用户',
               avatar: cloudAvatarUrl || '',
-              openid: openid
+              openid: openid,
+              isStaff: crmRes.data.data?.isStaff === true
             };
 
             console.log('💾 准备保存的用户信息:', userInfo);
@@ -162,7 +158,12 @@ Page({
         // 4. 登录成功提示
         wx.showToast({ title: "登录成功" });
         setTimeout(() => {
-          wx.navigateBack();
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            wx.navigateBack();
+          } else {
+            wx.switchTab({ url: '/pages/home/index' });
+          }
         }, 1500);
       } else {
         wx.showToast({ title: "登录失败", icon: "none" });

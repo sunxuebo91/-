@@ -92,6 +92,80 @@ async function getOrCreateMe(openid) {
   return user;
 }
 
+/**
+ * 查询当前用户的完整信息（含 openid、phone、role）——用于排查员工认证问题
+ */
+async function getMyInfo(openid) {
+  const user = await getOrCreateMe(openid);
+  const staffByPhone = user.phone ? await db.collection('staff').where({ phone: String(user.phone).trim() }).limit(1).get() : { data: [] };
+  const staffByOpenid = await db.collection('staff').where({ openid }).limit(1).get();
+  return {
+    openid,
+    phone: user.phone || '',
+    role: user.role,
+    nickname: user.nickname || '',
+    inStaffByPhone: staffByPhone.data.length > 0,
+    inStaffByOpenid: staffByOpenid.data.length > 0,
+  };
+}
+
+/**
+ * 按用户 _id 查询顾问公开信息（姓名、电话、头像）
+ * 供客户扫海报二维码进入简历详情页时，异步拉取分享顾问的完整信息
+ */
+async function getStaffPublicInfo(userId) {
+  if (!userId) throw new Error('missing userId');
+  const r = await db.collection('users').doc(userId).get();
+  if (!r.data) throw new Error('user not found');
+  const user = r.data;
+  return {
+    _id: user._id || userId,
+    name: user.name || user.nickname || '',
+    phone: user.phone || '',
+    avatar: user.avatarUrl || user.avatar || '',
+    company: '安得褓贝',
+  };
+}
+
+/**
+ * 将指定手机号或当前用户 openid 加入 staff 白名单
+ * - staffCollection 为空时（首次引导）任何人可调用
+ * - staffCollection 非空时，调用者自身必须已在 staff 名单中
+ */
+async function addStaff(callerOpenid, phone, targetOpenid) {
+  // 检查 staff 集合是否为空（首次引导模式）
+  const existing = await db.collection('staff').limit(1).get();
+  const bootstrapMode = !existing.data || existing.data.length === 0;
+
+  if (!bootstrapMode) {
+    // 非首次引导：调用者必须已是 staff
+    const callerIsStaff = await isStaff(callerOpenid, null);
+    if (!callerIsStaff) {
+      return { success: false, errMsg: '仅员工可添加新员工' };
+    }
+  }
+
+  const doc = { createdAt: db.serverDate() };
+  if (phone) doc.phone = String(phone).trim();
+  if (targetOpenid) doc.openid = targetOpenid;
+
+  if (!doc.phone && !doc.openid) {
+    return { success: false, errMsg: '请提供手机号或 openid' };
+  }
+
+  await db.collection('staff').add({ data: doc });
+
+  // 同步更新 users 集合中对应用户的 role
+  if (doc.phone) {
+    await db.collection('users').where({ phone: doc.phone }).update({ data: { role: 'staff', updatedAt: db.serverDate() } });
+  }
+  if (doc.openid) {
+    await db.collection('users').where({ _openid: doc.openid }).update({ data: { role: 'staff', updatedAt: db.serverDate() } });
+  }
+
+  return { success: true, data: doc };
+}
+
 async function updateMe(openid, data) {
   const safe = {
     updatedAt: db.serverDate(),
@@ -294,6 +368,17 @@ exports.main = async (event, context) => {
     }
     case "accountLogin": {
       return await accountLogin(openid, event.username, event.password);
+    }
+    case "getMyInfo": {
+      const info = await getMyInfo(openid);
+      return { success: true, data: info };
+    }
+    case "addStaff": {
+      return await addStaff(openid, event.phone || '', event.targetOpenid || '');
+    }
+    case "getStaffPublicInfo": {
+      const info = await getStaffPublicInfo(event.userId);
+      return { success: true, data: info };
     }
     default:
       return { success: false, errMsg: "unknown action" };

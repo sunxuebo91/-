@@ -49,6 +49,7 @@ Page({
   },
 
   async onLoad(options) {
+    if (!userService.requireLogin()) return;
     const contractId = options?.contractId ? decodeURIComponent(options.contractId) : '';
     if (contractId) {
       this.setData({ mode: 'diaries', contractId });

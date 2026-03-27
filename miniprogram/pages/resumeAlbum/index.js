@@ -1,4 +1,5 @@
 const resumeService = require('../../services/resume');
+const userService = require('../../services/userService.js');
 
 const THUMB_SIZE = 360; // 列表缩略图尺寸（像素），越小越快
 const THUMB_QUALITY = 70;
@@ -88,6 +89,10 @@ Page({
   },
 
   onLoad(options) {
+    // 员工分享进入不强制登录
+    const isSharedEntry = options.shared === '1';
+    if (!isSharedEntry && !userService.requireLogin()) return;
+
     const id = options && options.id;
     this.setData({ id: id ? String(id) : '' });
     this.loadAlbum();

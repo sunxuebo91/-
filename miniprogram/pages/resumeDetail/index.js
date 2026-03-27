@@ -1,5 +1,7 @@
 const resumeService = require('../../services/resume.js');
 const employeeEvaluationService = require('../../services/employeeEvaluation.js');
+const userService = require('../../services/userService.js');
+const { publicRequest } = require('../../utils/request.js');
 
 // 简历详情页视频缓存（用于提升手机端二次打开速度；非 Wi-Fi 不强制预下载）
 const VIDEO_CACHE_KEY = 'resumeDetailVideoCache_v1';
@@ -17,6 +19,24 @@ const JOB_TYPE_MAP = {
   'yangchong': '养宠',
   'xiaoshi': '小时工',
   'zhujia-hulao': '住家护老'
+};
+
+const WORK_EXPERIENCE_ICON_MAP = {
+  'yuexin': '/images/icons/yuexin.svg',
+  '月嫂': '/images/icons/yuexin.svg',
+  'zhujia-yuer': '/images/icons/work-yuer.svg',
+  'baiban-yuer': '/images/icons/work-yuer.svg',
+  '育儿嫂': '/images/icons/work-yuer.svg',
+  '住家育儿嫂': '/images/icons/work-yuer.svg',
+  '白班育儿嫂': '/images/icons/work-yuer.svg',
+  'baiban-baomu': '/images/icons/baomu.svg',
+  'zhujia-baomu': '/images/icons/baomu.svg',
+  '保姆': '/images/icons/baomu.svg',
+  '住家保姆': '/images/icons/baomu.svg',
+  '白班保姆': '/images/icons/baomu.svg',
+  'zhujia-hulao': '/images/icons/hulao.svg',
+  '护老': '/images/icons/hulao.svg',
+  '住家护老': '/images/icons/hulao.svg'
 };
 
 const EDUCATION_MAP = {
@@ -190,6 +210,13 @@ Page({
     loaded: false,
     detail: {},
 
+    // 分享相关
+    isShared: false,
+    sharerInfo: null,
+    displayName: '',
+    maskedPhone: '',
+    maskedIdNumber: '',
+    maskedWechat: '',
 
     // 推荐理由展示（默认 TopN + 展开/收起）
     recommendationExpanded: false,
@@ -213,8 +240,10 @@ Page({
 
     // 主媒体区显示状态：video/image
     heroMediaType: 'video',
-    // heroMediaType=image 时显示的图片
+    // heroMediaType=image 时显示的图片（从缩略图切换时更新）
     heroSelectedImage: '',
+    // 头像 URL（独立顶层属性，避免嵌套 detail 对象未更新问题）
+    heroAvatarSrc: '',
     // 底部缩略图数据（有视频时会跳过第1张个人照，避免与视频缩略图重复）
     heroThumbPhotos: [],
     // 固定展示的中间缩略图（最多 3 张），用于两端固定时做等距排布
@@ -227,52 +256,125 @@ Page({
     certTicketsShowSwipeHint: false,
     // 分享 LOGO 临时链接
     shareLogo: '',
+    // 分享卡片裁剪缩略图（上半身裁图，异步生成后填入）
+    croppedShareImage: '',
 
     // 登录态：用于控制 open-type="contact" 是否生效
-    isLoggedIn: false
+    isLoggedIn: false,
+
+    // 员工标识（非员工看脱敏简历）
+    isStaff: false
   },
 
 
 
 
 
-  onLoad(options) {
-    this.setData({ id: options.id || "" });
+  async onLoad(options) {
+    // 启用分享功能
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
 
-    // 预取分享 LOGO 的临时链接
+    const { id: rawId, shared, sharerId, sharer, sharerPhone, sharerCompany, sharerAvatar, scene } = options;
+
+    // 兼容从海报小程序码扫码进入（scene = "id%3Dxxx"）
+    let qrId = '';
+    if (!rawId && scene) {
+      try {
+        const sceneStr = decodeURIComponent(scene);
+        sceneStr.split('&').forEach(pair => {
+          const eqIdx = pair.indexOf('=');
+          if (eqIdx > -1 && pair.slice(0, eqIdx) === 'id') {
+            qrId = pair.slice(eqIdx + 1);
+          }
+        });
+      } catch (e) {
+        console.warn('📄 scene 参数解析失败:', e);
+      }
+    }
+    const id = rawId || qrId;
+
+    console.log('📄 详情页加载, 参数:', options);
+
+    // 检查是否通过分享进入
+    // options.p 是海报二维码扫码进入时的紧凑电话参数（card-share 用 sharerPhone）
+    if (shared === '1') {
+      const resolvedPhone = sharerPhone || options.p || '';
+      const resolvedSharerId = sharerId ? decodeURIComponent(sharerId) : '';
+      const sharerInfoData = {
+        id: resolvedSharerId,
+        name: decodeURIComponent(sharer || '安得褓贝顾问'),
+        phone: resolvedPhone ? decodeURIComponent(resolvedPhone) : '',
+        company: decodeURIComponent(sharerCompany || '安得褓贝'),
+        avatar: sharerAvatar ? decodeURIComponent(sharerAvatar) : ''
+      };
+      this.setData({
+        isShared: true,
+        sharerInfo: sharerInfoData
+      });
+
+      // 海报二维码扫码进来：URL 里没有顾问姓名，异步拉取完整信息补全（与卡片分享保持一致）
+      if (!sharer && resolvedSharerId) {
+        wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getStaffPublicInfo', userId: resolvedSharerId }
+        }).then(res => {
+          if (res && res.result && res.result.success) {
+            const d = res.result.data;
+            const cur = this.data.sharerInfo || {};
+            this.setData({
+              sharerInfo: {
+                ...cur,
+                name: d.name || cur.name,
+                phone: d.phone || cur.phone,
+                avatar: d.avatar || cur.avatar,
+                company: d.company || cur.company
+              }
+            });
+          }
+        }).catch(err => {
+          console.warn('⚠️ 拉取顾问信息失败（不影响主流程）:', err);
+        });
+      }
+
+      // 分享访问时隐藏 home 按钮
+      try {
+        if (wx.hideHomeButton) {
+          wx.hideHomeButton();
+        }
+      } catch (e) {
+        console.log('隐藏home按钮失败:', e);
+      }
+    }
+
+    // 员工分享进入不强制登录，其他情况需登录
+    const isSharedEntry = (options.shared === '1') || !!options.scene;
+    if (!isSharedEntry && !userService.requireLogin()) return;
+
+    this.setData({ id: id || "" });
+
+    // 预取分享 LOGO 的临时链接（不需要等待结果）
     this.loadShareLogo();
-
-    console.log('📄 详情页加载, ID:', options.id);
 
     // 尝试从列表页获取预加载的视频路径
     const pages = getCurrentPages();
-
-    console.log('📚 当前页面栈:', pages.length, '层');
-
     if (pages.length >= 2) {
       const prevPage = pages[pages.length - 2];
-      console.log('📄 上一页路由:', prevPage.route);
-
       if (prevPage.route === 'pages/resumeList/index') {
-        console.log('📋 列表页简历数量:', prevPage.data.resumes.length);
-        const resume = prevPage.data.resumes.find(r => r._id === options.id);
-
-        if (resume) {
-          console.log('✅ 找到简历:', resume.name);
-          console.log('📹 视频本地路径:', resume.videoLocalPath || '无');
-
-          if (resume.videoLocalPath) {
-            console.log('🎉 使用列表页预加载的视频:', resume.videoLocalPath);
-            this.preloadedVideoPath = resume.videoLocalPath;
-          } else {
-            console.log('⚠️ 简历没有预加载视频路径');
-          }
-        } else {
-          console.log('❌ 在列表页未找到该简历');
+        const resume = prevPage.data.resumes && prevPage.data.resumes.find(r => r._id === id);
+        if (resume && resume.coverFileId) {
+          this.preloadedCoverFileId = resume.coverFileId;
+        }
+        if (resume && resume.videoLocalPath) {
+          this.preloadedVideoPath = resume.videoLocalPath;
         }
       }
     }
 
+    // 必须先确认员工身份，再加载简历（避免脱敏竞争条件）
+    await this.checkStaffRole();
     this.loadDetail();
   },
 
@@ -316,18 +418,94 @@ Page({
         );
 
         const normalizeFileUrls = (input) => {
-          const arr = Array.isArray(input) ? input : [];
+          // 兼容嵌套 { files: [...] } 结构
+          if (input && typeof input === 'object' && !Array.isArray(input) && Array.isArray(input.files)) {
+            input = input.files;
+          }
+          // 兼容：单个对象/字符串 或 数组
+          const arr = Array.isArray(input) ? input : (input ? [input] : []);
           return arr
             .map((x) => {
               if (!x) return '';
               if (typeof x === 'string') return x;
-              if (typeof x === 'object') return x.url || x.fileUrl || x.path || '';
+              if (typeof x === 'object') {
+                // 优先检查所有常见 URL 属性名（含 COS 系统常用的 cosUrl）
+                const knownUrl = x.url || x.fileUrl || x.fileURL || x.cosUrl || x.path || x.src || x.imagePath || x.filePath || x.downloadUrl || x.accessUrl || '';
+                if (knownUrl) return knownUrl;
+                // 兜底：扫描对象里第一个看起来像 https 链接的字符串属性
+                const vals = Object.values(x);
+                for (const v of vals) {
+                  if (typeof v === 'string' && (v.startsWith('https://') || v.startsWith('http://'))) return v;
+                }
+              }
               return '';
             })
             .filter(Boolean);
         };
 
-        const personalPhotoUrls = normalizeFileUrls(data.personalPhoto);
+        // ===== 调试：打印 CRM 返回的所有字段，帮助排查头像缺失问题 =====
+        console.log('📸 CRM 简历数据字段一览:', Object.keys(data || {}));
+        console.log('📸 个人照片相关字段:', {
+          personalPhoto: data.personalPhoto,
+          photoFiles: data.photoFiles,
+          personalPhotos: data.personalPhotos,
+          photoUrls: data.photoUrls,
+          avatarUrl: data.avatarUrl,
+          avatar: data.avatar,
+          headPhoto: data.headPhoto,
+          profilePhoto: data.profilePhoto,
+          coverImage: data.coverImage,
+          albums: Array.isArray(data.albums) ? data.albums.map(a => ({ name: a.name, count: (a.photos || a.files || []).length })) : data.albums
+        });
+
+        // 兼容多种 CRM 字段名：依次尝试直到找到有效图片
+        const personalPhotoUrls = (() => {
+          // 1. 优先：个人照片数组
+          let urls = normalizeFileUrls(data.personalPhoto);
+          if (!urls.length) urls = normalizeFileUrls(data.photoFiles);
+          if (!urls.length) urls = normalizeFileUrls(data.personalPhotos);
+          // 2. 工装照（uniformPhoto）：没有个人照时用工装照作头像
+          if (!urls.length) urls = normalizeFileUrls(data.uniformPhoto);
+          // 3. 通用照片数组（photoUrls）
+          if (!urls.length) urls = normalizeFileUrls(data.photoUrls);
+          // 4. 单张头像字段回退（字符串或对象均可）
+          if (!urls.length) {
+            const single = data.avatarUrl || data.avatar || data.headPhoto || data.profilePhoto || data.coverImage || '';
+            const singleStr = typeof single === 'string' ? single : (single && (single.url || single.fileUrl || single.fileURL || single.path || single.src) || '');
+            if (singleStr) urls = [singleStr];
+          }
+          console.log('📸 解析出的个人照片URLs:', urls);
+          return urls;
+        })();
+
+        // 与列表页保持一致：头像只按 personalPhoto[0] -> avatarUrl 这条链路取值
+        const listLikeRawPhotos = Array.isArray(data.personalPhoto)
+          ? data.personalPhoto
+          : (data.personalPhoto ? [data.personalPhoto] : []);
+        const listLikePhotoUrls = listLikeRawPhotos
+          .map(p => {
+            if (typeof p === 'string') return p;
+            if (!p) return '';
+            const knownUrl = p.url || p.fileUrl || p.fileURL || p.cosUrl || p.path || p.src || p.imagePath || p.filePath || p.downloadUrl || p.accessUrl || '';
+            if (knownUrl) return knownUrl;
+            // 兜底：扫描对象里第一个 http(s) 字符串
+            const vals = Object.values(p);
+            for (const v of vals) {
+              if (typeof v === 'string' && (v.startsWith('https://') || v.startsWith('http://'))) return v;
+            }
+            return '';
+          })
+          .filter(Boolean);
+        const listLikeAvatarUrl = typeof data.avatarUrl === 'string'
+          ? data.avatarUrl
+          : ((data.avatarUrl && (data.avatarUrl.url || data.avatarUrl.fileUrl || data.avatarUrl.path)) || '');
+        const listLikeCoverFileId = listLikePhotoUrls[0] || listLikeAvatarUrl || '';
+        console.log('📸 列表页同款取图结果:', {
+          preloadedCoverFileId: this.preloadedCoverFileId || '',
+          listLikePhotoUrls,
+          listLikeAvatarUrl,
+          listLikeCoverFileId
+        });
 
         const detail = {
           _id: resumeId,
@@ -447,6 +625,10 @@ Page({
               }
             }
 
+            // 优先取工作经历自身的工种，没有则退回简历整体工种
+            const expJobType = exp.jobType || exp.serviceType || exp.workType || data.jobType || '';
+            const expJobTypeText = JOB_TYPE_MAP[expJobType] || exp.jobTypeText || exp.serviceTypeText || exp.workTypeText || expJobType || '';
+
             return {
               startDate: startDate,
               endDate: endDate,
@@ -455,7 +637,10 @@ Page({
               serviceArea: serviceAreaText,
               customerName: exp.customerName || '',
               customerReview: exp.customerReview || exp.review || '',
-              workPhotos: workPhotos
+              workPhotos: workPhotos,
+              jobType: expJobType,
+              jobTypeText: expJobTypeText,
+              jobTypeIcon: WORK_EXPERIENCE_ICON_MAP[expJobType] || WORK_EXPERIENCE_ICON_MAP[expJobTypeText] || '/images/icons/work-experience.svg'
             };
           }),
 
@@ -467,9 +652,10 @@ Page({
           idCardFront: data.idCardFront ? (data.idCardFront.url || data.idCardFront) : '',
           idCardBack: data.idCardBack ? (data.idCardBack.url || data.idCardBack) : '',
 
-          personalPhoto: personalPhotoUrls,
-          photos: personalPhotoUrls,
-          coverFileId: personalPhotoUrls[0] || '',
+          personalPhoto: listLikePhotoUrls.length ? listLikePhotoUrls : personalPhotoUrls,
+          photos: listLikePhotoUrls.length ? listLikePhotoUrls : personalPhotoUrls,
+          coverFileId: this.preloadedCoverFileId || listLikeCoverFileId || personalPhotoUrls[0] || data.avatarUrl || data.avatar || data.headPhoto || data.profilePhoto || data.coverImage
+            || normalizeFileUrls(data.uniformPhoto)[0] || normalizeFileUrls(data.photoUrls)[0] || '',
           certificates: normalizeFileUrls(data.certificates),
           reports: normalizeFileUrls(data.reports),
           selfIntroductionVideo: data.selfIntroductionVideo ? (data.selfIntroductionVideo.url || data.selfIntroductionVideo) : '',
@@ -558,8 +744,8 @@ Page({
         const basicInfoItems = [zodiacText, ageText, constellationText, nativePlaceText, nationText, educationText];
 
         const photos = detail.photos || [];
-        // 头像固定取个人照片第一张（没有就回退）
-        const avatarSrc = photos[0] || detail.coverFileId || '';
+        // 优先复用列表页已算好的封面图；否则按列表页同款规则取个人照第一张/cover
+        const avatarSrc = this.preloadedCoverFileId || photos[0] || detail.coverFileId || '';
         let detailWithAvatar = {
           ...detail,
           avatarSrc,
@@ -643,8 +829,31 @@ Page({
         }
 
         // 关键分类：用于按工种挑选缩略图
-        const avatarUrl = personalPhotoUrls[0] || '';
-        const personalUrls = personalPhotoUrls;
+        // 若 personalPhotoUrls 仍为空，从已构建的 photoCategories 里找"个人照"兜底
+        let effectivePersonalUrls = personalPhotoUrls.slice();
+        if (!effectivePersonalUrls.length && Object.keys(photoCategories).length > 0) {
+          effectivePersonalUrls = Object.entries(photoCategories)
+            .filter(([, cat]) => {
+              const s = simplifyCategory(cat); // 规范化后比较，"个人照片"→"个人"
+              return s === '个人照' || s === '个人';
+            })
+            .map(([url]) => url);
+        }
+        console.log('📸 effectivePersonalUrls（含albums兜底）:', effectivePersonalUrls);
+        const avatarUrl = effectivePersonalUrls[0] || '';
+        const personalUrls = effectivePersonalUrls;
+
+        // 如果 albums 兜底后找到了头像，补回到 detailWithAvatar
+        if (avatarUrl && !detailWithAvatar.avatarSrc) {
+          detailWithAvatar = {
+            ...detailWithAvatar,
+            avatarSrc: avatarUrl,
+            coverFileId: detailWithAvatar.coverFileId || avatarUrl,
+            videoThumbSrc: avatarUrl,
+            photos: effectivePersonalUrls.length ? effectivePersonalUrls : detailWithAvatar.photos
+          };
+        }
+
         const mealUrls = pickUrlsByKeys(['confinementMealPhotos', 'confinementMealPhoto', 'confinementMealFiles']);
         const cookingUrls = pickUrlsByKeys(['cookingPhotos', 'cookingPhoto', 'cookingFiles']);
         const foodUrls = pickUrlsByKeys(['complementaryFoodPhotos', 'complementaryFoodPhoto', 'complementaryFoodFiles']);
@@ -790,8 +999,26 @@ Page({
         const recommendationTagsAll = (detailWithAvatar && detailWithAvatar.recommendationTags) ? detailWithAvatar.recommendationTags : [];
         const recommendationVM = buildRecommendationView(recommendationTagsAll, recommendationExpanded, recommendationDefaultLimit, 3);
 
+        // 提取头像 URL 为独立顶层属性，避免 setData 嵌套对象未能更新到 WXML 的问题
+        const heroAvatarSrc = this.preloadedCoverFileId || detailWithAvatar.avatarSrc || detailWithAvatar.coverFileId || '';
+        // ===== 扫码路径关键诊断 =====
+        const isQrCodeEntry = !this.preloadedCoverFileId;
+        console.log(isQrCodeEntry ? '📲 [扫码入口] preloadedCoverFileId 为空，依赖 API 数据取图' : '📋 [列表入口] preloadedCoverFileId 已预加载');
+        console.log('🖼️ setData前最终检查:', {
+          入口: isQrCodeEntry ? '扫码/冷启动' : '列表页',
+          preloadedCoverFileId: this.preloadedCoverFileId || '(空)',
+          coverFileId: detailWithAvatar.coverFileId,
+          avatarSrc: detailWithAvatar.avatarSrc,
+          heroAvatarSrc: heroAvatarSrc || '⚠️ 最终为空！',
+          photos: detailWithAvatar.photos,
+          rawAvatarUrl: data.avatarUrl,
+          rawPhotoUrls: data.photoUrls,
+          rawPersonalPhoto: data.personalPhoto
+        });
+
         this.setData({
           detail: detailWithAvatar,
+          heroAvatarSrc,
           heroThumbPhotos,
           heroThumbPhotosPreview,
           heroTotalMediaCount,
@@ -810,6 +1037,51 @@ Page({
           heroSelectedImage: '',
           heroShowCenterPlayBtn: detailWithAvatar.videoFileId ? true : false
         });
+
+        if (heroAvatarSrc) {
+          Promise.resolve()
+            .then(() => this._downloadImage(heroAvatarSrc))
+            .then((localAvatarPath) => {
+              if (!localAvatarPath) return;
+              console.log('🖼️ 头像已下载到本地临时路径:', localAvatarPath);
+              const nextData = { heroAvatarSrc: localAvatarPath };
+              if (!detailWithAvatar.videoFileId && !this.data.heroSelectedImage) {
+                nextData.heroSelectedImage = localAvatarPath;
+              }
+              this.setData(nextData);
+              // 后台异步生成分享卡片裁剪图（取上半身），不阻塞主流程
+              this._generateShareThumbnail(localAvatarPath).then(croppedPath => {
+                if (croppedPath) this.setData({ croppedShareImage: croppedPath });
+              });
+            })
+            .catch((err) => {
+              console.warn('⚠️ 头像下载本地失败，继续使用远程地址:', heroAvatarSrc, err);
+            });
+        }
+
+        // 非员工或分享模式下应用数据脱敏
+        if (this.data.isShared || !this.data.isStaff) {
+          const surname = detailWithAvatar.name ? detailWithAvatar.name.charAt(0) : '某';
+          // 脱敏工作经历中的客户姓名
+          if (detailWithAvatar.workExperiences) {
+            detailWithAvatar.workExperiences = detailWithAvatar.workExperiences.map(exp => {
+              if (exp.customerName) {
+                const csurname = exp.customerName.charAt(0);
+                return { ...exp, customerName: `${csurname}女士` };
+              }
+              return exp;
+            });
+          }
+          this.setData({
+            detail: detailWithAvatar,
+            displayName: `${surname}阿姨`,
+            maskedPhone: this.maskPhone(detailWithAvatar.phone),
+            maskedWechat: this.maskWechat(detailWithAvatar.wechat)
+          });
+        } else {
+          // 员工直接显示全名
+          this.setData({ displayName: detailWithAvatar.name });
+        }
 
         console.log('📊 页面状态:', {
           heroMediaType: this.data.heroMediaType,
@@ -869,7 +1141,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/resumeAlbum/index?id=${encodeURIComponent(String(id))}`
+      url: `/pages/resumeAlbum/index?id=${encodeURIComponent(String(id))}${this.data.isShared ? '&shared=1' : ''}`
     });
   },
 
@@ -989,10 +1261,7 @@ Page({
 
   // 检查是否已登录
   isLoggedIn() {
-    const crmUserInfo = wx.getStorageSync('crmUserInfo');
-    const isLoggedIn = !!(crmUserInfo && (crmUserInfo.phone || crmUserInfo.nickname));
-    console.log('🔐 登录状态检查:', isLoggedIn, crmUserInfo);
-    return isLoggedIn;
+    return userService.isLoggedIn();
   },
 
   // 登录后提醒用户再点一次（open-type="contact" 无法代码中自动触发）
@@ -1010,6 +1279,15 @@ Page({
   // 小程序客服回调（用户从客服消息进入/返回）
   handleContact(e) {
     console.log('客服消息回调:', e.detail);
+  },
+
+  // 检查当前用户是否为员工
+  // 直接读登录时缓存的 isStaff 字段，无需再发云函数请求
+  checkStaffRole() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const isStaff = crmUserInfo.isStaff === true;
+    this.setData({ isStaff });
+    console.log('👤 用户角色（缓存）:', isStaff ? '员工' : '客户');
   },
 
 
@@ -1084,6 +1362,16 @@ Page({
   },
 
 
+
+  onHeroImageLoad(e) {
+    const currentSrc = this.data.heroSelectedImage || this.data.heroAvatarSrc || '/images/default-goods-image.png';
+    console.log('✅ hero图片加载成功:', currentSrc, 'detail:', e && e.detail);
+  },
+
+  onHeroImageError(e) {
+    const src = this.data.heroSelectedImage || this.data.heroAvatarSrc || (this.data.detail && (this.data.detail.coverFileId || this.data.detail.avatarSrc)) || '';
+    console.error('❌ hero图片加载失败! src:', src, 'error:', e && e.detail);
+  },
 
   onHeroVideoError(e) {
     const errMsg = (e && e.detail && e.detail.errMsg) || '视频播放失败';
@@ -1412,17 +1700,299 @@ Page({
     wx.showToast({ title: '评价列表页开发中', icon: 'none' });
   },
 
+  // 手机号脱敏处理
+  maskPhone(phone) {
+    if (!phone || phone.length < 7) return phone;
+    return phone.substring(0, 3) + '****' + phone.substring(phone.length - 4);
+  },
+
+  // 身份证号脱敏处理
+  maskIdNumber(idNumber) {
+    if (!idNumber || idNumber.length < 8) return idNumber;
+    return idNumber.substring(0, 4) + '****' + idNumber.substring(idNumber.length - 4);
+  },
+
+  // 微信号脱敏处理
+  maskWechat(wechat) {
+    if (!wechat || wechat.length < 6) return wechat;
+    return wechat.substring(0, 2) + '****' + wechat.substring(wechat.length - 2);
+  },
+
+  // 图片分享：生成含照片+信息栏+小程序码的海报
+  async onGeneratePoster() {
+    const detail = this.data.detail || {};
+    const photoUrl = detail.avatarSrc || detail.coverFileId || '';
+
+    if (!photoUrl) {
+      wx.showToast({ title: '暂无照片可生成海报', icon: 'none' });
+      return;
+    }
+
+    // 先从后端获取 AI 推荐文案并复制到剪贴板，显示提示后再弹生成海报的 loading
+    const recText = await this._fetchRecommendationText();
+    if (recText) {
+      wx.setClipboardData({ data: recText });
+      wx.showToast({ title: '推荐理由复制成功', icon: 'success', duration: 1500 });
+      // 等提示消失后再显示 loading，避免两个系统弹层互相覆盖
+      await new Promise(r => setTimeout(r, 800));
+    }
+
+    wx.showLoading({ title: '生成海报中...' });
+    try {
+      // 1. 并行：下载照片 & 获取小程序码
+      // 优先使用 this.data.id（URL 入参，是成功加载本简历的已知正确 ID）
+      const resumeQrId = this.data.id || detail._id || '';
+      // 读取当前员工信息，嵌入二维码路径，让客户扫码后能看到"联系顾问"
+      const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+      const staffId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+      const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
+      const [photoLocalPath, qrLocalPath] = await Promise.all([
+        this._downloadImage(photoUrl),
+        this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone)
+      ]);
+
+      // 2. Canvas 绘制海报
+      const posterPath = await this._drawPosterCanvas(detail, photoLocalPath, qrLocalPath);
+
+      wx.hideLoading();
+
+      // 3. 调起分享图片菜单（可分享给朋友或保存）
+      wx.showShareImageMenu({
+        path: posterPath,
+        fail: (err) => {
+          console.error('分享图片失败:', err);
+          // 降级：保存到相册
+          wx.saveImageToPhotosAlbum({
+            filePath: posterPath,
+            success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+            fail: () => wx.showToast({ title: '分享失败，请重试', icon: 'none' })
+          });
+        }
+      });
+    } catch (err) {
+      wx.hideLoading();
+      console.error('生成海报失败:', err);
+      wx.showToast({ title: '海报生成失败', icon: 'none' });
+    }
+  },
+
+  // 下载图片到本地（兼容 cloud:// 和 https）
+  async _downloadImage(url) {
+    if (!url) return '';
+    if (url.startsWith('cloud://')) {
+      const res = await wx.cloud.downloadFile({ fileID: url });
+      return res.tempFilePath;
+    }
+    const res = await new Promise((resolve, reject) => {
+      wx.downloadFile({ url, success: resolve, fail: reject });
+    });
+    return res.tempFilePath;
+  },
+
+  // 生成分享卡片缩略图：取照片上半身部分（宽度 × 宽度 的正方形从顶部裁剪）
+  // 输出 500×500，与 WeChat 分享卡方块预览区域匹配
+  async _generateShareThumbnail(localPath) {
+    if (!localPath) return '';
+    try {
+      const imgInfo = await new Promise((resolve, reject) =>
+        wx.getImageInfo({ src: localPath, success: resolve, fail: reject })
+      );
+      const { width: imgW, height: imgH } = imgInfo;
+      // 裁剪高度 = 图片宽度（保证是正方形，且只取上半身）；但不超过实际高度
+      const cropH = Math.min(imgW, imgH);
+      const outSize = 500;
+
+      const canvas = wx.createOffscreenCanvas({ type: '2d', width: outSize, height: outSize });
+      const ctx = canvas.getContext('2d');
+      const img = canvas.createImage();
+      img.src = localPath;
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+
+      // 垂直居中后再往下偏移 20%（裁剪窗口下移 → 人头出现在画面上方，减少顶部留白）
+      // 用 Math.min 确保裁剪区不超出图片底部
+      const sy = Math.min(imgH - cropH, Math.floor((imgH - cropH) / 2 + imgH * 0.2));
+      ctx.drawImage(img, 0, sy, imgW, cropH, 0, 0, outSize, outSize);
+
+      const result = await new Promise((resolve, reject) =>
+        wx.canvasToTempFilePath({ canvas, fileType: 'jpg', quality: 0.92,
+          success: r => resolve(r.tempFilePath), fail: reject })
+      );
+      return result;
+    } catch (err) {
+      console.warn('⚠️ 分享缩略图生成失败，回退到原图:', err);
+      return '';
+    }
+  },
+
+  // 调云函数生成简历小程序码，返回本地临时路径（失败时返回空串）
+  // staffId / staffPhone 非空时，生成的二维码会携带 shared=1&sharerId=xxx&p=phone，
+  // 扫码进入时底部会展示"联系顾问"而非"联系客服"
+  async _getResumeMiniCodePath(resumeId, staffId, staffPhone) {
+    if (!resumeId) return '';
+    try {
+      const cfRes = await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: {
+          type: 'getResumeMiniCode',
+          resumeId,
+          staffId: staffId || '',
+          staffPhone: staffPhone || ''
+        }
+      });
+      const fileID = cfRes?.result?.fileID;
+      if (!fileID) return '';
+      const tempRes = await wx.cloud.getTempFileURL({ fileList: [fileID] });
+      const tempUrl = tempRes?.fileList?.[0]?.tempFileURL || '';
+      if (!tempUrl) return '';
+      return await this._downloadImage(tempUrl);
+    } catch (err) {
+      console.warn('获取小程序码失败，海报将跳过二维码:', err);
+      return '';
+    }
+  },
+
+  // 用 Canvas 2D 绘制海报并导出为临时文件路径
+  _drawPosterCanvas(detail, photoLocalPath, qrLocalPath) {
+    return new Promise((resolve, reject) => {
+      wx.createSelectorQuery().in(this).select('#posterCanvas')
+        .fields({ node: true, size: true })
+        .exec(async (res) => {
+          try {
+            const canvas = res[0].node;
+            const ctx = canvas.getContext('2d');
+            const dpr = wx.getSystemInfoSync().pixelRatio || 2;
+            const W = 375, H = 560;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            ctx.scale(dpr, dpr);
+
+            // — 白色背景 —
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+
+            // — 照片区（占上方 460px）—
+            if (photoLocalPath) {
+              const photoImg = canvas.createImage();
+              photoImg.src = photoLocalPath;
+              await new Promise(r => { photoImg.onload = r; photoImg.onerror = r; });
+              ctx.drawImage(photoImg, 0, 0, W, 460);
+            }
+
+            // — 紫色信息栏（y: 445-510，覆盖照片底部）—
+            const PURPLE = '#8766F3';
+            ctx.fillStyle = PURPLE;
+            ctx.fillRect(0, 445, W, 65);
+
+            // — 浅紫页脚区（y: 510-560）—
+            ctx.fillStyle = '#f5f3ff';
+            ctx.fillRect(0, 510, W, 50);
+
+            // — 属相英文→中文映射 —
+            const ZODIAC_MAP = {
+              rat:'鼠', ox:'牛', tiger:'虎', rabbit:'兔', dragon:'龙',
+              snake:'蛇', horse:'马', goat:'羊', sheep:'羊',
+              monkey:'猴', rooster:'鸡', chicken:'鸡', dog:'狗', pig:'猪'
+            };
+            const zodiacRaw = (detail.zodiacText || '').replace(/^属/, '').trim();
+            const zodiac = ZODIAC_MAP[zodiacRaw.toLowerCase()] || zodiacRaw;
+
+            // — 信息文字（拆两行，不加 maxWidth 避免压缩变形）—
+            const surname = detail.name ? detail.name.charAt(0) : '';
+            // 第一行：个人信息
+            const row1Parts = [
+              surname ? `${surname}阿姨` : '',
+              detail.age ? `${detail.age}岁` : '',
+              zodiac,
+              (detail.nativePlace || detail.city || '').slice(0, 4),
+            ].filter(Boolean);
+            // 第二行：职业信息
+            const row2Parts = [
+              detail.jobTypeText || '',
+              detail.experienceYears ? `${detail.experienceYears}年经验` : '',
+              detail.expectedSalary || '',
+              detail.orderStatusText || ''
+            ].filter(Boolean);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 13px sans-serif';
+            // 第一行 y=463（信息栏上半）
+            ctx.fillText(row1Parts.join(' | '), 12, 463);
+            // 第二行 y=492（信息栏下半）
+            ctx.fillText(row2Parts.join(' | '), 12, 492);
+
+            // — 品牌标语（页脚左侧）—
+            ctx.fillStyle = PURPLE;
+            ctx.font = '13px sans-serif';
+            ctx.fillText('安得褓贝-一切为了爱', 12, 536);
+
+            // — 小程序码区域（右下角，88×88，顶部与信息栏上沿对齐）—
+            // QX=279, QY=445（与紫色信息栏 y:445 对齐），留 8px 右边距
+            const QX = 279, QY = 445, QW = 88, QH = 88;
+            // 白色底衬（因为透明 PNG 码需要白底可读）
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(QX, QY, QW, QH);
+
+            if (qrLocalPath) {
+              const qrImg = canvas.createImage();
+              qrImg.src = qrLocalPath;
+              await new Promise(r => { qrImg.onload = r; qrImg.onerror = r; });
+              // 透明 PNG 直接绘制在白底上，留 4px 内边距
+              ctx.drawImage(qrImg, QX + 4, QY + 4, QW - 8, QH - 8);
+            }
+
+            // — "扫一扫看详情"（页脚，二维码下方居中）—
+            ctx.fillStyle = PURPLE;
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('扫一扫看详情', QX + QW / 2, 548);
+            ctx.textAlign = 'left';
+
+            // — 导出为 jpg —
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: 'jpg',
+              quality: 0.95,
+              success: (r) => resolve(r.tempFilePath),
+              fail: reject
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
+    });
+  },
+
   // 分享给好友（右上角转发按钮）
   onShareAppMessage() {
     const detail = this.data.detail || {};
     const id = detail._id || this.data.id || '';
-    const titleBase = detail.name ? `${detail.name} · ${detail.jobTypeText || '家政服务'}` : '安得褓贝 · 家政简历';
-    const imageUrl = this.data.shareLogo || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png';
+
+    // 获取姓氏
+    const surname = detail.name ? detail.name.charAt(0) : '某';
+    // 获取工种
+    const jobType = detail.jobTypeText || '家政服务';
+
+    // 获取头像图片（优先用异步生成的上半身裁剪图，否则回退原图）
+    const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
+
+    // 获取分享者信息
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = crmUserInfo.name || crmUserInfo.nickname || localName || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || localAvatar || '';
+    const sharerCompany = '安得褓贝';
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+
+    const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
     return {
-      title: titleBase,
-      path: `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}`,
-      imageUrl
+      title: `${surname}阿姨的简历-${jobType}`,
+      path: sharePath,
+      imageUrl: shareImage
     };
   },
 
@@ -1430,14 +2000,94 @@ Page({
   onShareTimeline() {
     const detail = this.data.detail || {};
     const id = detail._id || this.data.id || '';
-    const titleBase = detail.name ? `${detail.name} · ${detail.jobTypeText || '家政服务'}` : '安得褓贝 · 家政简历';
-    const imageUrl = this.data.shareLogo || detail.avatarSrc || detail.coverFileId || '/images/default-goods-image.png';
+
+    const surname = detail.name ? detail.name.charAt(0) : '某';
+    const jobType = detail.jobTypeText || '家政服务';
+    const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
+
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = crmUserInfo.name || crmUserInfo.nickname || localName || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || localAvatar || '';
+    const sharerCompany = '安得褓贝';
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
     return {
-      title: titleBase,
-      query: `id=${encodeURIComponent(String(id))}`,
-      imageUrl
+      title: `${surname}阿姨的简历-${jobType}`,
+      query: shareQuery,
+      imageUrl: shareImage
     };
+  },
+
+  // 点击分享到朋友圈按钮
+  shareToMoments() {
+    const detail = this.data.detail || {};
+    const surname = detail.name ? detail.name.charAt(0) : '某';
+    const jobType = detail.jobTypeText || '家政服务';
+
+    wx.showModal({
+      title: '分享到朋友圈',
+      content: `即将分享"${surname}阿姨的简历-${jobType}"到朋友圈\n\n请点击右上角"..."按钮，选择"分享到朋友圈"`,
+      showCancel: true,
+      cancelText: '取消',
+      confirmText: '知道了'
+    });
+  },
+
+  // 联系顾问
+  onContactAdvisor() {
+    const sharerInfo = this.data.sharerInfo;
+    if (!sharerInfo) {
+      wx.showToast({ title: '顾问信息不存在', icon: 'none' });
+      return;
+    }
+
+    const itemList = [];
+    const actions = [];
+
+    if (sharerInfo.phone) {
+      itemList.push(`拨打电话：${sharerInfo.phone}`);
+      actions.push(() => {
+        wx.makePhoneCall({
+          phoneNumber: sharerInfo.phone,
+          fail: (error) => {
+            console.error('拨打电话失败:', error);
+            wx.showToast({ title: '拨打电话失败', icon: 'none' });
+          }
+        });
+      });
+    }
+
+    if (itemList.length === 0) {
+      wx.showToast({ title: '暂无联系方式', icon: 'none' });
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList: itemList,
+      success: (res) => {
+        if (res.tapIndex < actions.length) {
+          actions[res.tapIndex]();
+        }
+      }
+    });
+  },
+
+  // 编辑简历
+  onEditResume() {
+    const id = (this.data.detail && this.data.detail._id) || this.data.id;
+    if (!id) {
+      wx.showToast({ title: '简历ID缺失', icon: 'none' });
+      return;
+    }
+    wx.navigateTo({
+      url: `/pages/admin/resumeEdit/index?id=${encodeURIComponent(String(id))}`
+    });
   },
 
   // 预取云存储 Logo 的临时链接
@@ -1453,6 +2103,42 @@ Page({
     } catch (err) {
       console.error('获取分享LOGO失败，使用默认图:', err);
     }
+  },
+
+  // 调用后端 AI 接口获取推荐文案（无需 Token，用手机号做员工校验；失败时静默返回空串）
+  async _fetchRecommendationText() {
+    const resumeId = this.data.id || (this.data.detail && this.data.detail._id) || '';
+    if (!resumeId) return '';
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const phone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
+    if (!phone) {
+      console.warn('⚠️ 未找到员工手机号，跳过推荐文案获取');
+      return '';
+    }
+    try {
+      const res = await publicRequest({
+        url: `/resumes/miniprogram/${resumeId}/recommendation`,
+        method: 'POST',
+        data: { phone }
+      });
+      // 后端返回体: { success: true, data: { recommendation: "..." } }
+      return (res && res.data && res.data.recommendation) ? res.data.recommendation : '';
+    } catch (err) {
+      console.warn('⚠️ 获取 AI 推荐文案失败，跳过复制:', err);
+      return '';
+    }
+  },
+
+  // "分享简历"按钮 tap 处理器：先复制推荐文案，open-type=share 随后触发原生分享
+  async onBeforeShare() {
+    const text = await this._fetchRecommendationText();
+    if (!text) return;
+    wx.setClipboardData({
+      data: text,
+      success: () => {
+        wx.showToast({ title: '推荐理由复制成功', icon: 'success', duration: 2000 });
+      }
+    });
   }
 });
 

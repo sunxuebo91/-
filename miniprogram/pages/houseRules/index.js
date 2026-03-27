@@ -1,7 +1,10 @@
+const userService = require('../../services/userService.js');
+
 Page({
   data: {},
 
   onLoad() {
+    if (!userService.requireLogin()) return;
     // 页面加载
   },
 

@@ -1,4 +1,5 @@
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+const userService = require('../../services/userService.js');
 
 Page({
   data: {
@@ -85,6 +86,7 @@ Page({
   },
 
   onLoad() {
+    if (!userService.requireLogin()) return;
     this.loadShareLogo();
   },
 

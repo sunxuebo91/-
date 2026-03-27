@@ -24,7 +24,7 @@ const publicRequest = (options) => {
       success: (response) => {
         console.log(`📡 API 响应 [${options.method || 'GET'}] ${options.url}:`, response);
         
-        if (response.statusCode === 200) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(response.data);
         } else {
           const errorMsg = response.data?.message || `请求失败 (${response.statusCode})`;
@@ -86,7 +86,7 @@ const authenticatedRequest = (options) => {
           }, 2000);
           
           reject(new Error('登录已过期'));
-        } else if (response.statusCode === 200) {
+        } else if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(response.data);
         } else {
           const errorMsg = response.data?.message || `请求失败 (${response.statusCode})`;

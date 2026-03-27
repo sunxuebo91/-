@@ -1,9 +1,12 @@
+const userService = require('../../services/userService.js');
+
 Page({
   data: {
 
   },
 
   onLoad(options) {
+    if (!userService.requireLogin()) return;
     // 设置页面标题
     wx.setNavigationBarTitle({
       title: '透明服务'

@@ -1,6 +1,6 @@
 .page {
   padding: 0 10rpx;
-  padding-bottom: 140rpx;
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
   margin: 0;
   background: #F7F5FF;
   overflow-x: hidden;
@@ -876,11 +876,20 @@
   gap: 8rpx;
 }
 
+.period-main {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  min-height: 26rpx;
+}
+
 .period-icon {
-  width: 26rpx;
-  height: 26rpx;
+  width: 30rpx;
+  height: 30rpx;
   flex-shrink: 0;
   display: block;
+  position: relative;
+  top: 1rpx;
 }
 
 .period-text {
@@ -1072,8 +1081,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 20rpx 24rpx;
+  padding: 20rpx 32rpx;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   background: rgba(247, 245, 255, 0.98);
   backdrop-filter: blur(20px);
   display: flex;
@@ -1342,4 +1352,245 @@
 
 .view-more-evaluations:active .arrow {
   transform: translateX(4rpx);
+}
+
+/* ========== 分享相关样式 ========== */
+
+/* 加载中界面 */
+.loading-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.loading-content {
+  background: white;
+  border-radius: 20rpx;
+  padding: 60rpx 40rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  max-width: 600rpx;
+  width: 100%;
+}
+
+.loading-icon {
+  font-size: 80rpx;
+  margin-bottom: 30rpx;
+  animation: loading-rotate 2s linear infinite;
+}
+
+@keyframes loading-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.loading-desc {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 分享水印 */
+.shared-watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.08;
+}
+
+.shared-watermark text {
+  font-size: 48rpx;
+  color: #8766F3;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 朋友圈分享按钮 */
+.share-moments-btn {
+  position: absolute;
+  bottom: 120rpx;
+  right: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(135, 102, 243, 0.85);
+  padding: 12rpx 20rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.3);
+  z-index: 10;
+}
+
+.share-moments-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 8rpx rgba(135, 102, 243, 0.3);
+}
+
+.share-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.share-text {
+  font-size: 24rpx;
+  color: white;
+  font-weight: 600;
+}
+
+/* 内部用户操作栏 */
+.bottom-actions {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  gap: 20rpx;
+  box-sizing: border-box;
+}
+
+.edit-btn {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  height: 88rpx;
+  background: #ffffff !important;
+  border: 2rpx solid #8766F3 !important;
+  color: #8766F3 !important;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 44rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  padding: 0;
+  overflow: hidden;
+}
+
+.edit-btn::after {
+  border: none !important;
+  background: none !important;
+}
+
+.edit-btn:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+  background: #F0ECFF !important;
+}
+
+.share-btn {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  height: 88rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 44rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  padding: 0;
+  overflow: hidden;
+}
+
+.share-btn::after {
+  border: none !important;
+  background: none !important;
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+/* 非员工直接访问：联系客服，撑满底部栏 */
+.bottom-contact {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.advisor-mini {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  flex: 1;
+}
+
+.advisor-mini-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28rpx;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.advisor-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 40rpx;
+}
+
+.advisor-mini-info {
+  flex: 1;
+}
+
+.advisor-mini-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.advisor-mini-company {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.contact-btn {
+  flex: 1;
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  border-radius: 36rpx;
+  border: none;
+  color: white;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 15rpx rgba(135, 102, 243, 0.3);
+  line-height: normal;
+}
+
+.contact-btn::after {
+  border: none !important;
+}
+
+.contact-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }

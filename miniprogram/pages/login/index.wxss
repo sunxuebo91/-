@@ -19,45 +19,6 @@
   box-sizing: border-box;
 }
 
-/* 头像区域 */
-.avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 64rpx;
-  text-align: center;
-}
-
-/* chooseAvatar 的 button 默认会占满一行，内部内容也可能不居中；这里强制固定尺寸+居中 */
-.avatar-btn {
-  width: 200rpx;
-  height: 200rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  padding: 0;
-  border: none;
-  margin: 0 auto 16rpx;
-}
-
-.avatar-btn::after {
-  border: none;
-}
-
-.avatar {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 80rpx;
-  border: 4rpx solid #f0f0f0;
-  display: block;
-}
-
-.avatar-tip {
-  font-size: 24rpx;
-  color: #999;
-}
-
 /* 表单区域 */
 .form-section {
   width: 100%;

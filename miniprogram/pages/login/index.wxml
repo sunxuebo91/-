@@ -1,18 +1,10 @@
 <view class="page">
   <view class="content">
-    <!-- 头像区域 -->
-    <view class="avatar-section">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-        <image class="avatar" src="{{avatarUrl || me.avatarUrl || '/images/icons/avatar.png'}}"></image>
-      </button>
-      <view class="avatar-tip">点击设置头像</view>
-    </view>
-
     <!-- 表单区域 -->
     <view class="form-section">
-      <!-- 昵称输入框 -->
+      <!-- 昵称输入框（选填） -->
       <view class="form-control">
-        <input type="nickname" class="form-input" placeholder="请输入昵称" value="{{nickname}}" bindinput="onNicknameInput" />
+        <input type="nickname" class="form-input" placeholder="昵称（选填）" value="{{nickname}}" bindinput="onNicknameInput" />
       </view>
 
       <!-- 登录按钮 -->
@@ -33,4 +25,3 @@
     </view>
   </view>
 </view>
-

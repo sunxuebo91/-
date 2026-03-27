@@ -30,6 +30,45 @@ const getMiniProgramCode = async () => {
   return upload.fileID;
 };
 
+// 生成指定简历详情页的小程序码
+// 使用 wxacode.get + path 传 ID，避免 getUnlimited scene 32 字节限制导致 ID 被截断
+// 支持传入 staffId / staffPhone，让扫码进入时也能识别为"分享进入"并展示联系顾问
+const getResumeMiniCode = async (event) => {
+  const resumeId = (event.resumeId || '').toString();
+  const staffId   = (event.staffId   || '').toString();
+  const staffPhone = (event.staffPhone || '').toString();
+  if (!resumeId) throw new Error('missing resumeId');
+
+  // path 最长支持 128 字符；优先把 shared+sharerId+phone 塞进去，放不下时逐步降级
+  let path = `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`;
+  if (staffId) {
+    const withStaff = `${path}&shared=1&sharerId=${encodeURIComponent(staffId)}`;
+    if (withStaff.length <= 128) {
+      path = withStaff;
+      if (staffPhone) {
+        const withPhone = `${path}&p=${encodeURIComponent(staffPhone)}`;
+        if (withPhone.length <= 128) path = withPhone;
+      }
+    }
+  }
+
+  const resp = await cloud.openapi.wxacode.get({
+    path,
+    width: 200,        // 生成更精致的小尺寸码
+    is_hyaline: true,  // 透明背景 PNG
+  });
+  const { buffer } = resp;
+  // 每个员工对每张简历各缓存一份，避免不同员工扫码看到错误的顾问信息
+  const cloudPath = staffId
+    ? `resume-qrcodes/resume-${resumeId}-${staffId}.png`
+    : `resume-qrcodes/resume-${resumeId}.png`;
+  const upload = await cloud.uploadFile({
+    cloudPath,
+    fileContent: buffer,
+  });
+  return { success: true, fileID: upload.fileID };
+};
+
 // 创建集合
 const createCollection = async () => {
   try {
@@ -182,5 +221,7 @@ exports.main = async (event, context) => {
       return await insertRecord(event);
     case "deleteRecord":
       return await deleteRecord(event);
+    case "getResumeMiniCode":
+      return await getResumeMiniCode(event);
   }
 };
