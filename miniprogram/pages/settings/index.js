@@ -101,6 +101,10 @@ Page({
 
       if (res.result && res.result.success) {
         console.log("授权成功，返回的用户数据:", res.result.data);
+        // 同步昵称/头像到本地缓存，供分享时直接读取
+        const savedNickname = this.data.tempNickname || this.data.me.nickname;
+        if (savedNickname) wx.setStorageSync('userName', savedNickname);
+        if (avatarUrl) wx.setStorageSync('userAvatar', avatarUrl);
         wx.showToast({ title: "授权成功" });
         // 重新加载用户信息，包括手机号
         await this.loadMe();
@@ -154,6 +158,10 @@ Page({
           },
         },
       });
+
+      // 同步到本地缓存，供分享卡片/海报直接读取（避免还要异步调云函数）
+      wx.setStorageSync('userName', tempNickname);
+      if (avatarUrl) wx.setStorageSync('userAvatar', avatarUrl);
 
       wx.showToast({ title: "保存成功" });
       setTimeout(() => {

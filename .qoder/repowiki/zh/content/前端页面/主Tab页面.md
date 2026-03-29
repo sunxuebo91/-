@@ -14,10 +14,17 @@
 - [custom-tab-bar/index.js](file://miniprogram/custom-tab-bar/index.js)
 - [services/resume.js](file://miniprogram/services/resume.js)
 - [services/auth.js](file://miniprogram/services/auth.js)
+- [services/userService.js](file://miniprogram/services/userService.js)
 - [utils/request.js](file://miniprogram/utils/request.js)
 - [cloudfunctions/resumeService/index.js](file://cloudfunctions/resumeService/index.js)
 - [cloudfunctions/userService/index.js](file://cloudfunctions/userService/index.js)
 </cite>
+
+## 更新摘要
+**变更内容**   
+- 更新首页认证机制：移除了requireLogin()检查，允许访客浏览服务和价格信息
+- 更新个人中心页认证逻辑：保留requireLogin()检查，确保敏感功能的安全性
+- 更新用户体验分析：强调访客友好性和功能可用性的平衡
 
 ## 目录
 1. [简介](#简介)
@@ -32,6 +39,8 @@
 
 ## 简介
 本文档详细描述了安得褓贝小程序的主Tab页面，涵盖首页、家政列表和个人中心三个核心导航页面。文档说明了TabBar在`app.json`中的配置方式及其在用户导航中的作用，详细阐述了各页面的布局结构、功能入口、数据展示逻辑、分页加载机制、搜索过滤实现、用户信息管理及交互流程。同时，文档结合UI设计，说明响应式布局与用户体验优化策略，并分析页面与云函数的数据交互模式。
+
+**更新** 本次更新反映了首页认证要求的简化，移除了requireLogin()检查，允许访客浏览服务和价格信息，提升了用户体验。
 
 ## 项目结构
 
@@ -58,6 +67,7 @@ subgraph "服务与工具"
 services[services/]
 resume_service[resume.js]
 auth_service[auth.js]
+user_service[userService.js]
 utils[utils/]
 request[request.js]
 end
@@ -76,6 +86,7 @@ custom_tab_bar --> tab_js
 custom_tab_bar --> tab_wxml
 services --> resume_service
 services --> auth_service
+services --> user_service
 utils --> request
 cloudfunctions --> resumeService
 cloudfunctions --> userService
@@ -93,7 +104,7 @@ cloudfunctions --> userService
 ## 核心组件
 
 本文档的核心组件包括：
-- **首页（index）**：提供服务入口和导航跳转
+- **首页（index）**：提供服务入口和导航跳转，现允许访客浏览
 - **家政列表页（home）**：简历数据展示、分页加载、搜索过滤
 - **个人中心页（profile）**：用户信息展示、登录状态管理、设置跳转
 - **自定义TabBar**：主导航栏，支持页面切换
@@ -147,7 +158,7 @@ style Database fill:#f96,stroke:#333
 
 ### 首页分析
 
-首页是小程序的入口页面，提供服务分类和导航功能。
+首页是小程序的入口页面，提供服务分类和导航功能。**更新** 现在允许访客浏览，移除了requireLogin()检查。
 
 ```mermaid
 flowchart TD
@@ -238,7 +249,7 @@ FilterData --> UpdateUI["更新UI显示"]
 
 ### 个人中心页分析
 
-个人中心页负责用户信息展示、登录状态管理和设置跳转。
+个人中心页负责用户信息展示、登录状态管理和设置跳转。**更新** 保留了requireLogin()检查，确保敏感功能的安全性。
 
 ```mermaid
 sequenceDiagram
@@ -247,6 +258,7 @@ participant UserService as 用户服务
 participant Cloud as 云函数
 participant DB as 云数据库
 Profile->>Profile : onShow()
+Profile->>Profile : requireLogin() 检查
 Profile->>Profile : 更新TabBar选中状态
 Profile->>UserService : loadMe()
 UserService->>Cloud : 调用userService云函数
@@ -323,8 +335,10 @@ profile --> services
 resumeList --> services
 services --> resume_service[resume.js]
 services --> auth_service[auth.js]
+services --> user_service[userService.js]
 resume_service --> request[utils/request.js]
 auth_service --> request
+user_service --> request
 resumeList --> video_preloader[视频预加载器]
 cloudfunctions --> resumeService[resumeService]
 cloudfunctions --> userService[userService]
@@ -396,4 +410,8 @@ ReturnData --> End
 
 ## 结论
 
-安得褓贝小程序的主Tab页面设计合理，功能完整，实现了首页、家政列表和个人中心三个核心导航页面。通过自定义TabBar实现了灵活的导航控制，各页面之间通过规范的API调用和数据绑定实现交互。家政列表页实现了复杂的数据展示、分页加载和搜索过滤功能，个人中心页实现了用户信息管理和状态控制。整体架构清晰，依赖关系明确，性能优化到位，为用户提供了良好的使用体验。
+安得褓贝小程序的主Tab页面设计合理，功能完整，实现了首页、家政列表和个人中心三个核心导航页面。通过自定义TabBar实现了灵活的导航控制，各页面之间通过规范的API调用和数据绑定实现交互。
+
+**更新** 本次更新反映了用户体验优化的重要改进：首页移除了requireLogin()检查，允许访客浏览服务和价格信息，提升了用户友好性。同时，个人中心页仍保留认证检查，确保敏感功能的安全性。这种差异化的设计平衡了用户体验和安全需求。
+
+家政列表页实现了复杂的数据展示、分页加载和搜索过滤功能，个人中心页实现了用户信息管理和状态控制。整体架构清晰，依赖关系明确，性能优化到位，为用户提供了良好的使用体验。

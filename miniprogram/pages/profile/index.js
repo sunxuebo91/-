@@ -125,6 +125,10 @@ Page({
     wx.navigateTo({ url: "/pages/babyDiary/list/index" });
   },
 
+  goMyOrders() {
+    wx.navigateTo({ url: "/pages/myOrders/index" });
+  },
+
 
   // 跳转到测试页面
   goTestPage() {

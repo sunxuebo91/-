@@ -1745,8 +1745,8 @@ Page({
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
       const staffId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
       const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
-      const staffName = crmUserInfo.name || crmUserInfo.nickname || wx.getStorageSync('userName') || '';
-      const staffAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || wx.getStorageSync('userAvatar') || '';
+      const staffName = wx.getStorageSync('userName') || crmUserInfo.nickname || crmUserInfo.name || '';
+      const staffAvatar = wx.getStorageSync('userAvatar') || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
       if (staffId && (staffName || staffPhone)) {
@@ -1986,14 +1986,14 @@ Page({
     // 获取头像图片（优先用异步生成的上半身裁剪图，否则回退原图）
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 获取分享者信息
+    // 获取分享者信息（优先用员工在小程序设置的昵称/头像，其次回退到 CRM 数据）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
     const localName = wx.getStorageSync('userName') || '';
     const localPhone = wx.getStorageSync('userPhone') || '';
     const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = crmUserInfo.name || crmUserInfo.nickname || localName || '安得褓贝顾问';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
     const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || localAvatar || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
     const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
 
@@ -2019,9 +2019,9 @@ Page({
     const localName = wx.getStorageSync('userName') || '';
     const localPhone = wx.getStorageSync('userPhone') || '';
     const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = crmUserInfo.name || crmUserInfo.nickname || localName || '安得褓贝顾问';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
     const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || localAvatar || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
     const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
 

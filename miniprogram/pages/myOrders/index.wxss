@@ -1,0 +1,119 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx 20rpx;
+  box-sizing: border-box;
+}
+
+/* 状态页（加载中/空） */
+.state-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 160rpx;
+}
+.state-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.state-text { font-size: 32rpx; color: #555; font-weight: 500; }
+.state-sub { font-size: 26rpx; color: #999; margin-top: 12rpx; }
+
+/* 历史记录分隔线 */
+.history-divider {
+  display: flex; align-items: center;
+  margin: 8rpx 0 20rpx;
+}
+.history-divider::before,
+.history-divider::after {
+  content: ''; flex: 1;
+  height: 1rpx; background: #e0e0e0;
+}
+.history-divider-text {
+  font-size: 22rpx; color: #bbb;
+  padding: 0 20rpx; white-space: nowrap;
+}
+
+/* 卡片 */
+.contract-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+.service-type {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 历史合同卡片：灰化 */
+.card-history { opacity: 0.6; }
+
+/* 状态徽章 */
+.status-badge {
+  font-size: 24rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+.status-signing   { background: #f0ecfd; color: #8766F3; }
+.status-signed    { background: #ece6fd; color: #6b4fc7; }
+.status-active    { background: #8766F3; color: #fff; }
+.status-ended     { background: #f0f0f0; color: #999; }
+.status-cancelled { background: #f5e8f0; color: #a0407a; }
+.status-replaced  { background: #f0ecfd; color: #9b7ec8; }
+
+/* 卡片中部 */
+.card-body { margin-bottom: 24rpx; }
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.label {
+  font-size: 26rpx;
+  color: #999;
+  width: 130rpx;
+}
+.value {
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 卡片底部 */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 20rpx;
+}
+.onboard-tag {
+  font-size: 24rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+}
+.onboard-tag.pending   { background: #f0ecfd; color: #8766F3; }
+.onboard-tag.confirmed { background: #8766F3; color: #fff; }
+.arrow { font-size: 40rpx; color: #bbb; margin-left: auto; }
+.sign-btn {
+  font-size: 26rpx; color: #fff;
+  background: #8766F3;
+  border-radius: 20rpx;
+  padding: 8rpx 28rpx;
+}
+.onboard-btn {
+  font-size: 26rpx; color: #8766F3;
+  border: 1rpx solid #8766F3;
+  border-radius: 20rpx;
+  padding: 8rpx 28rpx;
+}
+

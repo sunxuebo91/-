@@ -1,0 +1,87 @@
+<view class="page">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{contract}}">
+    <!-- 合同状态横幅 -->
+    <view class="status-banner status-{{contract.contractStatus}}">
+      <text class="status-text">{{contract.statusText}}</text>
+    </view>
+
+    <!-- 客户信息 -->
+    <view class="section">
+      <view class="section-title">客户信息</view>
+      <view class="row"><text class="label">姓　　名</text><text class="value">{{contract.customerName}}</text></view>
+      <view class="row"><text class="label">手　机　号</text><text class="value">{{contract.customerPhone}}</text></view>
+    </view>
+
+    <!-- 服务信息 -->
+    <view class="section">
+      <view class="section-title">服务信息</view>
+      <view class="row"><text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text></view>
+      <view class="row"><text class="label">服务费用</text><text class="value">¥{{contract.serviceFee}} 元</text></view>
+      <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
+    </view>
+
+    <!-- 阿姨信息 -->
+    <view class="section">
+      <view class="section-title-row">
+        <text class="section-title">服务阿姨</text>
+        <view wx:if="{{contract.showOnboard}}"
+              class="onboard-btn {{contract.confirming ? 'onboard-btn-disabled' : ''}}"
+              bindtap="confirmOnboard">
+          {{contract.confirming ? '提交中...' : '确认上户'}}
+        </view>
+        <view wx:elif="{{contract.onboardConfirmed}}" class="onboard-done">✓ 已确认上户</view>
+      </view>
+      <view class="row"><text class="label">阿姨姓名</text><text class="value">{{contract.nannyName}}</text></view>
+      <view class="row"><text class="label">阿姨工资</text><text class="value">¥{{contract.nannySalary}} 元/月</text></view>
+      <view class="row" wx:if="{{contract.nannyPhone}}">
+        <text class="label">阿姨电话</text>
+        <view class="value-row">
+          <text class="value">{{contract.nannyPhone}}</text>
+          <view class="call-btn" bindtap="callNanny">拨打</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签约进度 -->
+    <view class="section" wx:if="{{contract.hasSigning}}">
+      <view class="section-title">签约进度</view>
+      <view class="signer-row">
+        <text class="signer-label">甲方（您）</text>
+        <text class="signer-status {{contract.customerSigned ? 'done' : 'pending'}}">
+          {{contract.customerSigned ? '✓ 已签署' : '待签署'}}
+        </text>
+      </view>
+      <view class="signer-row">
+        <text class="signer-label">乙方（阿姨）</text>
+        <text class="signer-status {{contract.nannySigned ? 'done' : 'pending'}}">
+          {{contract.nannySigned ? '✓ 已签署' : '待签署'}}
+        </text>
+      </view>
+    </view>
+
+    <!-- 上户确认时间（已确认时显示） -->
+    <view class="section" wx:if="{{contract.onboardConfirmed && contract.onboardConfirmedAt}}">
+      <view class="section-title">上户记录</view>
+      <view class="row"><text class="label">确认时间</text><text class="value">{{contract.onboardConfirmedAt}}</text></view>
+    </view>
+
+    <!-- 操作按钮区 -->
+    <view class="action-area">
+      <button wx:if="{{contract.showDownload}}" class="btn btn-outline" bindtap="downloadContract">
+        📄 下载合同
+      </button>
+      <button wx:if="{{contract.showSign}}" class="btn btn-primary" bindtap="goSign">
+        ✍️ 去签约
+      </button>
+      <view wx:elif="{{contract.waitingNanny}}" class="waiting-tip">
+        ⏳ 等待阿姨完成签署
+      </view>
+    </view>
+  </block>
+</view>
+

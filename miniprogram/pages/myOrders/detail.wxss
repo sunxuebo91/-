@@ -1,0 +1,117 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 60rpx;
+}
+.loading-wrap {
+  display: flex; justify-content: center;
+  margin-top: 200rpx;
+}
+.loading-text { font-size: 30rpx; color: #999; }
+
+/* 状态横幅 */
+.status-banner {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 36rpx;
+  margin-bottom: 20rpx;
+  background: #f0ecfd;
+}
+.status-banner.status-active   { background: #8766F3; }
+.status-banner.status-active .status-text { color: #fff; }
+.status-banner.status-ended    { background: #eeeeee; }
+.status-banner.status-cancelled { background: #f5e8f0; }
+.status-text { font-size: 32rpx; font-weight: 600; color: #8766F3; }
+.onboard-tag {
+  font-size: 24rpx; padding: 6rpx 20rpx;
+  border-radius: 20rpx; font-weight: 500;
+}
+.onboard-tag.pending   { background: #fff; color: #8766F3; border: 1rpx solid #8766F3; }
+.onboard-tag.confirmed { background: #fff; color: #6b4fc7; border: 1rpx solid #6b4fc7; }
+
+/* 信息卡片 */
+.section {
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 0 20rpx 20rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+.section-title-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding-bottom: 14rpx;
+  border-bottom: 1rpx solid #f0ecfd;
+}
+.section-title {
+  font-size: 26rpx; color: #8766F3; font-weight: 600;
+}
+.onboard-btn {
+  font-size: 24rpx; color: #8766F3;
+  border: 1rpx solid #8766F3;
+  border-radius: 20rpx;
+  padding: 6rpx 24rpx;
+}
+.onboard-btn-disabled { opacity: 0.5; }
+.onboard-done { font-size: 24rpx; color: #8766F3; font-weight: 500; }
+.row {
+  display: flex; align-items: center;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #fafafa;
+}
+.row:last-child { border-bottom: none; }
+.label { font-size: 28rpx; color: #999; width: 160rpx; flex-shrink: 0; }
+.value { font-size: 30rpx; color: #333; flex: 1; }
+.value-row { display: flex; align-items: center; flex: 1; justify-content: space-between; }
+.call-btn {
+  font-size: 26rpx; color: #8766F3;
+  border: 1rpx solid #8766F3;
+  border-radius: 20rpx; padding: 6rpx 24rpx;
+}
+
+/* 操作按钮区 */
+.action-area {
+  padding: 20rpx 20rpx 0;
+  display: flex; flex-direction: column; gap: 20rpx;
+}
+.btn {
+  width: 100%; border-radius: 50rpx;
+  font-size: 32rpx; font-weight: 500;
+  padding: 0; height: 90rpx; line-height: 90rpx;
+  border: none;
+}
+.btn-outline {
+  background: #fff; color: #8766F3;
+  border: 2rpx solid #8766F3;
+}
+.btn-primary { background: #8766F3; color: #fff; }
+.btn-onboard { background: #3d9970; color: #fff; }
+.btn[disabled] { opacity: 0.6; }
+
+.confirmed-tip {
+  text-align: center;
+  font-size: 28rpx; color: #2e7d32;
+  padding: 20rpx 0;
+}
+
+/* 签约进度 */
+.signer-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+.signer-row:last-child { border-bottom: none; }
+.signer-label { font-size: 28rpx; color: #555; }
+.signer-status { font-size: 26rpx; font-weight: 500; }
+.signer-status.done    { color: #8766F3; }
+.signer-status.pending { color: #bbb; }
+
+/* 等待阿姨签约提示 */
+.waiting-tip {
+  text-align: center;
+  font-size: 28rpx; color: #999;
+  padding: 24rpx 0;
+}
+

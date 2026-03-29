@@ -8,12 +8,25 @@ const THUMB_QUALITY = 70;
 const HIDE_SECTION_TITLES = ['证书'];
 
 function normalizeToUrls(input) {
-  const arr = Array.isArray(input) ? input : [];
+  // 兼容嵌套 { files: [...] } 结构
+  if (input && typeof input === 'object' && !Array.isArray(input) && Array.isArray(input.files)) {
+    input = input.files;
+  }
+  const arr = Array.isArray(input) ? input : (input ? [input] : []);
   return arr
     .map((x) => {
       if (!x) return '';
       if (typeof x === 'string') return x;
-      if (typeof x === 'object') return x.url || x.fileUrl || x.path || '';
+      if (typeof x === 'object') {
+        // 优先检查所有常见 URL 属性名（含 COS 系统常用的 cosUrl）
+        const knownUrl = x.url || x.fileUrl || x.fileURL || x.cosUrl || x.path || x.src || x.imagePath || x.filePath || x.downloadUrl || x.accessUrl || '';
+        if (knownUrl) return knownUrl;
+        // 兜底：扫描对象里第一个看起来像 https 链接的字符串属性
+        const vals = Object.values(x);
+        for (const v of vals) {
+          if (typeof v === 'string' && (v.startsWith('https://') || v.startsWith('http://'))) return v;
+        }
+      }
       return '';
     })
     .filter(Boolean);
@@ -22,7 +35,9 @@ function normalizeToUrls(input) {
 function pickFirstNonEmptyArray(data, keys) {
   for (const k of keys) {
     const v = data && data[k];
+    // 兼容数组和单个对象/字符串
     if (Array.isArray(v) && v.length) return v;
+    if (v && !Array.isArray(v)) return [v]; // 单值包装成数组
   }
   return [];
 }
@@ -108,19 +123,37 @@ Page({
       const resp = await resumeService.getResumeDetailMiniprogram(id);
       const data = (resp && resp.success && resp.data) ? resp.data : {};
 
+      // 调试：打印 CRM 返回的相册相关字段
+      console.log('📸 [相册页] CRM 返回数据字段:', Object.keys(data || {}));
+      console.log('📸 [相册页] personalPhoto:', data.personalPhoto);
+      console.log('📸 [相册页] albums:', data.albums);
+
       // 1) 如果后端直接返回了按分类组织的数据（兼容多种字段名）
       const albums = Array.isArray(data.albums) ? data.albums : (Array.isArray(data.album) ? data.album : []);
       if (albums.length) {
+        console.log('📸 [相册页] 使用 albums 数据，共', albums.length, '个分类');
+        albums.forEach((a, idx) => {
+          const rawPhotos = a.photos || a.files || a.list || a.items;
+          console.log(`📸 [相册页] albums[${idx}]:`, {
+            name: a.name || a.title || a.categoryName || a.category,
+            rawPhotosType: Array.isArray(rawPhotos) ? 'array' : typeof rawPhotos,
+            rawPhotosLength: Array.isArray(rawPhotos) ? rawPhotos.length : 0,
+            rawPhotos: rawPhotos
+          });
+        });
+
         const sections = albums
           .map((a) => {
             const title = a.name || a.title || a.categoryName || a.category || '未分类';
             const urls = normalizeToUrls(a.photos || a.files || a.list || a.items);
+            console.log(`📸 [相册页] 分类 "${title}" 解析出 ${urls.length} 个 URL:`, urls);
             const items = buildItems(urls);
             return { title, items };
           })
           .filter((x) => x.items && x.items.length)
           .filter((x) => !shouldHideTitle(x.title));
 
+        console.log('📸 [相册页] 最终 sections:', sections.map(s => ({ title: s.title, count: s.items.length })));
         this.setData({ sections, loading: false });
         return;
       }
@@ -139,13 +172,16 @@ Page({
       const sections = sectionsSpec
         .map((spec) => {
           const raw = pickFirstNonEmptyArray(data, spec.keys);
+          console.log(`📸 [相册页] 兜底 "${spec.title}" raw:`, raw);
           const urls = normalizeToUrls(raw);
+          console.log(`📸 [相册页] 兜底 "${spec.title}" urls:`, urls);
           const items = buildItems(urls);
           return { title: spec.title, items };
         })
         .filter((x) => x.items.length)
         .filter((x) => !shouldHideTitle(x.title));
 
+      console.log('📸 [相册页] 兜底 最终 sections:', sections.map(s => ({ title: s.title, count: s.items.length })));
       this.setData({ sections, loading: false });
     } catch (e) {
       console.error('相册加载失败', e);

@@ -14,6 +14,9 @@
     "pages/login/index",
     "pages/register/index",
     "pages/settings/index",
+    "pages/myOrders/index",
+    "pages/myOrders/detail",
+    "pages/webview/index",
     "pages/legal/userAgreement/index",
     "pages/legal/privacyPolicy/index",
 

@@ -21,11 +21,26 @@
     </view>
   </view>
 
-  <view class="section">
-    <view class="menu-item" bindtap="goBabyDiary">
-      <view class="menu-label">宝贝日记</view>
-      <view class="menu-arrow">›</view>
+  <!-- 我的服务：图标宫格 -->
+  <view class="section service-section">
+    <view class="section-title">我的服务</view>
+    <view class="service-grid">
+      <view class="service-item" bindtap="goMyOrders" wx:if="{{me.role !== 'staff' && me.phone}}">
+        <view class="service-icon-wrap service-icon-order">
+          <image class="service-icon-img" src="/images/icons/my-orders.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">我的订单</text>
+      </view>
+      <view class="service-item" bindtap="goBabyDiary">
+        <view class="service-icon-wrap service-icon-diary">
+          <image class="service-icon-img" src="/images/icons/baby-diary.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">宝贝日记</text>
+      </view>
     </view>
+  </view>
+
+  <view class="section">
 
     <view class="menu-item contact-menu-item">
       <view class="menu-label">联系客服</view>

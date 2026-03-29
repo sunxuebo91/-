@@ -177,6 +177,41 @@
   font-weight: 300;
 }
 
+/* 我的服务 图标宫格 */
+.service-section {
+  padding: 0 32rpx 32rpx;
+}
+.service-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 40rpx;
+  padding-top: 24rpx;
+}
+.service-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+.service-icon-wrap {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.service-icon-order { background: #EDE8FF; }
+.service-icon-diary  { background: #FFF0E8; }
+.service-icon-img {
+  width: 60rpx;
+  height: 60rpx;
+}
+.service-label {
+  font-size: 24rpx;
+  color: #333;
+}
+
 
 
 /* 微信头像昵称授权按钮 */

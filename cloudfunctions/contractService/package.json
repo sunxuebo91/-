@@ -1,0 +1,15 @@
+{
+  "name": "contractService",
+  "version": "1.0.0",
+  "description": "客户合同查询与上户确认",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}
+

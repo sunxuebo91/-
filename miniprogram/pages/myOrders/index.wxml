@@ -1,0 +1,62 @@
+<view class="page">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="state-wrap">
+    <view class="state-icon">⏳</view>
+    <view class="state-text">加载中...</view>
+  </view>
+
+  <!-- 暂无合同 -->
+  <view wx:elif="{{empty}}" class="state-wrap">
+    <view class="state-icon">📋</view>
+    <view class="state-text">暂无合同订单</view>
+    <view class="state-sub">您的服务合同信息将在这里显示</view>
+  </view>
+
+  <!-- 合同列表 -->
+  <view wx:else class="list">
+    <block wx:for="{{contracts}}" wx:key="_id">
+      <!-- 历史记录分隔线：第一条旧合同前插入 -->
+      <view wx:if="{{item.isHistory && (index === 0 || !contracts[index-1].isHistory)}}" class="history-divider">
+        <text class="history-divider-text">历史换人记录</text>
+      </view>
+
+    <view
+      class="contract-card {{item.isHistory ? 'card-history' : ''}}"
+      bindtap="goDetail"
+      data-id="{{item._id}}"
+    >
+      <!-- 顶部：服务类型 + 合同状态 -->
+      <view class="card-header">
+        <text class="service-type">{{item.serviceTypeText}}</text>
+        <view class="status-badge status-{{item.contractStatus}}">{{item.statusText}}</view>
+      </view>
+
+      <!-- 中部：阿姨姓名 + 开始日期 -->
+      <view class="card-body">
+        <view class="info-row">
+          <text class="label">服务阿姨</text>
+          <text class="value">{{item.nannyName || '待定'}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.startDateFmt}}">
+          <text class="label">开始日期</text>
+          <text class="value">{{item.startDateFmt}}</text>
+        </view>
+      </view>
+
+      <!-- 底部：操作按钮 + 箭头 -->
+      <view class="card-footer">
+        <view wx:if="{{item.showSign}}"
+              class="sign-btn"
+              catchtap="goSign"
+              data-id="{{item._id}}">去签约</view>
+        <view wx:elif="{{item.showOnboard}}"
+              class="onboard-btn"
+              catchtap="confirmOnboard"
+              data-id="{{item._id}}">去确认上户</view>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+    </block>
+  </view>
+</view>
+
