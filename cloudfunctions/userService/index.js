@@ -20,6 +20,7 @@ async function ensureCollections() {
     safeCreateCollection("users"),
     safeCreateCollection("staff"),
     safeCreateCollection("accounts"),
+    safeCreateCollection("staff_profiles"),
   ]);
 }
 
@@ -110,16 +111,82 @@ async function getMyInfo(openid) {
 }
 
 /**
- * 按用户 _id 查询顾问公开信息（姓名、电话、头像）
- * 供客户扫海报二维码进入简历详情页时，异步拉取分享顾问的完整信息
+ * 保存员工公开信息到 staff_profiles 集合
+ * 员工生成海报/二维码时调用，确保扫码方能查询到完整顾问信息
  */
-async function getStaffPublicInfo(userId) {
-  if (!userId) throw new Error('missing userId');
-  const r = await db.collection('users').doc(userId).get();
-  if (!r.data) throw new Error('user not found');
-  const user = r.data;
+async function saveStaffProfile(staffId, name, phone, avatar, company) {
+  if (!staffId && !phone) throw new Error('missing staffId or phone');
+  const doc = {
+    staffId: staffId || '',
+    name: name || '',
+    phone: phone || '',
+    avatar: avatar || '',
+    company: company || '安得褓贝',
+    updatedAt: db.serverDate()
+  };
+  try {
+    const existing = staffId
+      ? await db.collection('staff_profiles').where({ staffId }).limit(1).get()
+      : { data: [] };
+    if (existing.data && existing.data.length > 0) {
+      await db.collection('staff_profiles').where({ staffId }).update({ data: doc });
+    } else {
+      await db.collection('staff_profiles').add({ data: { ...doc, createdAt: db.serverDate() } });
+    }
+  } catch (e) {
+    console.error('saveStaffProfile error:', e);
+  }
+  return doc;
+}
+
+/**
+ * 按 staffId / 手机号查询顾问公开信息（姓名、电话、头像）
+ * 供客户扫海报二维码进入简历详情页时，异步拉取分享顾问的完整信息
+ * 查找顺序：staff_profiles(staffId) → staff_profiles(phone) → users.doc → users(phone)
+ */
+async function getStaffPublicInfo(userId, phone) {
+  // 1. 优先从 staff_profiles 按 staffId 查找（生成海报时已缓存）
+  if (userId) {
+    try {
+      const r = await db.collection('staff_profiles').where({ staffId: userId }).limit(1).get();
+      if (r.data && r.data[0]) {
+        const p = r.data[0];
+        return { _id: userId, name: p.name || '', phone: p.phone || '', avatar: p.avatar || '', company: p.company || '安得褓贝' };
+      }
+    } catch (e) { /* 继续尝试其他方式 */ }
+  }
+
+  // 2. 按手机号从 staff_profiles 查找
+  if (phone) {
+    try {
+      const r = await db.collection('staff_profiles').where({ phone: String(phone) }).limit(1).get();
+      if (r.data && r.data[0]) {
+        const p = r.data[0];
+        return { _id: p.staffId || userId || '', name: p.name || '', phone: p.phone || '', avatar: p.avatar || '', company: p.company || '安得褓贝' };
+      }
+    } catch (e) { /* 继续 */ }
+  }
+
+  // 3. 兼容旧逻辑：按 userId 从 users 集合 doc 查找
+  let user = null;
+  if (userId) {
+    try {
+      const r = await db.collection('users').doc(userId).get();
+      if (r.data) user = r.data;
+    } catch (e) { /* 不存在 */ }
+  }
+
+  // 4. 按手机号从 users 集合查找
+  if (!user && phone) {
+    try {
+      const r = await db.collection('users').where({ phone: String(phone) }).limit(1).get();
+      if (r.data && r.data[0]) user = r.data[0];
+    } catch (e) { /* 不存在 */ }
+  }
+
+  if (!user) throw new Error('user not found');
   return {
-    _id: user._id || userId,
+    _id: user._id || userId || '',
     name: user.name || user.nickname || '',
     phone: user.phone || '',
     avatar: user.avatarUrl || user.avatar || '',
@@ -377,7 +444,11 @@ exports.main = async (event, context) => {
       return await addStaff(openid, event.phone || '', event.targetOpenid || '');
     }
     case "getStaffPublicInfo": {
-      const info = await getStaffPublicInfo(event.userId);
+      const info = await getStaffPublicInfo(event.userId, event.phone);
+      return { success: true, data: info };
+    }
+    case "saveStaffProfile": {
+      const info = await saveStaffProfile(event.staffId, event.name, event.phone, event.avatar, event.company);
       return { success: true, data: info };
     }
     default:

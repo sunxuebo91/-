@@ -62,7 +62,9 @@ const MATERNITY_LEVEL_MAP = {
 
 const ORDER_STATUS_MAP = {
   'available': '可接单',
+  'accepting': '可接单',
   'busy': '忙碌中',
+  'working': '忙碌中',
   'unavailable': '暂不接单'
 };
 
@@ -316,10 +318,11 @@ Page({
       });
 
       // 海报二维码扫码进来：URL 里没有顾问姓名，异步拉取完整信息补全（与卡片分享保持一致）
-      if (!sharer && resolvedSharerId) {
+      // 同时传入 phone 作为回退查询条件，解决 CRM userId 与云数据库 _id 不一致问题
+      if (!sharer && (resolvedSharerId || resolvedPhone)) {
         wx.cloud.callFunction({
           name: 'userService',
-          data: { action: 'getStaffPublicInfo', userId: resolvedSharerId }
+          data: { action: 'getStaffPublicInfo', userId: resolvedSharerId, phone: resolvedPhone }
         }).then(res => {
           if (res && res.result && res.result.success) {
             const d = res.result.data;
@@ -348,10 +351,6 @@ Page({
         console.log('隐藏home按钮失败:', e);
       }
     }
-
-    // 员工分享进入不强制登录，其他情况需登录
-    const isSharedEntry = (options.shared === '1') || !!options.scene;
-    if (!isSharedEntry && !userService.requireLogin()) return;
 
     this.setData({ id: id || "" });
 
@@ -1746,6 +1745,17 @@ Page({
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
       const staffId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
       const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
+      const staffName = crmUserInfo.name || crmUserInfo.nickname || wx.getStorageSync('userName') || '';
+      const staffAvatar = crmUserInfo.avatar || crmUserInfo.avatarUrl || wx.getStorageSync('userAvatar') || '';
+
+      // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
+      if (staffId && (staffName || staffPhone)) {
+        wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
+        }).catch(err => console.warn('⚠️ 缓存顾问信息失败(不影响海报生成):', err));
+      }
+
       const [photoLocalPath, qrLocalPath] = await Promise.all([
         this._downloadImage(photoUrl),
         this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone)

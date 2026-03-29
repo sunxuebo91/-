@@ -89,10 +89,6 @@ Page({
   },
 
   onLoad(options) {
-    // 员工分享进入不强制登录
-    const isSharedEntry = options.shared === '1';
-    if (!isSharedEntry && !userService.requireLogin()) return;
-
     const id = options && options.id;
     this.setData({ id: id ? String(id) : '' });
     this.loadAlbum();

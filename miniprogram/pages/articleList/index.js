@@ -207,7 +207,6 @@ Page({
   },
 
   onLoad() {
-    if (!userService.requireLogin()) return;
     this.loadArticles({ reset: true });
   },
 

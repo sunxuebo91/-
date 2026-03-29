@@ -37,13 +37,13 @@
         </view>
         <text class="quick-text">保姆</text>
       </view>
-      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuexin">
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuesao">
         <view class="quick-icon bg-2">
           <image class="quick-icon-img" src="/images/icons/yuexin.svg" mode="aspectFit"></image>
         </view>
         <text class="quick-text">月嫂</text>
       </view>
-      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuesao">
+      <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuer">
         <view class="quick-icon bg-3">
           <image class="quick-icon-img" src="/images/icons/yuer.svg" mode="aspectFit"></image>
         </view>

@@ -26,7 +26,7 @@ const LEVEL_OPTIONS = [
 // 工种类型选项（自定义弹层，不受 ActionSheet 6 条限制）
 const TYPE_OPTIONS = [
   { key: null, label: '全部', emoji: '📋', iconClass: 'icon-all' },
-  { key: 'yuexin', label: '月嫂', icon: '/images/icons/yuexin.svg', iconClass: 'icon-yuexin' },
+  { key: 'yuesao', label: '月嫂', icon: '/images/icons/yuexin.svg', iconClass: 'icon-yuexin' },
   { key: 'zhujia-yuer', label: '住家育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
   { key: 'baiban-yuer', label: '白班育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
   { key: 'zhujia-baomu', label: '住家保姆', icon: '/images/icons/baomu.svg', iconClass: 'icon-baomu' },
@@ -222,7 +222,6 @@ Page({
 
   async onLoad(options) {
     console.log('📋 页面 onLoad, options:', options);
-    if (!userService.requireLogin()) return;
 
     // 从 URL 参数获取工种
     const jobType = options?.jobType;
@@ -230,27 +229,24 @@ Page({
     if (jobType) {
       console.log('🔍 从 URL 参数获取工种:', jobType);
 
-      // 根据工种映射到对应的筛选项
+      // 根据工种映射到对应的筛选项（找不到则直接用原值，如 yuesao 直接匹配）
       const typeMapping = {
         'baomu': 'zhujia-baomu',      // 保姆 -> 住家保姆
-        'yuexin': 'yuexin',            // 月嫂 -> 月嫂
-        'yuesao': 'zhujia-yuer',       // 育儿嫂 -> 住家育儿嫂
-        'hulao': 'zhujia-hulao'        // 护老 -> 住家护老
+        'yuer': 'zhujia-yuer',        // 育儿嫂 -> 住家育儿嫂
+        'hulao': 'zhujia-hulao'       // 护老 -> 住家护老
       };
 
-      const mappedType = typeMapping[jobType];
+      const mappedType = typeMapping[jobType] || jobType;
       console.log('🔍 映射后的工种:', mappedType);
 
-      if (mappedType) {
-        const typeOption = TYPE_OPTIONS.find(opt => opt.key === mappedType);
-        if (typeOption) {
-          console.log('🔍 设置工种筛选:', typeOption.label, '(', mappedType, ')');
-          // 设置筛选条件
-          this.setData({
-            selectedType: mappedType,
-            selectedTypeText: typeOption.label
-          });
-        }
+      const typeOption = TYPE_OPTIONS.find(opt => opt.key === mappedType);
+      if (typeOption) {
+        console.log('🔍 设置工种筛选:', typeOption.label, '(', mappedType, ')');
+        // 设置筛选条件
+        this.setData({
+          selectedType: mappedType,
+          selectedTypeText: typeOption.label
+        });
       }
     }
 

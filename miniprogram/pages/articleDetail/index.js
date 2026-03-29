@@ -257,8 +257,6 @@ Page({
   },
 
   async onLoad(options) {
-    if (!userService.requireLogin()) return;
-
     const id = options?.id ? decodeURIComponent(options.id) : '';
     this.setData({ id });
 

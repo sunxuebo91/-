@@ -112,7 +112,6 @@ Page({
   },
 
   onLoad() {
-    if (!userService.requireLogin()) return;
     this.loadShareLogo();
   },
 
