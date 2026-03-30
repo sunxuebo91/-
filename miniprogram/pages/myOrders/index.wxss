@@ -51,7 +51,7 @@
 .service-type {
   font-size: 34rpx;
   font-weight: 600;
-  color: #333;
+  color: #8766F3;
 }
 
 /* 历史合同卡片：灰化 */

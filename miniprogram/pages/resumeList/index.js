@@ -396,6 +396,19 @@ Page({
             : (item.personalPhoto ? [item.personalPhoto] : []);
           const photos = rawPhotos.map(p => (typeof p === 'string' ? p : (p.url || p.fileUrl || p.path || ''))).filter(Boolean);
 
+          // 处理工装照（uniformPhoto）：CRM 单独字段，兼容字符串/对象/数组
+          const uniformPhotoUrl = (() => {
+            const raw = item.uniformPhoto;
+            if (!raw) return '';
+            if (typeof raw === 'string') return raw;
+            if (Array.isArray(raw)) {
+              const first = raw[0];
+              if (!first) return '';
+              return typeof first === 'string' ? first : (first.url || first.fileUrl || first.path || '');
+            }
+            return raw.url || raw.fileUrl || raw.path || '';
+          })();
+
 	      // 格式化工作类型
 	      const formatJobType = (jobType) => {
 	        if (!jobType) return '';
@@ -539,7 +552,7 @@ Page({
 	            priceUnit,
             tags: formatSkills(item.skills || []),  // 使用格式化后的标签
             intro: item.selfIntroduction,
-            coverFileId: photos[0] || item.avatarUrl || '',
+            coverFileId: uniformPhotoUrl || photos[0] || item.avatarUrl || '',
             photos: photos,
             videoUrl: videoUrl,  // 添加视频 URL
             videoLocalPath: '',  // 预加载后的本地路径

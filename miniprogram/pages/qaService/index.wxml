@@ -1,22 +1,14 @@
 <view class="qa-service">
   <!-- 对齐“报价列表卡片(price-card)”的容器与结构 -->
   <view class="content">
-    <view class="price-card price-card-purple" bindtap="goHouseRules">
+    <view class="price-card price-card-orange" bindtap="goHouseRules">
       <view class="price-card-content">
         <view class="price-card-title">安得阿姨上户须知</view>
         <view class="price-card-subtitle">查看详细上户须知</view>
       </view>
       <image class="price-card-image" src="/images/icons/info-circle.svg" mode="aspectFit"></image>
     </view>
-
-    <view class="price-card price-card-green" bindtap="goHourlyContractPreview">
-      <view class="price-card-content">
-        <view class="price-card-title">小时工服务合同预览</view>
-        <view class="price-card-subtitle">查看最新服务合同</view>
-      </view>
-      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
-    </view>
-
+    
     <view class="price-card price-card-purple" bindtap="goNannyChildcareContractPreview">
       <view class="price-card-content">
         <view class="price-card-title">保姆育儿服务合同预览</view>

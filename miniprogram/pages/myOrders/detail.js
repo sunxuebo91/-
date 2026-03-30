@@ -13,6 +13,17 @@ function formatDate(str) {
   return str.slice(0, 10);
 }
 
+// 计算两个日期之间的月数差
+function calculateMonths(start, end) {
+  if (!start || !end) return '';
+  const d1 = new Date(start);
+  const d2 = new Date(end);
+  const yearDiff = d2.getFullYear() - d1.getFullYear();
+  const monthDiff = d2.getMonth() - d1.getMonth();
+  const totalMonths = yearDiff * 12 + monthDiff;
+  return totalMonths > 0 ? `${totalMonths}个月` : '—';
+}
+
 function formatDateTime(str) {
   if (!str) return '';
   // ISO → 北京时间（+8）
@@ -73,6 +84,8 @@ Page({
           nannySalary:      c.workerSalary || 0,
           serviceFee:       c.customerServiceFee || 0,
           startDateFmt:     formatDate(c.startDate),
+          endDateFmt:       formatDate(c.endDate),
+          contractDuration: calculateMonths(c.startDate, c.endDate),
           statusText,
           // 确认上户仅在双方都签完后才开放
           onboardConfirmed: c.onboardStatus === 'confirmed',

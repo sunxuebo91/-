@@ -11,6 +11,7 @@ const VIDEO_CACHE_MAX = 8;
 // 数据字典
 const JOB_TYPE_MAP = {
   'yuexin': '月嫂',
+  'yuesao': '月嫂',
   'zhujia-yuer': '住家育儿嫂',
   'baiban-yuer': '白班育儿嫂',
   'baojie': '保洁',
@@ -1743,10 +1744,13 @@ Page({
       const resumeQrId = this.data.id || detail._id || '';
       // 读取当前员工信息，嵌入二维码路径，让客户扫码后能看到"联系顾问"
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-      const staffId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+      // userInfo 由 CRM 账号登录（auth.js）写入，含 name / avatar 等真实员工字段
+      const localUserInfo = wx.getStorageSync('userInfo') || {};
+      // 统一转为字符串，避免整数类型（CRM userId 为数字）与云函数/URL 参数字符串类型不匹配
+      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '');
       const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
-      const staffName = wx.getStorageSync('userName') || crmUserInfo.nickname || crmUserInfo.name || '';
-      const staffAvatar = wx.getStorageSync('userAvatar') || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      const staffName = wx.getStorageSync('userName') || crmUserInfo.nickname || crmUserInfo.name || localUserInfo.name || localUserInfo.nickname || '';
+      const staffAvatar = wx.getStorageSync('userAvatar') || crmUserInfo.avatarUrl || crmUserInfo.avatar || localUserInfo.avatarUrl || localUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
       if (staffId && (staffName || staffPhone)) {

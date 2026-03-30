@@ -20,6 +20,7 @@
           type="nickname"
           placeholder="请输入昵称"
           value="{{tempNickname}}"
+          bindinput="onNicknameInput"
           bindblur="onNicknameBlur"
         />
       </view>

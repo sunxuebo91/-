@@ -253,7 +253,9 @@ Page({
     shareLogo: '',
     images: [],  // 小红书风格：多图数组
     currentImageIndex: 0,  // 当前图片索引
-    swiperHeight: 0  // 动态计算的轮播图高度
+    swiperHeight: 0,  // 动态计算的轮播图高度
+    isShared: false,
+    sharerInfo: null
   },
 
   async onLoad(options) {
@@ -264,6 +266,47 @@ Page({
       wx.showToast({ title: '文章ID缺失', icon: 'none' });
       this.setData({ loading: false });
       return;
+    }
+
+    // 解析分享参数
+    const { shared, sharerId, sharer, sharerPhone, sharerCompany, sharerAvatar } = options || {};
+    if (shared === '1') {
+      const resolvedSharerId = sharerId ? decodeURIComponent(sharerId) : '';
+      const sharerInfoData = {
+        id: resolvedSharerId,
+        name: sharer ? decodeURIComponent(sharer) : '安得褓贝顾问',
+        phone: sharerPhone ? decodeURIComponent(sharerPhone) : '',
+        company: sharerCompany ? decodeURIComponent(sharerCompany) : '安得褓贝',
+        avatar: sharerAvatar ? decodeURIComponent(sharerAvatar) : ''
+      };
+      this.setData({
+        isShared: true,
+        sharerInfo: sharerInfoData
+      });
+
+      // 如果缺少顾问姓名，异步拉取完整信息补全
+      if (!sharer && (resolvedSharerId || sharerPhone)) {
+        wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getStaffPublicInfo', userId: resolvedSharerId, phone: sharerPhone ? decodeURIComponent(sharerPhone) : '' }
+        }).then(res => {
+          if (res && res.result && res.result.success) {
+            const d = res.result.data;
+            const cur = this.data.sharerInfo || {};
+            this.setData({
+              sharerInfo: {
+                ...cur,
+                name: d.name || cur.name,
+                phone: d.phone || cur.phone,
+                avatar: d.avatar || cur.avatar,
+                company: d.company || cur.company
+              }
+            });
+          }
+        }).catch(err => {
+          console.warn('⚠️ 拉取顾问信息失败（不影响主流程）:', err);
+        });
+      }
     }
 
     // 预取分享 LOGO
@@ -365,9 +408,23 @@ Page({
     const title = article.title || '安得褓贝 · 文章';
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
+
+    // 获取分享者信息
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerCompany = '安得褓贝';
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+
+    const sharePath = `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+
     return {
       title,
-      path: `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}`,
+      path: sharePath,
       imageUrl
     };
   },
@@ -379,9 +436,23 @@ Page({
     const title = article.title || '安得褓贝 · 文章';
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
+
+    // 获取分享者信息
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerCompany = '安得褓贝';
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+
     return {
       title,
-      query: `id=${encodeURIComponent(String(id))}`,
+      query: shareQuery,
       imageUrl
     };
   },
@@ -491,6 +562,36 @@ Page({
     } catch (err) {
       console.error('获取分享LOGO失败，使用默认图:', err);
     }
+  },
+
+  // 联系顾问
+  onContactAdvisor() {
+    const sharerInfo = this.data.sharerInfo;
+    if (!sharerInfo) {
+      wx.showToast({ title: '顾问信息不存在', icon: 'none' });
+      return;
+    }
+    const itemList = [];
+    const actions = [];
+    if (sharerInfo.phone) {
+      itemList.push('拨打电话：' + sharerInfo.phone);
+      actions.push(() => {
+        wx.makePhoneCall({
+          phoneNumber: sharerInfo.phone,
+          fail: () => wx.showToast({ title: '拨打电话失败', icon: 'none' })
+        });
+      });
+    }
+    if (itemList.length === 0) {
+      wx.showToast({ title: '暂无联系方式', icon: 'none' });
+      return;
+    }
+    wx.showActionSheet({
+      itemList,
+      success: (res) => {
+        if (res.tapIndex < actions.length) actions[res.tapIndex]();
+      }
+    });
   }
 });
 

@@ -60,4 +60,19 @@
 
   <!-- 加载状态 -->
   <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <!-- 分享进入：顾问信息 + 联系按钮 -->
+  <view wx:if="{{isShared && sharerInfo}}" class="bottom-contact">
+    <view class="advisor-mini">
+      <view class="advisor-mini-avatar">
+        <image wx:if="{{sharerInfo.avatar}}" src="{{sharerInfo.avatar}}" mode="aspectFill" class="advisor-avatar-img" />
+        <text wx:else>{{sharerInfo.name ? sharerInfo.name.charAt(0) : '顾'}}</text>
+      </view>
+      <view class="advisor-mini-info">
+        <view class="advisor-mini-name">{{sharerInfo.name || '安得褓贝顾问'}}</view>
+        <view class="advisor-mini-company">{{sharerInfo.company || '安得褓贝'}}</view>
+      </view>
+    </view>
+    <button class="contact-btn" bindtap="onContactAdvisor">联系顾问</button>
+  </view>
 </view>

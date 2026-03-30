@@ -42,7 +42,7 @@
   margin-top: -24rpx;
   position: relative;
   z-index: 10;
-  padding: 32rpx 32rpx 60rpx 32rpx;
+  padding: 32rpx 32rpx 160rpx 32rpx;
 }
 
 /* 标题 */
@@ -135,5 +135,80 @@
   font-size: 28rpx;
 }
 
-
-
+/* 分享进入的底部顾问信息 */
+.bottom-contact {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.05);
+  z-index: 100;
+}
+.advisor-mini {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  flex: 1;
+}
+.advisor-mini-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28rpx;
+  font-weight: bold;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.advisor-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 40rpx;
+}
+.advisor-mini-info {
+  flex: 1;
+  min-width: 0;
+}
+.advisor-mini-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.advisor-mini-company {
+  font-size: 24rpx;
+  color: #666;
+}
+.contact-btn {
+  width: 220rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  border-radius: 40rpx;
+  border: none;
+  color: white;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 15rpx rgba(135, 102, 243, 0.3);
+  line-height: normal;
+  margin-left: 15rpx;
+  flex-shrink: 0;
+}
+.contact-btn::after {
+  border: none !important;
+}

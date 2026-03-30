@@ -23,6 +23,8 @@
       <view class="row"><text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text></view>
       <view class="row"><text class="label">服务费用</text><text class="value">¥{{contract.serviceFee}} 元</text></view>
       <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
+      <view class="row"><text class="label">结束日期</text><text class="value">{{contract.endDateFmt || '待定'}}</text></view>
+      <view class="row"><text class="label">合同期限</text><text class="value">{{contract.contractDuration || '—'}}</text></view>
     </view>
 
     <!-- 阿姨信息 -->
@@ -78,9 +80,9 @@
       <button wx:if="{{contract.showSign}}" class="btn btn-primary" bindtap="goSign">
         ✍️ 去签约
       </button>
-      <view wx:elif="{{contract.waitingNanny}}" class="waiting-tip">
+      <button wx:elif="{{contract.waitingNanny}}" class="btn btn-waiting" disabled>
         ⏳ 等待阿姨完成签署
-      </view>
+      </button>
     </view>
   </block>
 </view>

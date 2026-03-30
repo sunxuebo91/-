@@ -64,9 +64,21 @@ async function getOrCreateMe(openid) {
       });
       user.role = role;
     }
-    // 确保返回的用户对象包含 _openid 字段
+    // 确保返回的用户对象包含必要字段
     if (!user._openid) {
       user._openid = openid;
+    }
+    // 确保 phone 字段存在（即使为空字符串）
+    if (user.phone === undefined) {
+      user.phone = "";
+    }
+    // 确保 nickname 字段存在
+    if (user.nickname === undefined) {
+      user.nickname = "";
+    }
+    // 确保 avatarUrl 字段存在
+    if (user.avatarUrl === undefined) {
+      user.avatarUrl = "";
     }
     return user;
   }
@@ -74,6 +86,9 @@ async function getOrCreateMe(openid) {
   const role = (await isStaff(openid, null)) ? "staff" : "customer";
   const doc = {
     role,
+    phone: "", // 新用户默认空手机号
+    nickname: "", // 新用户默认空昵称
+    avatarUrl: "", // 新用户默认空头像
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
   };
@@ -86,9 +101,18 @@ async function getOrCreateMe(openid) {
     .limit(1)
     .get();
   const user = (r2.data && r2.data[0]) || doc;
-  // 确保返回的用户对象包含 _openid 字段
+  // 确保返回的用户对象包含必要字段
   if (!user._openid) {
     user._openid = openid;
+  }
+  if (user.phone === undefined) {
+    user.phone = "";
+  }
+  if (user.nickname === undefined) {
+    user.nickname = "";
+  }
+  if (user.avatarUrl === undefined) {
+    user.avatarUrl = "";
   }
   return user;
 }
@@ -116,8 +140,11 @@ async function getMyInfo(openid) {
  */
 async function saveStaffProfile(staffId, name, phone, avatar, company) {
   if (!staffId && !phone) throw new Error('missing staffId or phone');
-  const doc = {
-    staffId: staffId || '',
+  // 统一将 staffId 转为字符串，避免整数类型（CRM userId）与 URL 参数字符串类型不匹配
+  const staffIdStr = staffId ? String(staffId) : '';
+  // 新增记录时写全量字段
+  const docFull = {
+    staffId: staffIdStr,
     name: name || '',
     phone: phone || '',
     avatar: avatar || '',
@@ -125,18 +152,23 @@ async function saveStaffProfile(staffId, name, phone, avatar, company) {
     updatedAt: db.serverDate()
   };
   try {
-    const existing = staffId
-      ? await db.collection('staff_profiles').where({ staffId }).limit(1).get()
+    const existing = staffIdStr
+      ? await db.collection('staff_profiles').where({ staffId: staffIdStr }).limit(1).get()
       : { data: [] };
     if (existing.data && existing.data.length > 0) {
-      await db.collection('staff_profiles').where({ staffId }).update({ data: doc });
+      // 更新时：只覆盖非空字段，保留已有的姓名/头像，避免本次 session 数据缺失时把有效值擦除
+      const docUpdate = { updatedAt: db.serverDate(), company: company || '安得褓贝' };
+      if (phone) docUpdate.phone = phone;
+      if (name) docUpdate.name = name;
+      if (avatar) docUpdate.avatar = avatar;
+      await db.collection('staff_profiles').where({ staffId: staffIdStr }).update({ data: docUpdate });
     } else {
-      await db.collection('staff_profiles').add({ data: { ...doc, createdAt: db.serverDate() } });
+      await db.collection('staff_profiles').add({ data: { ...docFull, createdAt: db.serverDate() } });
     }
   } catch (e) {
     console.error('saveStaffProfile error:', e);
   }
-  return doc;
+  return docFull;
 }
 
 /**
@@ -146,9 +178,15 @@ async function saveStaffProfile(staffId, name, phone, avatar, company) {
  */
 async function getStaffPublicInfo(userId, phone) {
   // 1. 优先从 staff_profiles 按 staffId 查找（生成海报时已缓存）
+  // 注意：老数据 staffId 可能是整数，新数据统一为字符串，需同时兼容两种类型
   if (userId) {
     try {
-      const r = await db.collection('staff_profiles').where({ staffId: userId }).limit(1).get();
+      const userIdStr = String(userId);
+      let r = await db.collection('staff_profiles').where({ staffId: userIdStr }).limit(1).get();
+      // 兼容旧记录：若字符串未命中，再尝试数字类型（历史遗留整数 staffId）
+      if ((!r.data || !r.data.length) && !isNaN(Number(userId)) && Number(userId) > 0) {
+        r = await db.collection('staff_profiles').where({ staffId: Number(userId) }).limit(1).get();
+      }
       if (r.data && r.data[0]) {
         const p = r.data[0];
         return { _id: userId, name: p.name || '', phone: p.phone || '', avatar: p.avatar || '', company: p.company || '安得褓贝' };
@@ -234,6 +272,8 @@ async function addStaff(callerOpenid, phone, targetOpenid) {
 }
 
 async function updateMe(openid, data) {
+  console.log("updateMe 调用，openid:", openid, "data:", data);
+
   const safe = {
     updatedAt: db.serverDate(),
   };
@@ -242,12 +282,46 @@ async function updateMe(openid, data) {
   if (typeof data.avatarUrl === "string") safe.avatarUrl = data.avatarUrl;
   if (typeof data.phone === "string") safe.phone = data.phone;
 
-  await db
+  console.log("准备更新的字段:", safe);
+
+  // 先查询用户记录，获取 _id
+  const userQuery = await db
     .collection("users")
     .where({ _openid: openid })
-    .update({
-      data: safe,
-    });
+    .limit(1)
+    .get();
+
+  console.log("用户查询结果:", userQuery);
+
+  let updateResult;
+  if (userQuery.data && userQuery.data.length > 0) {
+    // 使用 doc(_id) 方式更新，更可靠
+    const userId = userQuery.data[0]._id;
+    console.log("找到用户记录，_id:", userId);
+    
+    updateResult = await db
+      .collection("users")
+      .doc(userId)
+      .update({
+        data: safe,
+      });
+  } else {
+    // 如果没有找到记录，尝试使用 where 更新（兼容旧逻辑）
+    console.warn("未找到匹配的用户记录，尝试 where 更新，openid:", openid);
+    updateResult = await db
+      .collection("users")
+      .where({ _openid: openid })
+      .update({
+        data: safe,
+      });
+  }
+
+  console.log("数据库更新结果:", updateResult);
+
+  // 检查是否更新了记录
+  if (updateResult.stats && updateResult.stats.updated === 0) {
+    console.warn("更新失败，未更新任何记录，openid:", openid);
+  }
 
   return await getOrCreateMe(openid);
 }
@@ -303,10 +377,15 @@ async function loginByPhone(openid, code, nickname, avatarUrl) {
     const user = await getOrCreateMe(openid);
     console.log("重新获取的用户信息:", user);
 
-    // 确保返回的用户对象包含 _openid 字段
+    // 确保返回的用户对象包含必要字段（解决数据库同步延迟问题）
     user._openid = openid;
+    // 强制设置 phone，确保一定返回给前端
     user.phone = phone;
+    // 同步昵称和头像（如果有传入）
+    if (nickname) user.nickname = nickname;
+    if (avatarUrl) user.avatarUrl = avatarUrl;
 
+    console.log("最终返回的用户信息:", user);
     return user;
   } catch (err) {
     console.error("loginByPhone error:", err);

@@ -27,44 +27,55 @@ Page({
 
   async loadMe() {
     try {
-      // 1. 先尝试从本地存储获取 CRM 用户信息
-      const crmUserInfo = wx.getStorageSync('crmUserInfo');
+      // 1. 先从云函数获取最新数据（确保数据同步）
+      const resp = await wx.cloud.callFunction({
+        name: "userService",
+        data: { action: "getOrCreateMe" },
+      });
+      const cloudMe = (resp.result && resp.result.data) || {};
+      console.log('📦 云函数返回的用户信息:', cloudMe);
+
+      // 2. 从本地存储获取 CRM 用户信息
+      const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
       console.log('📦 本地存储的 CRM 用户信息:', crmUserInfo);
 
+      // 3. 合并数据：云函数数据优先，但本地存储的 nickname 作为补充
+      // 注意：云端可能没有 nickname 字段，此时应使用本地存储的值
+      const mergedMe = {
+        ...this.data.me,
+        ...cloudMe, // 云函数数据优先（phone、role、_openid 等）
+      };
+
+      // nickname: 云端有值则用云端，否则用本地存储
+      mergedMe.nickname = cloudMe.nickname || crmUserInfo.nickname || '';
+      // avatar: 云端有值则用云端，否则用本地存储
+      mergedMe.avatarUrl = cloudMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      // phone: 云端有值则用云端，否则用本地存储
+      mergedMe.phone = cloudMe.phone || crmUserInfo.phone || '';
+
+      this.setData({
+        me: mergedMe,
+      });
+      console.log('✅ 合并后的用户信息:', mergedMe);
+    } catch (e) {
+      console.error('❌ 加载用户信息失败:', e);
+      // 云函数失败时，尝试从本地存储读取
+      const crmUserInfo = wx.getStorageSync('crmUserInfo');
       if (crmUserInfo && (crmUserInfo.nickname || crmUserInfo.phone)) {
-        // 如果有 CRM 用户信息，直接使用
         this.setData({
           me: {
             ...this.data.me,
             ...crmUserInfo,
           },
         });
-        console.log('✅ 使用 CRM 用户信息:', crmUserInfo);
-        return;
+        console.log('✅ 云函数失败，使用本地存储:', crmUserInfo);
       }
-
-      // 2. 如果没有 CRM 用户信息，从云函数获取
-      const resp = await wx.cloud.callFunction({
-        name: "userService",
-        data: { action: "getOrCreateMe" },
-      });
-      const me = (resp.result && resp.result.data) || {};
-      console.log('📦 云函数返回的用户信息:', me);
-
-      this.setData({
-        me: {
-          ...this.data.me,
-          ...me,
-        },
-      });
-    } catch (e) {
-      console.error('❌ 加载用户信息失败:', e);
       wx.showToast({ title: "加载失败", icon: "none" });
     }
   },
 
   goLogin() {
-    wx.navigateTo({ url: "/pages/login/index" });
+    wx.navigateTo({ url: "/pages/settings/index" });
   },
 
   // 点击联系客服：未登录先去登录；已登录由 open-type="contact" 打开客服
