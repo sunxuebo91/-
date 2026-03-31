@@ -30,8 +30,9 @@ Page({
   },
 
   onShow() {
-    // 登录保护
-    if (!userService.requireLogin()) return;
+    // ⚠️ 不在 Tab 页的 onShow() 里强制跳转登录
+    // 否则用户从登录页返回后 onShow 再次触发，造成无限重定向死循环
+    // 违反微信「点击取消/返回必须有效」的登录规范
 
     // 更新自定义 tabBar 选中状态（消息是索引1）
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {

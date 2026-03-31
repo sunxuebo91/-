@@ -74,17 +74,25 @@ const authenticatedRequest = (options) => {
           wx.removeStorageSync('token');
           wx.removeStorageSync('userInfo');
           wx.removeStorageSync('user_info');
-          
+
           wx.showToast({
             title: '登录已过期，请重新登录',
             icon: 'none',
             duration: 2000
           });
-          
+
+          // 用 navigateTo 而非 reLaunch，保留页面栈使系统返回按钮可用
+          // 满足微信登录规范：点击取消/返回必须有效
           setTimeout(() => {
-            wx.reLaunch({ url: '/pages/login/index' });
+            wx.navigateTo({
+              url: '/pages/login/index',
+              fail: () => {
+                // 页面栈满时 navigateTo 会失败，此时用 switchTab 跳首页（不强制登录）
+                wx.switchTab({ url: '/pages/home/index' });
+              }
+            });
           }, 2000);
-          
+
           reject(new Error('登录已过期'));
         } else if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(response.data);
