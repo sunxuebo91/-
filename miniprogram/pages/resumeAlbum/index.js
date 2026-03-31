@@ -123,10 +123,22 @@ Page({
       const resp = await resumeService.getResumeDetailMiniprogram(id);
       const data = (resp && resp.success && resp.data) ? resp.data : {};
 
-      // 调试：打印 CRM 返回的相册相关字段
-      console.log('📸 [相册页] CRM 返回数据字段:', Object.keys(data || {}));
-      console.log('📸 [相册页] personalPhoto:', data.personalPhoto);
-      console.log('📸 [相册页] albums:', data.albums);
+      // 诊断：完整打印 CRM 返回的所有字段及与照片相关字段的值
+      const allKeys = Object.keys(data || {});
+      console.log('📸 [相册页] CRM 全部字段名:', allKeys);
+      // 打印所有可能是"照片"的字段
+      const photoKeyGuesses = ['personalPhoto','personalPhotos','photoFiles','photos','photoUrls',
+        'uniformPhoto','albums','album','workPhotos','employeePhotos','personal_photo'];
+      photoKeyGuesses.forEach(k => {
+        if (data[k] !== undefined) console.log(`📸 [相册页] data.${k}:`, JSON.stringify(data[k]).slice(0, 300));
+      });
+      // 打印所有值是数组且不为空的字段（帮助发现未预期的字段名）
+      allKeys.forEach(k => {
+        const v = data[k];
+        if (Array.isArray(v) && v.length > 0 && !['skills','tags','workExperiences','certificates','reports'].includes(k)) {
+          console.log(`📸 [相册页] 非空数组字段 data.${k} (${v.length}项):`, JSON.stringify(v[0]).slice(0, 200));
+        }
+      });
 
       // 1) 如果后端直接返回了按分类组织的数据（兼容多种字段名）
       const albums = Array.isArray(data.albums) ? data.albums : (Array.isArray(data.album) ? data.album : []);
@@ -142,10 +154,13 @@ Page({
           });
         });
 
+        // 记录 albums 中已有的所有 URL，避免与个人照片重复
+        const albumUrlSet = new Set();
         const sections = albums
           .map((a) => {
             const title = a.name || a.title || a.categoryName || a.category || '未分类';
             const urls = normalizeToUrls(a.photos || a.files || a.list || a.items);
+            urls.forEach((u) => albumUrlSet.add(u));
             console.log(`📸 [相册页] 分类 "${title}" 解析出 ${urls.length} 个 URL:`, urls);
             const items = buildItems(urls);
             return { title, items };
@@ -153,14 +168,61 @@ Page({
           .filter((x) => x.items && x.items.length)
           .filter((x) => !shouldHideTitle(x.title));
 
+        // albums 数组可能只包含部分分类，平铺字段里的照片需逐一补充（去重）
+        const supplementSpecs = [
+          {
+            title: '个人照片',
+            collect: () => {
+              const all = [
+                ...normalizeToUrls(data.personalPhoto),
+                ...normalizeToUrls(data.photoUrls),
+                ...normalizeToUrls(data.photoFiles),
+                ...normalizeToUrls(data.uniformPhoto),
+              ];
+              if (data.avatarUrl && typeof data.avatarUrl === 'string') all.push(data.avatarUrl);
+              return all;
+            },
+            prepend: true // 个人照片置顶
+          },
+          { title: '月子餐',   collect: () => normalizeToUrls(data.confinementMealPhotos   || data.confinementMealPhotoUrls) },
+          { title: '烹饪',     collect: () => normalizeToUrls(data.cookingPhotos            || data.cookingPhotoUrls) },
+          { title: '辅食',     collect: () => normalizeToUrls(data.complementaryFoodPhotos  || data.complementaryFoodPhotoUrls) },
+          { title: '好评展示', collect: () => normalizeToUrls(data.positiveReviewPhotos     || data.positiveReviewPhotoUrls) },
+          { title: '体检报告', collect: () => normalizeToUrls(data.reports                  || data.medicalReportUrls) },
+        ];
+
+        supplementSpecs.forEach(({ title, collect, prepend }) => {
+          const urls = [...new Set(collect())].filter((u) => u && !albumUrlSet.has(u));
+          if (!urls.length) return;
+          // 已有同名分类则追加图片，否则新增分类
+          const existing = sections.find((s) => s.title === title);
+          if (existing) {
+            existing.items.push(...buildItems(urls));
+          } else {
+            const section = { title, items: buildItems(urls) };
+            if (prepend) sections.unshift(section);
+            else sections.push(section);
+          }
+          console.log(`📸 [相册页] 补充 "${title}" ${urls.length} 张（albums 未包含）`);
+        });
+
         console.log('📸 [相册页] 最终 sections:', sections.map(s => ({ title: s.title, count: s.items.length })));
         this.setData({ sections, loading: false });
         return;
       }
 
+      // 个人照片需合并多个字段（CRM 把照片分散存到 personalPhoto / photoUrls / uniformPhoto / avatarUrl）
+      const _personalAll = [
+        ...normalizeToUrls(data.personalPhoto),
+        ...normalizeToUrls(data.photoUrls),
+        ...normalizeToUrls(data.photoFiles),
+        ...normalizeToUrls(data.uniformPhoto),
+      ];
+      if (data.avatarUrl && typeof data.avatarUrl === 'string') _personalAll.push(data.avatarUrl);
+      const _personalUrls = [...new Set(_personalAll)].filter(Boolean);
+
       // 2) 兜底：按简历详情里常见的“多相册字段”拼装分类
       const sectionsSpec = [
-        { title: '个人照片', keys: ['personalPhoto', 'photoFiles', 'photos'] },
         { title: '月子餐', keys: ['confinementMealPhotos', 'confinementMealPhoto', 'confinementMealFiles'] },
         { title: '烹饪', keys: ['cookingPhotos', 'cookingPhoto', 'cookingFiles'] },
         { title: '辅食', keys: ['complementaryFoodPhotos', 'complementaryFoodPhoto', 'complementaryFoodFiles'] },
@@ -180,6 +242,12 @@ Page({
         })
         .filter((x) => x.items.length)
         .filter((x) => !shouldHideTitle(x.title));
+
+      // 个人照片置顶（使用已合并的 _personalUrls，去掉与其他分类重复的图）
+      if (_personalUrls.length) {
+        sections.unshift({ title: '个人照片', items: buildItems(_personalUrls) });
+      }
+
 
       console.log('📸 [相册页] 兜底 最终 sections:', sections.map(s => ({ title: s.title, count: s.items.length })));
       this.setData({ sections, loading: false });

@@ -1743,14 +1743,13 @@ Page({
       // 优先使用 this.data.id（URL 入参，是成功加载本简历的已知正确 ID）
       const resumeQrId = this.data.id || detail._id || '';
       // 读取当前员工信息，嵌入二维码路径，让客户扫码后能看到"联系顾问"
+      // 锁定使用 CRM 端的员工姓名和头像，不读取本地覆盖值
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-      // userInfo 由 CRM 账号登录（auth.js）写入，含 name / avatar 等真实员工字段
-      const localUserInfo = wx.getStorageSync('userInfo') || {};
       // 统一转为字符串，避免整数类型（CRM userId 为数字）与云函数/URL 参数字符串类型不匹配
-      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '');
-      const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
-      const staffName = wx.getStorageSync('userName') || crmUserInfo.nickname || crmUserInfo.name || localUserInfo.name || localUserInfo.nickname || '';
-      const staffAvatar = wx.getStorageSync('userAvatar') || crmUserInfo.avatarUrl || crmUserInfo.avatar || localUserInfo.avatarUrl || localUserInfo.avatar || '';
+      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
+      const staffPhone = crmUserInfo.phone || '';
+      const staffName = crmUserInfo.name || crmUserInfo.nickname || '';
+      const staffAvatar = crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
       if (staffId && (staffName || staffPhone)) {
@@ -1990,16 +1989,13 @@ Page({
     // 获取头像图片（优先用异步生成的上半身裁剪图，否则回退原图）
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 获取分享者信息（优先用员工在小程序设置的昵称/头像，其次回退到 CRM 数据）
+    // 锁定使用 CRM 端的员工姓名和头像
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerName = crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || '';
+    const sharerAvatar = crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
     const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
@@ -2019,17 +2015,15 @@ Page({
     const jobType = detail.jobTypeText || '家政服务';
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
-    const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    // 锁定使用 CRM 端的员工姓名和头像
+    const crmUserInfo2 = wx.getStorageSync('crmUserInfo') || {};
+    const sharerName2 = crmUserInfo2.name || crmUserInfo2.nickname || '安得褓贝顾问';
+    const sharerPhone2 = crmUserInfo2.phone || '';
+    const sharerAvatar2 = crmUserInfo2.avatarUrl || crmUserInfo2.avatar || '';
+    const sharerCompany2 = '安得褓贝';
+    const sharerId2 = String(crmUserInfo2._id || crmUserInfo2.id || crmUserInfo2.userId || '');
 
-    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId2)}&sharer=${encodeURIComponent(sharerName2)}&sharerPhone=${encodeURIComponent(sharerPhone2)}&sharerCompany=${encodeURIComponent(sharerCompany2)}&sharerAvatar=${encodeURIComponent(sharerAvatar2)}`;
 
     return {
       title: `${surname}阿姨的简历-${jobType}`,
