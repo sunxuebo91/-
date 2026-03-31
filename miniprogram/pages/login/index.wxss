@@ -108,3 +108,12 @@
   padding: 0 6rpx;
   text-decoration: underline;
 }
+
+/* 暂不登录 */
+.skip-login {
+  margin-top: 40rpx;
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  padding: 16rpx 48rpx;
+}

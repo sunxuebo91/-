@@ -23,5 +23,8 @@
       <text class="text">和</text>
       <text class="link" bindtap="openPrivacyPolicy">《隐私政策》</text>
     </view>
+
+    <!-- 暂不登录（满足微信登录规范：必须提供可用的取消/跳过选项） -->
+    <view class="skip-login" bindtap="onSkipLogin">暂不登录</view>
   </view>
 </view>

@@ -183,6 +183,16 @@ Page({
   openPrivacyPolicy() {
     wx.navigateTo({ url: "/pages/legal/privacyPolicy/index" });
   },
+
+  // 暂不登录：满足微信登录规范，必须提供可用的取消/跳过选项
+  onSkipLogin() {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      wx.navigateBack();
+    } else {
+      wx.switchTab({ url: '/pages/home/index' });
+    }
+  },
 });
 
 
