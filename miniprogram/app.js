@@ -119,19 +119,26 @@ App({
       console.log('📡 CRM 登录接口响应:', apiRes);
 
       if (apiRes.data && apiRes.data.success) {
-        const userData = apiRes.data.data;
+        const userData = apiRes.data.data || {};
         this.globalData.userInfo = userData;
 
-        // 保存到本地存储
-        wx.setStorageSync('crmUserInfo', userData);
+        // 合并保存：不能整体覆盖，否则会清掉之前授权/设置时存入的
+        // crmName、crmAvatar、isStaff、nickname、phone 等字段
+        const existing = wx.getStorageSync('crmUserInfo') || {};
+        const merged = {
+          ...userData,                                      // CRM login 最新数据
+          phone:     existing.phone     || userData.phone     || '',
+          nickname:  existing.nickname  || userData.nickname  || '',
+          avatarUrl: existing.avatarUrl || userData.avatarUrl || '',
+          avatar:    existing.avatar    || userData.avatar    || '',
+          isStaff:   existing.isStaff   || userData.isStaff   || false,
+          crmName:   existing.crmName   || userData.crmName   || '',
+          crmAvatar: existing.crmAvatar || userData.crmAvatar || '',
+        };
+        wx.setStorageSync('crmUserInfo', merged);
 
-        console.log('✅ 自动登录成功:', userData);
-        console.log('📱 是否已授权手机号:', userData.hasPhone ? '是' : '否');
-
-        // 如果是新用户或未授权手机号，可以在这里做一些提示
-        if (!userData.hasPhone) {
-          console.log('💡 提示：用户尚未授权手机号，可在首页引导授权');
-        }
+        console.log('✅ 自动登录成功:', merged);
+        console.log('📱 是否已授权手机号:', merged.phone ? '是' : '否');
       } else {
         console.warn('⚠️ CRM 登录接口返回失败:', apiRes.data?.message);
       }

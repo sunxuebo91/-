@@ -716,11 +716,65 @@ Page({
   },
 
   // 检查当前用户是否为员工
-  // 直接读登录时缓存的 isStaff 字段，无需再发云函数请求
-  checkStaffRole() {
+  // 优先读登录时缓存的 isStaff 字段；缓存未命中时调云函数兜底
+  // 确认是员工后，主动从 staff/info 接口刷新 CRM 真实姓名和头像（无需重新登录）
+  async checkStaffRole() {
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const isStaff = crmUserInfo.isStaff === true;
+    let isStaff = crmUserInfo.isStaff === true;
+
+    if (!isStaff) {
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getOrCreateMe' }
+        });
+        const cloudUser = res?.result?.data || {};
+        isStaff = cloudUser.role === 'staff' || cloudUser.isStaff === true;
+        if (isStaff) {
+          crmUserInfo.isStaff = true;
+          wx.setStorageSync('crmUserInfo', crmUserInfo);
+        }
+        console.log('👤 用户角色（云函数）:', isStaff ? '员工' : '客户');
+      } catch (e) {
+        console.warn('⚠️ 云函数检查员工角色失败，默认当客户处理:', e);
+      }
+    } else {
+      console.log('👤 用户角色（缓存）: 员工');
+    }
+
     this.setData({ isStaff });
-    console.log('👤 用户角色（缓存）:', isStaff ? '员工' : '客户');
+
+    // 确认是员工后，主动刷新 CRM 档案（姓名+头像），确保不重新登录也能用最新数据
+    if (isStaff && crmUserInfo.phone) {
+      this._refreshCrmStaffInfo(crmUserInfo.phone);
+    }
+  },
+
+  // 从 staff/info 接口拉取员工最新姓名和头像，回写 crmUserInfo 缓存
+  _refreshCrmStaffInfo(phone) {
+    wx.request({
+      url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${phone}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.success && res.data.data) {
+          const staffData = res.data.data;
+          const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+          let changed = false;
+          if (staffData.name && staffData.name !== crmUserInfo.crmName) {
+            crmUserInfo.crmName = staffData.name;
+            changed = true;
+          }
+          if (staffData.avatar && staffData.avatar !== crmUserInfo.crmAvatar) {
+            crmUserInfo.crmAvatar = staffData.avatar;
+            changed = true;
+          }
+          if (changed) {
+            wx.setStorageSync('crmUserInfo', crmUserInfo);
+            console.log('✅ CRM 员工档案已刷新:', staffData.name, staffData.avatar);
+          }
+        }
+      },
+      fail: () => {}
+    });
   }
 });

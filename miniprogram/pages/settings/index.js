@@ -21,48 +21,64 @@ Page({
 
   async loadMe() {
     try {
-      const resp = await wx.cloud.callFunction({
-        name: "userService",
-        data: { action: "getOrCreateMe" },
-      });
-      const serverMe = (resp.result && resp.result.data) || {};
-
-      console.log("loadMe 返回的数据:", serverMe);
-
-      // 获取本地存储的 CRM 用户信息
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-      console.log("本地 CRM 用户信息:", crmUserInfo);
+      const openid = crmUserInfo.openid || crmUserInfo._openid || '';
 
-      // 合并数据：云端数据优先，但本地存储的 nickname 作为补充
+      let serverMe = {};
+
+      if (openid) {
+        // 主链路：从 CRM 拉取（权威来源）
+        try {
+          const crmRes = await new Promise((resolve, reject) => {
+            wx.request({
+              url: `https://crm.andejiazheng.com/api/miniprogram-users/info?openid=${openid}`,
+              method: 'GET',
+              success: resolve,
+              fail: reject,
+            });
+          });
+          if (crmRes.data && crmRes.data.success && crmRes.data.data) {
+            const d = crmRes.data.data;
+            serverMe = {
+              nickname:  d.nickname  || '',
+              avatarUrl: d.avatar    || '',   // CRM 字段是 avatar，映射到 avatarUrl
+              phone:     d.phone     || '',
+              role:      d.isStaff ? 'staff' : 'customer',
+            };
+            console.log('✅ CRM loadMe:', serverMe);
+          }
+        } catch (e) {
+          console.warn('⚠️ CRM /info 失败，降级到微信云函数:', e);
+        }
+      }
+
+      // 兜底：wx 云函数（openid 还没有，或 CRM 没返回数据时）
+      if (!serverMe.phone && !serverMe.nickname) {
+        const resp = await wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getOrCreateMe' },
+        });
+        const wxMe = (resp.result && resp.result.data) || {};
+        serverMe = {
+          nickname:  wxMe.nickname  || crmUserInfo.nickname  || '',
+          avatarUrl: wxMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '',
+          phone:     wxMe.phone     || crmUserInfo.phone     || '',
+          role:      wxMe.role      || 'customer',
+        };
+        console.log('✅ 云函数 loadMe 兜底:', serverMe);
+      }
+
       const mergedMe = Object.assign({}, this.data.me, serverMe);
-      
-      // nickname: 云端有值则用云端，否则用本地存储
-      if (!mergedMe.nickname && crmUserInfo.nickname) {
-        mergedMe.nickname = crmUserInfo.nickname;
-      }
-      // avatarUrl: 云端有值则用云端，否则用本地存储
-      if (!mergedMe.avatarUrl && (crmUserInfo.avatarUrl || crmUserInfo.avatar)) {
-        mergedMe.avatarUrl = crmUserInfo.avatarUrl || crmUserInfo.avatar;
-      }
-      // phone: 云端有值则用云端，否则用本地存储
-      if (!mergedMe.phone && crmUserInfo.phone) {
-        mergedMe.phone = crmUserInfo.phone;
-      }
 
       // 如果已有临时数据（用户正在编辑），保留临时数据
-      const tempNickname = this.data.tempNickname || mergedMe.nickname || "";
-      const tempAvatarUrl = this.data.tempAvatarUrl || mergedMe.avatarUrl || "";
+      const tempNickname  = this.data.tempNickname  || mergedMe.nickname  || '';
+      const tempAvatarUrl = this.data.tempAvatarUrl || mergedMe.avatarUrl || '';
 
-      this.setData({
-        me: mergedMe,
-        tempNickname,
-        tempAvatarUrl,
-      });
-
-      console.log("setData 后的 me:", this.data.me);
+      this.setData({ me: mergedMe, tempNickname, tempAvatarUrl });
+      console.log('setData 后的 me:', this.data.me);
     } catch (e) {
-      console.error("loadMe 失败:", e);
-      wx.showToast({ title: "加载失败", icon: "none" });
+      console.error('loadMe 失败:', e);
+      wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
 
@@ -149,8 +165,51 @@ Page({
         if (updatedUser.phone) crmUserInfo.phone = updatedUser.phone;
         if (savedNickname) crmUserInfo.nickname = savedNickname;
         if (avatarUrl) crmUserInfo.avatarUrl = avatarUrl;
+        // ⚠️ 不用 loginByPhone 的 role 判断 isStaff：
+        //    loginByPhone 查的是小程序云数据库，员工可能在那里是 "customer"
+        //    用 staff/info 接口（CRM User 表）才是权威来源
         wx.setStorageSync('crmUserInfo', crmUserInfo);
-        console.log('✅ 已同步更新 crmUserInfo:', crmUserInfo);
+
+        // 用手机号调 staff/info 确认是否员工，并拉取 CRM 真实姓名和头像
+        const staffPhone = updatedUser.phone;
+        wx.request({
+          url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${staffPhone}`,
+          method: 'GET',
+          success: (staffRes) => {
+            if (staffRes.data && staffRes.data.success && staffRes.data.data) {
+              const staffData = staffRes.data.data;
+              const cur = wx.getStorageSync('crmUserInfo') || {};
+              cur.isStaff = true;
+              cur.crmName = staffData.name || cur.crmName || '';
+              cur.crmAvatar = staffData.avatar || cur.crmAvatar || '';
+              wx.setStorageSync('crmUserInfo', cur);
+              console.log('✅ 已同步更新 crmUserInfo:', cur);
+            } else {
+              // 非员工：不修改 isStaff（保留原值，避免误降级）
+              console.log('ℹ️ staff/info 无数据，非员工用户');
+            }
+          },
+          fail: () => {}
+        });
+
+        // 同步到 CRM 后端（openid + phone + nickname + avatar 全量写入）
+        const crmSyncInfo = wx.getStorageSync('crmUserInfo') || {};
+        const syncOpenid = updatedUser._openid || crmSyncInfo.openid || crmSyncInfo._openid || '';
+        if (syncOpenid) {
+          wx.request({
+            url: 'https://crm.andejiazheng.com/api/miniprogram-users/register',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            data: {
+              openid:   syncOpenid,
+              phone:    updatedUser.phone || crmSyncInfo.phone || '',
+              nickname: savedNickname || '',
+              avatar:   avatarUrl || crmSyncInfo.avatarUrl || crmSyncInfo.avatar || '',
+            },
+            success: (r) => console.log('✅ 手机授权后已同步到CRM:', r.data),
+            fail:    () => {}
+          });
+        }
 
         // 同步更新全局 app.globalData.userInfo
         const app = getApp();
@@ -240,6 +299,25 @@ Page({
       if (avatarUrl) crmUserInfo.avatarUrl = avatarUrl;
       wx.setStorageSync('crmUserInfo', crmUserInfo);
       console.log('✅ 已同步更新 crmUserInfo:', crmUserInfo);
+
+      // 同步到 CRM 后端（PATCH 只更新传入字段，不会覆盖手机号等其他字段）
+      const saveOpenid = crmUserInfo.openid || crmUserInfo._openid || '';
+      if (saveOpenid) {
+        wx.request({
+          url: 'https://crm.andejiazheng.com/api/miniprogram-users/update-profile',
+          method: 'PATCH',
+          header: { 'Content-Type': 'application/json' },
+          data: {
+            openid:   saveOpenid,
+            nickname: tempNickname,
+            avatar:   avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '',
+          },
+          success: (r) => console.log('✅ 昵称/头像已同步到CRM:', r.data),
+          fail:    () => {}
+        });
+      } else {
+        console.warn('⚠️ 无 openid，跳过 CRM 同步');
+      }
 
       // 同步更新全局 app.globalData.userInfo
       const app = getApp();

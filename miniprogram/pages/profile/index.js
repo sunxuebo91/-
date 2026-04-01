@@ -29,50 +29,90 @@ Page({
 
   async loadMe() {
     try {
-      // 1. 先从云函数获取最新数据（确保数据同步）
-      const resp = await wx.cloud.callFunction({
-        name: "userService",
-        data: { action: "getOrCreateMe" },
-      });
-      const cloudMe = (resp.result && resp.result.data) || {};
-      console.log('📦 云函数返回的用户信息:', cloudMe);
-
-      // 2. 从本地存储获取 CRM 用户信息
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-      console.log('📦 本地存储的 CRM 用户信息:', crmUserInfo);
+      const openid = crmUserInfo.openid || crmUserInfo._openid || '';
 
-      // 3. 合并数据：云函数数据优先，但本地存储的 nickname 作为补充
-      // 注意：云端可能没有 nickname 字段，此时应使用本地存储的值
-      const mergedMe = {
-        ...this.data.me,
-        ...cloudMe, // 云函数数据优先（phone、role、_openid 等）
-      };
+      let serverMe = {};
 
-      // nickname: 云端有值则用云端，否则用本地存储
-      mergedMe.nickname = cloudMe.nickname || crmUserInfo.nickname || '';
-      // avatar: 云端有值则用云端，否则用本地存储
-      mergedMe.avatarUrl = cloudMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
-      // phone: 云端有值则用云端，否则用本地存储
-      mergedMe.phone = cloudMe.phone || crmUserInfo.phone || '';
+      if (openid) {
+        // 主链路：CRM GET /info（权威来源）
+        try {
+          const crmRes = await new Promise((resolve, reject) => {
+            wx.request({
+              url: `https://crm.andejiazheng.com/api/miniprogram-users/info?openid=${openid}`,
+              method: 'GET',
+              success: resolve,
+              fail: reject,
+            });
+          });
+          if (crmRes.data && crmRes.data.success && crmRes.data.data) {
+            const d = crmRes.data.data;
+            serverMe = {
+              nickname:  d.nickname || '',
+              avatarUrl: d.avatar   || '',   // CRM 字段 avatar → 前端 avatarUrl
+              phone:     d.phone    || '',
+              isStaff:   !!d.isStaff,
+            };
+            console.log('✅ CRM profile loadMe:', serverMe);
+          }
+        } catch (e) {
+          console.warn('⚠️ CRM /info 失败，降级到微信云函数:', e);
+        }
+      }
 
-      this.setData({
-        me: mergedMe,
-      });
+      // 兜底：wx 云函数
+      if (!serverMe.phone && !serverMe.nickname) {
+        const resp = await wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getOrCreateMe' },
+        });
+        const wxMe = (resp.result && resp.result.data) || {};
+        serverMe = {
+          nickname:  wxMe.nickname  || crmUserInfo.nickname  || '',
+          avatarUrl: wxMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '',
+          phone:     wxMe.phone     || crmUserInfo.phone     || '',
+          isStaff:   crmUserInfo.isStaff || false,
+        };
+        console.log('✅ 云函数 profile loadMe 兜底:', serverMe);
+      }
+
+      const phone = serverMe.phone || '';
+      const mergedMe = { ...this.data.me, ...serverMe };
+
+      // 员工：crmName / crmAvatar 优先展示（CRM 管理员维护的真实信息）
+      if (crmUserInfo.crmName)   mergedMe.nickname  = crmUserInfo.crmName;
+      if (crmUserInfo.crmAvatar) mergedMe.avatarUrl = crmUserInfo.crmAvatar;
+
+      this.setData({ me: mergedMe });
       console.log('✅ 合并后的用户信息:', mergedMe);
+
+      // 有手机号就调 staff/info，静默刷新员工姓名/头像
+      if (phone) {
+        wx.request({
+          url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${phone}`,
+          method: 'GET',
+          success: (res) => {
+            if (res.data && res.data.success && res.data.data) {
+              const staffData = res.data.data;
+              const latest = wx.getStorageSync('crmUserInfo') || {};
+              latest.isStaff  = true;
+              latest.crmName  = staffData.name   || latest.crmName  || '';
+              latest.crmAvatar = staffData.avatar || latest.crmAvatar || '';
+              wx.setStorageSync('crmUserInfo', latest);
+              this.setData({ 'me.nickname': latest.crmName, 'me.avatarUrl': latest.crmAvatar });
+              console.log('✅ 员工档案已刷新:', latest.crmName, latest.crmAvatar);
+            }
+          },
+          fail: () => {}
+        });
+      }
     } catch (e) {
       console.error('❌ 加载用户信息失败:', e);
-      // 云函数失败时，尝试从本地存储读取
-      const crmUserInfo = wx.getStorageSync('crmUserInfo');
-      if (crmUserInfo && (crmUserInfo.nickname || crmUserInfo.phone)) {
-        this.setData({
-          me: {
-            ...this.data.me,
-            ...crmUserInfo,
-          },
-        });
-        console.log('✅ 云函数失败，使用本地存储:', crmUserInfo);
+      const cache = wx.getStorageSync('crmUserInfo') || {};
+      if (cache.nickname || cache.phone) {
+        this.setData({ me: { ...this.data.me, nickname: cache.crmName || cache.nickname || '', avatarUrl: cache.crmAvatar || cache.avatarUrl || cache.avatar || '', phone: cache.phone || '' } });
       }
-      wx.showToast({ title: "加载失败", icon: "none" });
+      wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
 

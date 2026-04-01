@@ -409,16 +409,13 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息
+    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || '';
+    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
     const sharePath = `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
@@ -437,16 +434,13 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息
+    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || '';
+    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
     const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 

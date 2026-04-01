@@ -1282,12 +1282,67 @@ Page({
   },
 
   // 检查当前用户是否为员工
-  // 直接读登录时缓存的 isStaff 字段，无需再发云函数请求
-  checkStaffRole() {
+  // 优先读登录时缓存的 isStaff 字段；缓存未命中时调云函数兜底
+  // 确认是员工后，主动从 staff/info 接口刷新 CRM 真实姓名和头像（无需重新登录）
+  async checkStaffRole() {
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const isStaff = crmUserInfo.isStaff === true;
+    let isStaff = crmUserInfo.isStaff === true;
+
+    if (!isStaff) {
+      // 缓存中没有确认的员工标识，调云函数重新查询
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getOrCreateMe' }
+        });
+        const cloudUser = res?.result?.data || {};
+        isStaff = cloudUser.role === 'staff' || cloudUser.isStaff === true;
+        if (isStaff) {
+          crmUserInfo.isStaff = true;
+          wx.setStorageSync('crmUserInfo', crmUserInfo);
+        }
+        console.log('👤 用户角色（云函数）:', isStaff ? '员工' : '客户');
+      } catch (e) {
+        console.warn('⚠️ 云函数检查员工角色失败，默认当客户处理:', e);
+      }
+    } else {
+      console.log('👤 用户角色（缓存）: 员工');
+    }
+
     this.setData({ isStaff });
-    console.log('👤 用户角色（缓存）:', isStaff ? '员工' : '客户');
+
+    // 确认是员工后，主动刷新 CRM 档案（姓名+头像），确保不重新登录也能用最新数据
+    if (isStaff && crmUserInfo.phone) {
+      this._refreshCrmStaffInfo(crmUserInfo.phone);
+    }
+  },
+
+  // 从 staff/info 接口拉取员工最新姓名和头像，回写 crmUserInfo 缓存
+  _refreshCrmStaffInfo(phone) {
+    wx.request({
+      url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${phone}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.success && res.data.data) {
+          const staffData = res.data.data;
+          const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+          let changed = false;
+          if (staffData.name && staffData.name !== crmUserInfo.crmName) {
+            crmUserInfo.crmName = staffData.name;
+            changed = true;
+          }
+          if (staffData.avatar && staffData.avatar !== crmUserInfo.crmAvatar) {
+            crmUserInfo.crmAvatar = staffData.avatar;
+            changed = true;
+          }
+          if (changed) {
+            wx.setStorageSync('crmUserInfo', crmUserInfo);
+            console.log('✅ CRM 员工档案已刷新:', staffData.name, staffData.avatar);
+          }
+        }
+      },
+      fail: () => {} // 静默失败，不影响页面
+    });
   },
 
 
@@ -1748,8 +1803,8 @@ Page({
       // 统一转为字符串，避免整数类型（CRM userId 为数字）与云函数/URL 参数字符串类型不匹配
       const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
       const staffPhone = crmUserInfo.phone || '';
-      const staffName = crmUserInfo.name || crmUserInfo.nickname || '';
-      const staffAvatar = crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      const staffName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
+      const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
       if (staffId && (staffName || staffPhone)) {
@@ -1989,11 +2044,11 @@ Page({
     // 获取头像图片（优先用异步生成的上半身裁剪图，否则回退原图）
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 锁定使用 CRM 端的员工姓名和头像
+    // 锁定使用 CRM 端的员工姓名和头像（crmName/crmAvatar 登录时从 CRM 后端专门存储，不会被小程序本地值覆盖）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const sharerName = crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
     const sharerPhone = crmUserInfo.phone || '';
-    const sharerAvatar = crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
     const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
@@ -2015,11 +2070,11 @@ Page({
     const jobType = detail.jobTypeText || '家政服务';
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 锁定使用 CRM 端的员工姓名和头像
+    // 锁定使用 CRM 端的员工姓名和头像（crmName/crmAvatar 登录时从 CRM 后端专门存储，不会被小程序本地值覆盖）
     const crmUserInfo2 = wx.getStorageSync('crmUserInfo') || {};
-    const sharerName2 = crmUserInfo2.name || crmUserInfo2.nickname || '安得褓贝顾问';
+    const sharerName2 = crmUserInfo2.crmName || crmUserInfo2.name || crmUserInfo2.nickname || '安得褓贝顾问';
     const sharerPhone2 = crmUserInfo2.phone || '';
-    const sharerAvatar2 = crmUserInfo2.avatarUrl || crmUserInfo2.avatar || '';
+    const sharerAvatar2 = crmUserInfo2.crmAvatar || crmUserInfo2.avatarUrl || crmUserInfo2.avatar || '';
     const sharerCompany2 = '安得褓贝';
     const sharerId2 = String(crmUserInfo2._id || crmUserInfo2.id || crmUserInfo2.userId || '');
 

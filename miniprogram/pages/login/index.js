@@ -128,15 +128,43 @@ Page({
           if (crmRes.data && crmRes.data.success) {
             console.log('✅ 用户信息已同步到 CRM 后端');
 
+            const crmData = crmRes.data.data || {};
+
+            // 额外调用 staff/info 接口，用手机号拉取 CRM 管理员维护的真实姓名和头像
+            // 该接口只有员工才有记录，普通用户会返回 404 / success:false，catch 后静默处理
+            let crmName = crmData.name || crmData.nickname || '';
+            let crmAvatar = crmData.avatar || crmData.avatarUrl || '';
+            try {
+              const staffRes = await new Promise((resolve, reject) => {
+                wx.request({
+                  url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${phone}`,
+                  method: 'GET',
+                  success: resolve,
+                  fail: reject
+                });
+              });
+              if (staffRes.data && staffRes.data.success && staffRes.data.data) {
+                const staffData = staffRes.data.data;
+                crmName = staffData.name || crmName;
+                crmAvatar = staffData.avatar || crmAvatar;
+                console.log('✅ 员工档案已拉取:', crmName, crmAvatar);
+              }
+            } catch (staffErr) {
+              console.log('ℹ️ 非员工或 staff/info 接口异常，跳过:', staffErr);
+            }
+
             // 构建完整的用户信息对象
-            // isStaff 由后端通过手机号查员工表返回，直接存入缓存供权限判断
             const userInfo = {
-              ...crmRes.data.data,
+              ...crmData,
               phone: phone,
               nickname: (this.data.nickname || '').trim() || '用户',
+              // 小程序上传的头像保留在 avatar 字段（用于小程序内展示）
               avatar: cloudAvatarUrl || '',
+              // CRM 管理员维护的真实姓名和头像，分享时优先读取，不会被设置页覆盖
+              crmName,
+              crmAvatar,
               openid: openid,
-              isStaff: crmRes.data.data?.isStaff === true
+              isStaff: crmData.isStaff === true
             };
 
             console.log('💾 准备保存的用户信息:', userInfo);
