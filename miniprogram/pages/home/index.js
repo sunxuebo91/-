@@ -107,7 +107,7 @@ Page({
 
   // 分享给好友（右上角转发按钮）
   onShareAppMessage() {
-    const title = '安得褓贝 · 专业家政服务平台';
+    const title = '安得褓贝·为爱，全力以赴！';
     const path = '/pages/home/index';
     const imageUrl = this.data.shareLogo || this.data.bannerList[0]?.imageUrl || '/images/default-goods-image.png';
 
