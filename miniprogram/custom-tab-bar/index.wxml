@@ -10,6 +10,10 @@
         <view class="normal-item">
           <view class="icon-wrapper {{selected === index ? 'active' : ''}}">
             <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit" />
+            <!-- 消息红点（index=1 是消息页） -->
+            <view wx:if="{{index === 1 && messageBadge > 0}}" class="tab-badge">
+              <text class="tab-badge-text">{{messageBadge > 99 ? '99+' : messageBadge}}</text>
+            </view>
           </view>
           <view class="text {{selected === index ? 'active' : ''}}">{{item.text}}</view>
         </view>

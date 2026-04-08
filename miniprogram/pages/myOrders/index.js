@@ -61,12 +61,20 @@ Page({
             && c.contractStatus === 'draft';
           const showOnboard = !isHistory && !showSign && !onboardConfirmed
             && c.contractStatus === 'active';
+          // "服务中"仅在已到开始日期时显示，否则显示"待服务"
+          let statusText = STATUS_MAP[c.contractStatus] || c.contractStatus || '';
+          if (c.contractStatus === 'active') {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const startDay = c.startDate ? new Date(c.startDate) : null;
+            if (startDay) startDay.setHours(0, 0, 0, 0);
+            statusText = (startDay && today >= startDay) ? '服务中' : '待服务';
+          }
           return {
             ...c,
             serviceTypeText: c.contractType || '未知服务',
             nannyName:       c.workerName   || '',
             startDateFmt:    formatDate(c.startDate),
-            statusText:      STATUS_MAP[c.contractStatus] || c.contractStatus || '',
+            statusText,
             onboardConfirmed,
             showSign,
             showOnboard,

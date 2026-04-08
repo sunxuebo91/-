@@ -139,12 +139,39 @@ App({
 
         console.log('✅ 自动登录成功:', merged);
         console.log('📱 是否已授权手机号:', merged.phone ? '是' : '否');
+
+        // 登录成功后拉取未读消息数，更新 tabBar 红点
+        if (merged.phone) {
+          this.refreshMessageBadge(merged.phone);
+        }
       } else {
         console.warn('⚠️ CRM 登录接口返回失败:', apiRes.data?.message);
       }
     } catch (err) {
       console.error('❌ 自动登录失败:', err);
       // 登录失败不影响小程序正常使用
+    }
+  },
+
+  /** 拉取未读数并更新所有页面的 tabBar 红点 */
+  async refreshMessageBadge(phone) {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'notificationService',
+        data: { action: 'getList', phone, page: 1, pageSize: 1 },
+      });
+      const count = res?.result?.data?.unreadCount || 0;
+      // 存全局，消息页 onShow 时也可读取
+      this.globalData.messageUnreadCount = count;
+      // 通知当前 tabBar 实例（如已渲染）
+      const pages = getCurrentPages();
+      pages.forEach(p => {
+        if (typeof p.getTabBar === 'function' && p.getTabBar()) {
+          p.getTabBar().setData({ messageBadge: count });
+        }
+      });
+    } catch (e) {
+      console.warn('[app] refreshMessageBadge failed:', e.message);
     }
   }
 });

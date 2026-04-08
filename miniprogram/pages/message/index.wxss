@@ -89,20 +89,56 @@ page {
   font-weight: 300;
 }
 
+/* 通知列表头部 */
+.msg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx 16rpx;
+}
+
+.msg-header-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.msg-mark-all-text {
+  font-size: 26rpx;
+  color: #8766F3;
+}
+
+.msg-mark-all-text.disabled {
+  color: #ccc;
+}
+
 /* 消息列表 */
 .message-list {
   padding: 0 32rpx;
 }
 
+.msg-group {
+  margin-bottom: 20rpx;
+}
+
+.msg-timestamp {
+  font-size: 22rpx;
+  color: #bbb;
+  padding: 0 8rpx 8rpx;
+}
+
 .message-item {
   background: #fff;
   border-radius: 16rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
+  padding: 28rpx;
   display: flex;
   gap: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
+}
+
+.message-item.read {
+  background: #fafafa;
 }
 
 .message-item:active {
@@ -110,24 +146,29 @@ page {
   box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.08);
 }
 
-.message-icon-wrapper {
+/* 类型图标 */
+.msg-icon-wrap {
   position: relative;
   flex-shrink: 0;
+  align-self: stretch;   /* 高度跟随右侧内容自动拉伸 */
+  width: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.message-icon {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
-  background: #f0f0f0;
+.msg-emoji {
+  font-size: 36rpx;
+  line-height: 1;
 }
 
 .unread-badge {
   position: absolute;
   top: -4rpx;
   right: -4rpx;
-  width: 16rpx;
-  height: 16rpx;
+  width: 18rpx;
+  height: 18rpx;
   background: #ff4d4f;
   border-radius: 50%;
   border: 3rpx solid #fff;
@@ -137,37 +178,61 @@ page {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+  gap: 8rpx;
+  min-width: 0;
 }
 
 .message-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
+/* 合同邀请的时间：紧跟标题，之后由 flex 把按钮推到最右 */
+.msg-time-inline {
+  margin-right: auto;
 }
 
 .message-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.message-title.read {
+  font-weight: 500;
+  color: #666;
 }
 
 .message-time {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 22rpx;
+  color: #bbb;
   flex-shrink: 0;
-  margin-left: 16rpx;
+  margin-left: 12rpx;
+  margin-top: 4rpx;
 }
 
 .message-desc {
-  font-size: 28rpx;
-  color: #666;
+  flex: 1;
+  font-size: 26rpx;
+  color: #888;
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.msg-action-btn {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 600;
+  background: #8766F3;
+  border-radius: 16rpx;
+  padding: 8rpx 20rpx;
 }
 
 /* 空状态 */

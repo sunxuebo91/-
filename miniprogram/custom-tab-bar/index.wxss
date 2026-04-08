@@ -44,6 +44,7 @@
 }
 
 .icon-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,5 +68,29 @@
 
 .text.active {
   color: #8766f3;
+}
+
+/* 消息未读红点 */
+.tab-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -10rpx;
+  min-width: 28rpx;
+  height: 28rpx;
+  background: #ff4d4f;
+  border-radius: 14rpx;
+  border: 3rpx solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6rpx;
+  box-sizing: border-box;
+}
+
+.tab-badge-text {
+  font-size: 18rpx;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
 }
 

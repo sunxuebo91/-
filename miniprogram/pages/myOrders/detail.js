@@ -33,7 +33,7 @@ function formatDateTime(str) {
 }
 
 Page({
-  data: { contract: null, loading: true, confirming: false },
+  data: { contract: null, loading: true, confirming: false, paying: false },
 
   onLoad({ id, autoSign }) {
     this.contractId = id;
@@ -69,11 +69,42 @@ Page({
       // 状态文字：中间态覆盖
       let statusText = STATUS_TEXT[c.contractStatus] || c.contractStatus || '';
       if (waitingNanny) statusText = '等待阿姨签约';
+      // "服务中"仅在已到开始日期时显示；否则显示"待服务"
+      if (c.contractStatus === 'active') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDay = c.startDate ? new Date(c.startDate) : null;
+        if (startDay) startDay.setHours(0, 0, 0, 0);
+        statusText = (startDay && today >= startDay) ? '服务中' : '待服务';
+      }
 
       // 去签约按钮：有爱签合同号 + 处于签约流程 + 客户本人尚未签
       const showSign = !!c.esignContractNo
         && ['draft', 'signing', 'signed'].includes(c.contractStatus)
         && !customerSigned;
+
+      // ── 支付状态 ──
+      const serviceFee = c.customerServiceFee || 0;
+      const paymentEnabled = !!c.paymentEnabled; // 后端开关
+
+      // 只要有服务费就查支付记录（不管开关），这样已支付的始终能显示 ✓
+      let paymentStatus = 'unpaid';
+      if (serviceFee > 0) {
+        try {
+          const payRes = await wx.cloud.callFunction({
+            name: 'paymentService',
+            data: { action: 'getPaymentByContract', contractId: this.contractId },
+          });
+          if (payRes.result?.success) {
+            paymentStatus = payRes.result.data.paymentStatus || 'unpaid';
+          }
+        } catch (e) {
+          console.warn('查询支付状态失败', e);
+        }
+      }
+
+      // 去支付按钮：后端开关开 + 有服务费 + 未支付
+      const showPay = paymentEnabled && serviceFee > 0 && paymentStatus === 'unpaid';
 
       this.setData({
         contract: {
@@ -82,7 +113,7 @@ Page({
           nannyName:        c.workerName   || '待定',
           nannyPhone:       c.workerPhone  || '',
           nannySalary:      c.workerSalary || 0,
-          serviceFee:       c.customerServiceFee || 0,
+          serviceFee,
           startDateFmt:     formatDate(c.startDate),
           endDateFmt:       formatDate(c.endDate),
           contractDuration: calculateMonths(c.startDate, c.endDate),
@@ -98,6 +129,9 @@ Page({
           customerSigned,
           nannySigned,
           waitingNanny,
+          // 支付
+          paymentStatus,
+          showPay,
         },
       });
     } catch (e) {
@@ -162,6 +196,90 @@ Page({
     } catch (e) {
       wx.hideLoading();
       wx.showToast({ title: e.message || '获取签约链接失败', icon: 'none', duration: 2500 });
+    }
+  },
+
+  // ── 支付 ──
+  async goPayment() {
+    if (this.data.paying) return;
+    const { contract } = this.data;
+    if (!contract || !contract.showPay) return;
+
+    // 二次确认
+    const { confirm } = await new Promise(resolve =>
+      wx.showModal({
+        title: '确认支付',
+        content: `确认支付服务费 ¥${contract.serviceFee} 元？`,
+        confirmText: '确认支付',
+        confirmColor: '#8766F3',
+        success: resolve,
+      })
+    );
+    if (!confirm) return;
+
+    this.setData({ paying: true });
+    try {
+      // 1. 预下单
+      const res = await wx.cloud.callFunction({
+        name: 'paymentService',
+        data: {
+          action: 'precreate',
+          contractId: this.contractId,
+          phone: this.phone,
+        },
+      });
+      if (!res.result?.success) throw new Error(res.result?.errMsg || '支付发起失败');
+
+      const { paymentId, wapPayRequest } = res.result.data;
+      if (!wapPayRequest) throw new Error('获取支付参数失败');
+
+      // 2. 解析微信支付参数并唤起支付
+      const payParams = typeof wapPayRequest === 'string' ? JSON.parse(wapPayRequest) : wapPayRequest;
+      await new Promise((resolve, reject) => {
+        wx.requestPayment({
+          timeStamp: payParams.timeStamp,
+          nonceStr:  payParams.nonceStr,
+          package:   payParams.package,
+          signType:  payParams.signType || 'MD5',
+          paySign:   payParams.paySign,
+          success: resolve,
+          fail: reject,
+        });
+      });
+
+      // 3. 支付成功 → 轮询确认
+      wx.showLoading({ title: '确认支付结果...' });
+      let confirmed = false;
+      for (let i = 0; i < 6; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const qRes = await wx.cloud.callFunction({
+          name: 'paymentService',
+          data: { action: 'queryPayment', paymentId },
+        });
+        if (qRes.result?.data?.paymentStatus === 'paid') {
+          confirmed = true;
+          break;
+        }
+      }
+      wx.hideLoading();
+
+      if (confirmed) {
+        wx.showToast({ title: '支付成功', icon: 'success' });
+      } else {
+        wx.showToast({ title: '支付处理中，请稍后刷新', icon: 'none', duration: 3000 });
+      }
+      // 刷新页面状态
+      setTimeout(() => this.loadDetail(), 1500);
+    } catch (e) {
+      wx.hideLoading();
+      // 用户取消支付不报错
+      if (e.errMsg && e.errMsg.includes('cancel')) {
+        wx.showToast({ title: '已取消支付', icon: 'none' });
+      } else {
+        wx.showToast({ title: e.message || '支付失败', icon: 'none', duration: 2500 });
+      }
+    } finally {
+      this.setData({ paying: false });
     }
   },
 

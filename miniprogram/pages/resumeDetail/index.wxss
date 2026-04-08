@@ -864,7 +864,7 @@
 /* 顶部标题行：月嫂 + 日期 | 订单编号 */
 .work-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 16rpx;
 }
@@ -880,31 +880,29 @@
   display: flex;
   align-items: center;
   gap: 4rpx;
-  min-height: 26rpx;
 }
 
 .period-icon {
-  width: 30rpx;
-  height: 30rpx;
+  width: 26rpx;
+  height: 26rpx;
   flex-shrink: 0;
   display: block;
-  position: relative;
-  top: 1rpx;
+  align-self: center;
 }
 
 .period-text {
   font-size: 26rpx;
   font-weight: 600;
   color: #333;
-  line-height: 26rpx;
+  line-height: 1;
 }
 
 .period-date {
   font-size: 20rpx;
   color: #666;
   margin-left: 4rpx;
-  line-height: 20rpx;
-  align-self: flex-end;
+  line-height: 1;
+  padding-bottom: 1rpx;
 }
 
 /* 订单编号（右上角，纯文字对齐右侧） */
@@ -961,7 +959,7 @@
 
 .service-area {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 4rpx;
   font-size: 20rpx;
   color: #666;
@@ -1406,7 +1404,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-45deg);
-  z-index: 1;
+  z-index: 9999;
   pointer-events: none;
   opacity: 0.08;
 }

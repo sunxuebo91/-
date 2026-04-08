@@ -13,6 +13,7 @@ const icons = {
 Component({
   data: {
     selected: 0,
+    messageBadge: 0,   // 消息未读数
     list: [
       {
         pagePath: "/pages/home/index",

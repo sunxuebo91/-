@@ -116,6 +116,22 @@
 .signer-status.done    { color: #8766F3; }
 .signer-status.pending { color: #bbb; }
 
+/* 支付按钮 & 已支付标记 */
+.pay-btn {
+  font-size: 24rpx; color: #fff;
+  background: #8766F3;
+  border-radius: 20rpx;
+  padding: 6rpx 28rpx;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+.pay-btn-disabled { opacity: 0.5; pointer-events: none; }
+.paid-tag {
+  font-size: 24rpx; color: #2e7d32; font-weight: 500;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
 /* 等待阿姨签约按钮 */
 .btn-waiting {
   background: #f0ecfd; color: #8766F3;

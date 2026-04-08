@@ -21,7 +21,20 @@
     <view class="section">
       <view class="section-title">服务信息</view>
       <view class="row"><text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text></view>
-      <view class="row"><text class="label">服务费用</text><text class="value">¥{{contract.serviceFee}} 元</text></view>
+      <view class="row">
+        <text class="label">服务费用</text>
+        <view class="value-row">
+          <text class="value">¥{{contract.serviceFee}} 元</text>
+          <!-- 去支付：客户已签约 + 服务费>0 + 未支付 -->
+          <view wx:if="{{contract.showPay}}"
+                class="pay-btn {{paying ? 'pay-btn-disabled' : ''}}"
+                bindtap="goPayment">
+            {{paying ? '支付中...' : '去支付'}}
+          </view>
+          <!-- 已支付标记 -->
+          <view wx:elif="{{contract.paymentStatus === 'paid'}}" class="paid-tag">✓ 已支付</view>
+        </view>
+      </view>
       <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">结束日期</text><text class="value">{{contract.endDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">合同期限</text><text class="value">{{contract.contractDuration || '—'}}</text></view>

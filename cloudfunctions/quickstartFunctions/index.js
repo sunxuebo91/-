@@ -42,7 +42,7 @@ const getResumeMiniCode = async (event) => {
   // path 最长支持 128 字符；优先把 shared+sharerId+phone 塞进去，放不下时逐步降级
   let path = `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`;
   if (staffId) {
-    const withStaff = `${path}&shared=1&sharerId=${encodeURIComponent(staffId)}`;
+    const withStaff = `${path}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1`;
     if (withStaff.length <= 128) {
       path = withStaff;
       if (staffPhone) {

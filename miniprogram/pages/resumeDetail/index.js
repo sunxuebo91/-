@@ -190,6 +190,7 @@ function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
 }
 
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
+const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 
 Page({
   onHide() {
@@ -216,6 +217,7 @@ Page({
     // 分享相关
     isShared: false,
     sharerInfo: null,
+    sharerIsStaff: false, // 分享者是否为员工（控制顾问栏显示）
     displayName: '',
     maskedPhone: '',
     maskedIdNumber: '',
@@ -303,6 +305,7 @@ Page({
 
     // 检查是否通过分享进入
     // options.p 是海报二维码扫码进入时的紧凑电话参数（card-share 用 sharerPhone）
+    // options.sf = '1' 表示分享者是员工（staff flag），只有员工分享时才会携带
     if (shared === '1') {
       const resolvedPhone = sharerPhone || options.p || '';
       const resolvedSharerId = sharerId ? decodeURIComponent(sharerId) : '';
@@ -315,11 +318,13 @@ Page({
       };
       this.setData({
         isShared: true,
-        sharerInfo: sharerInfoData
+        sharerInfo: sharerInfoData,
+        sharerIsStaff: options.sf === '1'  // 卡片分享：sf=1 表示员工分享
       });
 
       // 海报二维码扫码进来：URL 里没有顾问姓名，异步拉取完整信息补全（与卡片分享保持一致）
       // 同时传入 phone 作为回退查询条件，解决 CRM userId 与云数据库 _id 不一致问题
+      // 查询成功即确认分享者是员工，设置 sharerIsStaff
       if (!sharer && (resolvedSharerId || resolvedPhone)) {
         wx.cloud.callFunction({
           name: 'userService',
@@ -335,7 +340,8 @@ Page({
                 phone: d.phone || cur.phone,
                 avatar: d.avatar || cur.avatar,
                 company: d.company || cur.company
-              }
+              },
+              sharerIsStaff: true  // 海报二维码：查到员工信息则确认是员工分享
             });
           }
         }).catch(err => {
@@ -1059,8 +1065,8 @@ Page({
             });
         }
 
-        // 非员工或分享模式下应用数据脱敏
-        if (this.data.isShared || !this.data.isStaff) {
+        // 非员工应用数据脱敏（员工无论通过何种方式进入都显示真实数据）
+        if (!this.data.isStaff) {
           const surname = detailWithAvatar.name ? detailWithAvatar.name.charAt(0) : '某';
           // 脱敏工作经历中的客户姓名
           if (detailWithAvatar.workExperiences) {
@@ -1814,13 +1820,14 @@ Page({
         }).catch(err => console.warn('⚠️ 缓存顾问信息失败(不影响海报生成):', err));
       }
 
-      const [photoLocalPath, qrLocalPath] = await Promise.all([
+      const [photoLocalPath, qrLocalPath, logoLocalPath] = await Promise.all([
         this._downloadImage(photoUrl),
-        this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone)
+        this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone),
+        this._downloadImage(POSTER_LOGO_FILE_ID)
       ]);
 
       // 2. Canvas 绘制海报
-      const posterPath = await this._drawPosterCanvas(detail, photoLocalPath, qrLocalPath);
+      const posterPath = await this._drawPosterCanvas(detail, photoLocalPath, qrLocalPath, logoLocalPath);
 
       wx.hideLoading();
 
@@ -1919,8 +1926,8 @@ Page({
     }
   },
 
-  // 用 Canvas 2D 绘制海报并导出为临时文件路径
-  _drawPosterCanvas(detail, photoLocalPath, qrLocalPath) {
+  // 用 Canvas 2D 绘制海报并导出为临时文件路径（v2 杂志封面风格）
+  _drawPosterCanvas(detail, photoLocalPath, qrLocalPath, logoLocalPath) {
     return new Promise((resolve, reject) => {
       wx.createSelectorQuery().in(this).select('#posterCanvas')
         .fields({ node: true, size: true })
@@ -1929,33 +1936,56 @@ Page({
             const canvas = res[0].node;
             const ctx = canvas.getContext('2d');
             const dpr = wx.getSystemInfoSync().pixelRatio || 2;
-            const W = 375, H = 560;
+            const W = 375, H = 640;
             canvas.width = W * dpr;
             canvas.height = H * dpr;
             ctx.scale(dpr, dpr);
 
-            // — 白色背景 —
-            ctx.fillStyle = '#ffffff';
+            // ── 辅助函数：绘制圆角矩形路径 ──
+            const roundRectPath = (x, y, w, h, r) => {
+              ctx.beginPath();
+              ctx.moveTo(x + r, y);
+              ctx.lineTo(x + w - r, y);
+              ctx.arcTo(x + w, y, x + w, y + r, r);
+              ctx.lineTo(x + w, y + h - r);
+              ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+              ctx.lineTo(x + r, y + h);
+              ctx.arcTo(x, y + h, x, y + h - r, r);
+              ctx.lineTo(x, y + r);
+              ctx.arcTo(x, y, x + r, y, r);
+              ctx.closePath();
+            };
+
+            // ── Layer 1：深色背景兜底 ──
+            ctx.fillStyle = '#0f051e';
             ctx.fillRect(0, 0, W, H);
 
-            // — 照片区（占上方 460px）—
+            // ── Layer 2：全出血照片（Cover 模式，不变形）──
             if (photoLocalPath) {
               const photoImg = canvas.createImage();
               photoImg.src = photoLocalPath;
               await new Promise(r => { photoImg.onload = r; photoImg.onerror = r; });
-              ctx.drawImage(photoImg, 0, 0, W, 460);
+              const imgW = photoImg.width, imgH = photoImg.height;
+              // Cover：取较大缩放比，确保铺满画布
+              const scale = Math.max(W / imgW, H / imgH);
+              const drawW = imgW * scale;
+              const drawH = imgH * scale;
+              // 水平居中，垂直偏上 15%（让人脸出现在画面上半）
+              const dx = (W - drawW) / 2;
+              const dy = Math.min(0, (H - drawH) * 0.15);
+              ctx.drawImage(photoImg, dx, dy, drawW, drawH);
             }
 
-            // — 紫色信息栏（y: 445-510，覆盖照片底部）—
-            const PURPLE = '#8766F3';
-            ctx.fillStyle = PURPLE;
-            ctx.fillRect(0, 445, W, 65);
+            // ── Layer 3：底部渐变遮罩（透明 → 深紫近黑）──
+            const grad = ctx.createLinearGradient(0, H * 0.42, 0, H);
+            grad.addColorStop(0,    'rgba(15,5,30,0)');
+            grad.addColorStop(0.45, 'rgba(15,5,30,0.6)');
+            grad.addColorStop(0.75, 'rgba(15,5,30,0.88)');
+            grad.addColorStop(1,    'rgba(15,5,30,0.97)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
 
-            // — 浅紫页脚区（y: 510-560）—
-            ctx.fillStyle = '#f5f3ff';
-            ctx.fillRect(0, 510, W, 50);
-
-            // — 属相英文→中文映射 —
+            // ── 数据准备 ──
             const ZODIAC_MAP = {
               rat:'鼠', ox:'牛', tiger:'虎', rabbit:'兔', dragon:'龙',
               snake:'蛇', horse:'马', goat:'羊', sheep:'羊',
@@ -1963,60 +1993,151 @@ Page({
             };
             const zodiacRaw = (detail.zodiacText || '').replace(/^属/, '').trim();
             const zodiac = ZODIAC_MAP[zodiacRaw.toLowerCase()] || zodiacRaw;
-
-            // — 信息文字（拆两行，不加 maxWidth 避免压缩变形）—
             const surname = detail.name ? detail.name.charAt(0) : '';
-            // 第一行：个人信息
-            const row1Parts = [
-              surname ? `${surname}阿姨` : '',
+            const displayName = surname ? `${surname}阿姨` : '阿姨';
+            const subParts = [
               detail.age ? `${detail.age}岁` : '',
-              zodiac,
+              zodiac ? `属${zodiac}` : '',
               (detail.nativePlace || detail.city || '').slice(0, 4),
             ].filter(Boolean);
-            // 第二行：职业信息
-            const row2Parts = [
+            const pillTags = [
               detail.jobTypeText || '',
               detail.experienceYears ? `${detail.experienceYears}年经验` : '',
-              detail.expectedSalary || '',
-              detail.orderStatusText || ''
+              detail.orderStatusText || '',
             ].filter(Boolean);
+            const salary = detail.expectedSalary || '';
 
-            ctx.fillStyle = '#ffffff';
+            // ── 布局锚点 ──
+            // 左右两列，各两行：
+            //   Row1 y=442：左=姓名大字  右=工种/经验胶囊标签
+            //   Row2 y=484：左=年龄属相籍贯  右=月薪金色
+            // 分隔线 y=532 / 品牌区 y=551,571 / QR y=534~614 / 扫码提示 y=626
+            const Y_SEP    = 532;   // 分隔线
+            // 二维码上沿到分隔线的间距
+            const bottomZoneAll = H - Y_SEP;
+            const qrBlockHAll = 72 + 11 + 5;
+            const qrGap = (bottomZoneAll - qrBlockHAll) / 2;  // ≈10px
+            // 内容区底部到分隔线保持同样间距
+            const Y_ROW2   = Y_SEP - qrGap - 11;   // 511 (middle baseline, 22px字高)
+            const Y_ROW1   = Y_ROW2 - 42;           // 469 (行间距保持42)
+            // 品牌文字 & 二维码在分隔线与画布底部之间垂直居中
+            const bottomZone = H - Y_SEP;          // 108px
+            const brandMid = Y_SEP + bottomZone / 2; // 586
+            const Y_SLOGAN = brandMid;              // slogan 垂直居中
+            const QW = 72, QH = 72;                 // 缩小 10%
+            const qrBlockH = QH + 11 + 5;           // 二维码 + 间距 + 半行文字
+            const QX = W - QW - 16;
+            const QY = Y_SEP + (bottomZone - qrBlockH) / 2;  // 垂直居中
+
+            // ── Layer 4：信息文字区（左右两列，各两行）──
             ctx.textBaseline = 'middle';
-            ctx.font = 'bold 13px sans-serif';
-            // 第一行 y=463（信息栏上半）
-            ctx.fillText(row1Parts.join(' | '), 12, 463);
-            // 第二行 y=492（信息栏下半）
-            ctx.fillText(row2Parts.join(' | '), 12, 492);
 
-            // — 品牌标语（页脚左侧）—
-            ctx.fillStyle = PURPLE;
-            ctx.font = '13px sans-serif';
-            ctx.fillText('安得褓贝-一切为了爱', 12, 536);
-
-            // — 小程序码区域（右下角，88×88，顶部与信息栏上沿对齐）—
-            // QX=279, QY=445（与紫色信息栏 y:445 对齐），留 8px 右边距
-            const QX = 279, QY = 445, QW = 88, QH = 88;
-            // 白色底衬（因为透明 PNG 码需要白底可读）
+            // ── 左列 Row1：姓名大字 ──
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(QX, QY, QW, QH);
+            ctx.font = 'bold 30px sans-serif';
+            const nameChars = displayName.split('');
+            let nx = 20;
+            nameChars.forEach(ch => {
+              ctx.fillText(ch, nx, Y_ROW1);
+              nx += ctx.measureText(ch).width + 3;
+            });
+
+            // ── 左列 Row2：年龄 · 属相 · 籍贯 ──
+            if (subParts.length) {
+              ctx.fillStyle = 'rgba(255,255,255,0.72)';
+              ctx.font = '14px sans-serif';
+              ctx.fillText(subParts.join('  ·  '), 20, Y_ROW2);
+            }
+
+            // ── 右列 Row1：工种/经验胶囊标签（右对齐，从右往左排） ──
+            if (pillTags.length) {
+              const pillH = 28, pillR = 14;
+              let rx = W - 20; // 从右边距开始向左排
+              [...pillTags].reverse().forEach(tag => {
+                ctx.font = '13px sans-serif';
+                const tw = ctx.measureText(tag).width;
+                const pw = tw + 22;
+                rx -= pw;
+                if (rx < 20) return; // 防止越界
+                roundRectPath(rx, Y_ROW1 - pillH / 2, pw, pillH, pillR);
+                ctx.fillStyle = 'rgba(255,255,255,0.13)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.40)';
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(tag, rx + 11, Y_ROW1 + 1);
+                rx -= 8; // 标签间距
+              });
+            }
+
+            // ── 右列 Row2：月薪金色（右对齐，与副标题同高）──
+            if (salary) {
+              ctx.fillStyle = '#C8A96E';
+              ctx.font = 'bold 22px sans-serif';
+              ctx.textBaseline = 'middle';
+              ctx.textAlign = 'right';
+              ctx.fillText(salary, W - 20, Y_ROW2);
+              ctx.textAlign = 'left';
+            }
+
+            // ── Layer 5：底部品牌栏 ──
+            // 细分隔线
+            ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(16, Y_SEP);
+            ctx.lineTo(W - 16, Y_SEP);
+            ctx.stroke();
+
+            // 品牌 slogan —— 在二维码左侧区域居中显示
+            const sloganText = '为爱，全力以赴！';
+            const sloganAreaLeft = 0;
+            const sloganAreaRight = QX - 8;          // 二维码左边留 8px 间距
+            const sloganCenterX = (sloganAreaLeft + sloganAreaRight) / 2;
+            ctx.fillStyle = '#C8A96E';
+            ctx.font = 'italic bold 25px "PingFang SC", "STKaiti", "KaiTi", Georgia, serif';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillText(sloganText, sloganCenterX, Y_SLOGAN);
+            ctx.textAlign = 'left';  // 恢复默认
+
+            // ── Layer 6：二维码圆角白卡（右侧，顶贴分隔线）──
+            roundRectPath(QX, QY, QW, QH, 8);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
 
             if (qrLocalPath) {
               const qrImg = canvas.createImage();
               qrImg.src = qrLocalPath;
               await new Promise(r => { qrImg.onload = r; qrImg.onerror = r; });
-              // 透明 PNG 直接绘制在白底上，留 4px 内边距
-              ctx.drawImage(qrImg, QX + 4, QY + 4, QW - 8, QH - 8);
+              ctx.save();
+              roundRectPath(QX + 5, QY + 5, QW - 10, QH - 10, 4);
+              ctx.clip();
+              ctx.drawImage(qrImg, QX + 5, QY + 5, QW - 10, QH - 10);
+              ctx.restore();
             }
 
-            // — "扫一扫看详情"（页脚，二维码下方居中）—
-            ctx.fillStyle = PURPLE;
-            ctx.font = '12px sans-serif';
+            // "扫码了解详情"（QR 正下方居中）
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('扫一扫看详情', QX + QW / 2, 548);
+            ctx.fillText('扫码查看简历', QX + QW / 2, QY + QH + 11);
             ctx.textAlign = 'left';
 
-            // — 导出为 jpg —
+            // ── Layer 7：右上角 Logo ──
+            if (logoLocalPath) {
+              const logoImg = canvas.createImage();
+              logoImg.src = logoLocalPath;
+              await new Promise(r => { logoImg.onload = r; logoImg.onerror = r; });
+              const logoSize = 78;   // 再缩小20%（98*0.8）
+              const logoX = W - logoSize - 6;
+              const logoY = 6;
+              ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+            }
+
+            // ── 导出为 jpg ──
             wx.canvasToTempFilePath({
               canvas,
               fileType: 'jpg',
@@ -2052,7 +2173,8 @@ Page({
     const sharerCompany = '安得褓贝';
     const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
-    const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+    const isStaffSharer = this.data.isStaff ? '&sf=1' : '';
+    const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}${isStaffSharer}`;
 
     return {
       title: `${surname}阿姨的简历-${jobType}`,
@@ -2078,7 +2200,8 @@ Page({
     const sharerCompany2 = '安得褓贝';
     const sharerId2 = String(crmUserInfo2._id || crmUserInfo2.id || crmUserInfo2.userId || '');
 
-    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId2)}&sharer=${encodeURIComponent(sharerName2)}&sharerPhone=${encodeURIComponent(sharerPhone2)}&sharerCompany=${encodeURIComponent(sharerCompany2)}&sharerAvatar=${encodeURIComponent(sharerAvatar2)}`;
+    const isStaffSharer2 = this.data.isStaff ? '&sf=1' : '';
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId2)}&sharer=${encodeURIComponent(sharerName2)}&sharerPhone=${encodeURIComponent(sharerPhone2)}&sharerCompany=${encodeURIComponent(sharerCompany2)}&sharerAvatar=${encodeURIComponent(sharerAvatar2)}${isStaffSharer2}`;
 
     return {
       title: `${surname}阿姨的简历-${jobType}`,
