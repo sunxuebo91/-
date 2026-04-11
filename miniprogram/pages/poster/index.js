@@ -430,6 +430,26 @@ Page({
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, W, H);
 
+          // ── Layer 3.5: 左上角日期 ──
+          const now = new Date();
+          const month   = now.getMonth() + 1;
+          const day     = now.getDate();
+          const weekMap = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+          const weekStr = weekMap[now.getDay()];
+          const dateStr = `${month}月${day}日`;
+
+          ctx.save();
+          ctx.shadowColor   = 'rgba(0,0,0,0.5)';
+          ctx.shadowBlur    = 6;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 1;
+          ctx.fillStyle    = '#ffffff';
+          ctx.textBaseline = 'top';
+          ctx.textAlign    = 'left';
+          ctx.font = '15px "STXingkai", "华文行楷", "STKaiti", "KaiTi", serif';
+          ctx.fillText(`${dateStr}  ${weekStr}`, 14, 20);
+          ctx.restore();
+
           // ── Layer 4: 文案区（整图垂直居中，高级排版） ──
           const Y_SEP = 532;
           const QW = 72, QH = 72;

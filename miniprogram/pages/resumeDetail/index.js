@@ -1893,10 +1893,11 @@ Page({
       const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
-      if (staffId && (staffName || staffPhone)) {
+      // staffId 或 staffPhone 任意一个非空即可保存，解决招生老师等无 userId 的角色扫码看不到顾问信息的问题
+      if ((staffId || staffPhone) && (staffName || staffPhone)) {
         wx.cloud.callFunction({
           name: 'userService',
-          data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
+          data: { action: 'saveStaffProfile', staffId: staffId || staffPhone, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
         }).catch(err => console.warn('⚠️ 缓存顾问信息失败(不影响海报生成):', err));
       }
 

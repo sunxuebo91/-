@@ -44,12 +44,18 @@ const getResumeMiniCode = async (event) => {
   const basePath = `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`;
   let path = basePath;
 
-  if (staffId) {
-    // 优先：带 sharerId + sf=1 + 手机号
-    const full = `${basePath}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1${staffPhone ? `&p=${encodeURIComponent(staffPhone)}` : ''}`;
+  // staffId 或 staffPhone 任意一个非空，均应在二维码路径中携带 shared=1&sf=1
+  // 解决"招生老师"等角色 crmUserInfo 中无 userId 字段时，扫码方看不到顾问底部信息的问题
+  if (staffId || staffPhone) {
+    const sharerPart = staffId ? `&sharerId=${encodeURIComponent(staffId)}` : '';
+    const phonePart  = staffPhone ? `&p=${encodeURIComponent(staffPhone)}` : '';
+    // 优先：带 sharerId + sf=1 + 手机号（能放下就用全量）
+    const full     = `${basePath}&shared=1${sharerPart}&sf=1${phonePart}`;
     // 次选：带 sharerId + sf=1（无手机号）
-    const noPhone = `${basePath}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1`;
-    // 再次：只带 sf=1（无 sharerId，无手机号；回流时靠顾问主动关联）
+    const noPhone  = `${basePath}&shared=1${sharerPart}&sf=1`;
+    // 再次：只带手机号 + sf=1（无 sharerId）
+    const phoneOnly = staffPhone ? `${basePath}&shared=1&sf=1${phonePart}` : '';
+    // 兜底：只保 shared=1&sf=1（无任何身份信息，扫码后显示默认顾问名）
     const minShared = `${basePath}&shared=1&sf=1`;
 
     if (full.length <= 128) {
@@ -57,9 +63,12 @@ const getResumeMiniCode = async (event) => {
     } else if (noPhone.length <= 128) {
       path = noPhone;
       console.warn(`[getResumeMiniCode] 路径超128字符，手机号已省略 (${full.length}字符)`);
+    } else if (phoneOnly && phoneOnly.length <= 128) {
+      path = phoneOnly;
+      console.warn(`[getResumeMiniCode] 路径超128字符，sharerId已省略 (${noPhone.length}字符)`);
     } else if (minShared.length <= 128) {
       path = minShared;
-      console.warn(`[getResumeMiniCode] 路径超128字符，sharerId已省略 (${noPhone.length}字符)`);
+      console.warn(`[getResumeMiniCode] 路径超128字符，sharerId/phone均已省略 (${noPhone.length}字符)`);
     } else {
       // 极端情况：连 shared=1&sf=1 都放不下，退回纯ID（实际上几乎不可能）
       path = basePath;
@@ -74,8 +83,10 @@ const getResumeMiniCode = async (event) => {
   });
   const { buffer } = resp;
   // 每个员工对每张简历各缓存一份，避免不同员工扫码看到错误的顾问信息
-  const cloudPath = staffId
-    ? `resume-qrcodes/resume-${resumeId}-${staffId}.png`
+  // staffId 为空时用手机号（去除非数字字符）区分不同员工
+  const cacheKey  = staffId || staffPhone.replace(/\D/g, '');
+  const cloudPath = cacheKey
+    ? `resume-qrcodes/resume-${resumeId}-${cacheKey}.png`
     : `resume-qrcodes/resume-${resumeId}.png`;
   const upload = await cloud.uploadFile({
     cloudPath,
