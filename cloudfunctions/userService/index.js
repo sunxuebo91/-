@@ -137,12 +137,11 @@ async function getMyInfo(openid) {
 /**
  * 保存员工公开信息到 staff_profiles 集合
  * 员工生成海报/二维码时调用，确保扫码方能查询到完整顾问信息
+ * 同时保存 staffOpenid，供 notificationService 按手机号直接拿到 openid 发通知
  */
-async function saveStaffProfile(staffId, name, phone, avatar, company) {
+async function saveStaffProfile(callerOpenid, staffId, name, phone, avatar, company) {
   if (!staffId && !phone) throw new Error('missing staffId or phone');
-  // 统一将 staffId 转为字符串，避免整数类型（CRM userId）与 URL 参数字符串类型不匹配
   const staffIdStr = staffId ? String(staffId) : '';
-  // 新增记录时写全量字段
   const docFull = {
     staffId: staffIdStr,
     name: name || '',
@@ -151,23 +150,28 @@ async function saveStaffProfile(staffId, name, phone, avatar, company) {
     company: company || '安得褓贝',
     updatedAt: db.serverDate()
   };
+  // 关键：把调用者 openid 一并存入，通知服务可按 phone → openid 直接查此集合
+  if (callerOpenid) docFull.staffOpenid = callerOpenid;
+
   try {
     const existing = staffIdStr
       ? await db.collection('staff_profiles').where({ staffId: staffIdStr }).limit(1).get()
       : { data: [] };
     if (existing.data && existing.data.length > 0) {
-      // 更新时：只覆盖非空字段，保留已有的姓名/头像，避免本次 session 数据缺失时把有效值擦除
       const docUpdate = { updatedAt: db.serverDate(), company: company || '安得褓贝' };
       if (phone) docUpdate.phone = phone;
       if (name) docUpdate.name = name;
       if (avatar) docUpdate.avatar = avatar;
+      if (callerOpenid) docUpdate.staffOpenid = callerOpenid;  // 始终更新 openid
       await db.collection('staff_profiles').where({ staffId: staffIdStr }).update({ data: docUpdate });
     } else {
       await db.collection('staff_profiles').add({ data: { ...docFull, createdAt: db.serverDate() } });
     }
+    console.log('[saveStaffProfile] ✅ staff_profiles 已保存, phone:', phone, 'openid:', callerOpenid);
   } catch (e) {
     console.error('saveStaffProfile error:', e);
   }
+
   return docFull;
 }
 
@@ -527,7 +531,7 @@ exports.main = async (event, context) => {
       return { success: true, data: info };
     }
     case "saveStaffProfile": {
-      const info = await saveStaffProfile(event.staffId, event.name, event.phone, event.avatar, event.company);
+      const info = await saveStaffProfile(openid, event.staffId, event.name, event.phone, event.avatar, event.company);
       return { success: true, data: info };
     }
     default:

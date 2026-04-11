@@ -27,7 +27,7 @@
     </view>
 
     <view class="info-item">
-      <view class="label">手机号</view>
+      <view class="label">手机号<text class="required-mark">*</text></view>
       <view class="value-wrapper">
         <button wx:if="{{!me.phone}}" class="phone-auth-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
           <view class="phone-text-btn">点击授权</view>
@@ -39,6 +39,18 @@
 
   <view class="btn-wrapper">
     <button class="save-btn" bindtap="onSave">保存修改</button>
+  </view>
+
+  <!-- 员工专属：简历查看提醒订阅 -->
+  <view class="section" wx:if="{{me.role === 'staff'}}">
+    <view class="section-title">消息提醒</view>
+    <view class="info-item" bindtap="onManualSubscribe">
+      <view class="label-full">
+        <view class="menu-label">简历查看提醒</view>
+        <view class="menu-sub">客户查看您分享的简历时通知您</view>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
   </view>
 </view>
 

@@ -235,6 +235,10 @@ Page({
     }
   },
 
+  goPoster() {
+    wx.navigateTo({ url: '/pages/poster/index' });
+  },
+
   goBabyDiary() {
     wx.navigateTo({
       url: '/pages/babyDiary/list/index'

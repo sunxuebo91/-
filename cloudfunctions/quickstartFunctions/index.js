@@ -39,16 +39,31 @@ const getResumeMiniCode = async (event) => {
   const staffPhone = (event.staffPhone || '').toString();
   if (!resumeId) throw new Error('missing resumeId');
 
-  // path 最长支持 128 字符；优先把 shared+sharerId+phone 塞进去，放不下时逐步降级
-  let path = `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`;
+  // path 最长支持 128 字符；逐步降级：完整 > 无phone > 无sharerId > 最小(只保 shared+sf)
+  // 无论如何都保留 shared=1&sf=1，确保扫码后能触发"简历被查看"通知
+  const basePath = `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`;
+  let path = basePath;
+
   if (staffId) {
-    const withStaff = `${path}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1`;
-    if (withStaff.length <= 128) {
-      path = withStaff;
-      if (staffPhone) {
-        const withPhone = `${path}&p=${encodeURIComponent(staffPhone)}`;
-        if (withPhone.length <= 128) path = withPhone;
-      }
+    // 优先：带 sharerId + sf=1 + 手机号
+    const full = `${basePath}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1${staffPhone ? `&p=${encodeURIComponent(staffPhone)}` : ''}`;
+    // 次选：带 sharerId + sf=1（无手机号）
+    const noPhone = `${basePath}&shared=1&sharerId=${encodeURIComponent(staffId)}&sf=1`;
+    // 再次：只带 sf=1（无 sharerId，无手机号；回流时靠顾问主动关联）
+    const minShared = `${basePath}&shared=1&sf=1`;
+
+    if (full.length <= 128) {
+      path = full;
+    } else if (noPhone.length <= 128) {
+      path = noPhone;
+      console.warn(`[getResumeMiniCode] 路径超128字符，手机号已省略 (${full.length}字符)`);
+    } else if (minShared.length <= 128) {
+      path = minShared;
+      console.warn(`[getResumeMiniCode] 路径超128字符，sharerId已省略 (${noPhone.length}字符)`);
+    } else {
+      // 极端情况：连 shared=1&sf=1 都放不下，退回纯ID（实际上几乎不可能）
+      path = basePath;
+      console.error(`[getResumeMiniCode] 路径超128字符，无法附加分享信息 (${minShared.length}字符)`);
     }
   }
 
@@ -65,6 +80,29 @@ const getResumeMiniCode = async (event) => {
   const upload = await cloud.uploadFile({
     cloudPath,
     fileContent: buffer,
+  });
+  return { success: true, fileID: upload.fileID };
+};
+
+// 生成首页小程序码（固定路径，缓存云存储）
+const getHomeMiniCode = async () => {
+  const cloudPath = 'home-qrcode/home.png';
+  // 先尝试直接取已缓存的
+  try {
+    const tempRes = await cloud.getTempFileURL({ fileList: [`cloud://${cloud.DYNAMIC_CURRENT_ENV}.${cloudPath}`] });
+    if (tempRes?.fileList?.[0]?.tempFileURL) {
+      // 已缓存，直接返回 fileID 形式
+    }
+  } catch (_) { /* 未缓存则继续生成 */ }
+
+  const resp = await cloud.openapi.wxacode.get({
+    path: 'pages/home/index',
+    width: 200,
+    is_hyaline: true,
+  });
+  const upload = await cloud.uploadFile({
+    cloudPath,
+    fileContent: resp.buffer,
   });
   return { success: true, fileID: upload.fileID };
 };
@@ -223,5 +261,7 @@ exports.main = async (event, context) => {
       return await deleteRecord(event);
     case "getResumeMiniCode":
       return await getResumeMiniCode(event);
+    case "getHomeMiniCode":
+      return await getHomeMiniCode();
   }
 };

@@ -29,9 +29,60 @@
   right: 0;
   z-index: 100;
   display: flex;
+  flex-direction: column;
   background: #ffffff;
-  padding: 0 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 筛选按钮行 */
+.tabs-row {
+  display: flex;
+  padding: 0 32rpx;
+}
+
+/* 员工版含搜索框时整体不额外撑高，搜索行自带内边距 */
+.tabs-with-search {
+  /* 无需额外样式，子元素自然撑开 */
+}
+
+/* 员工搜索框行 */
+.staff-search-row {
+  padding: 0 32rpx 16rpx;
+}
+
+.staff-search-box {
+  display: flex;
+  align-items: center;
+  background: #f5f5f7;
+  border-radius: 32rpx;
+  padding: 0 24rpx;
+  height: 68rpx;
+}
+
+.staff-search-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.staff-search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+  height: 68rpx;
+  line-height: 68rpx;
+}
+
+.staff-search-placeholder {
+  color: #aaa;
+  font-size: 26rpx;
+}
+
+.staff-search-clear {
+  font-size: 26rpx;
+  color: #aaa;
+  padding: 0 8rpx;
+  flex-shrink: 0;
 }
 
 .tab {
@@ -196,7 +247,12 @@
 /* 简历列表 */
 .list {
   padding: 20rpx 32rpx;
-  padding-top: 100rpx; /* 为固定的筛选栏留出空间 */
+  padding-top: 100rpx; /* 为固定筛选栏留出空间（无搜索框） */
+}
+
+/* 员工模式：筛选栏多一行搜索框（约 84rpx），整体约 184rpx */
+.list.list-with-search {
+  padding-top: 186rpx;
 }
 
 .card {

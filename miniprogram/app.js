@@ -1,4 +1,6 @@
 // app.js
+const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+
 App({
   onLaunch: function () {
     this.globalData = {
@@ -143,6 +145,13 @@ App({
         // 登录成功后拉取未读消息数，更新 tabBar 红点
         if (merged.phone) {
           this.refreshMessageBadge(merged.phone);
+          // 同步手机号到云数据库 users 集合
+          // 员工若通过账号密码登录，users.phone 可能为空，这里补齐
+          // notificationService 依赖 users.phone 查 openid 发订阅消息
+          wx.cloud.callFunction({
+            name: 'userService',
+            data: { action: 'updateMe', data: { phone: merged.phone } }
+          }).catch(err => console.warn('⚠️ 同步手机号到云数据库失败（不影响使用）:', err));
         }
       } else {
         console.warn('⚠️ CRM 登录接口返回失败:', apiRes.data?.message);
@@ -151,6 +160,44 @@ App({
       console.error('❌ 自动登录失败:', err);
       // 登录失败不影响小程序正常使用
     }
+  },
+
+  onShow() {
+    // 每次切到前台时，计算员工是否需要订阅提醒，结果存到 globalData 供 profile 页读取
+    this.calcSubscribeReminder();
+  },
+
+  /**
+   * 计算是否需要展示订阅提醒（只存标记，不弹窗）
+   * 实际弹窗必须在用户点击事件中调用 wx.requestSubscribeMessage
+   */
+  calcSubscribeReminder() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    if (!crmUserInfo.isStaff || !crmUserInfo.phone) {
+      this.globalData.needSubscribeReminder = false;
+      return;
+    }
+
+    wx.getSetting({
+      withSubscriptions: true,
+      success: (res) => {
+        const itemSettings = (res.subscriptionsSetting || {}).itemSettings || {};
+        // 已永久授权 → 不再提醒
+        if (itemSettings[RESUME_VIEW_TEMPLATE_ID] === 'accept') {
+          console.log('✅ 已永久订阅，无需提醒');
+          this.globalData.needSubscribeReminder = false;
+          return;
+        }
+        // 今天已提示过 → 不再提醒
+        const today = new Date().toLocaleDateString();
+        const lastDate = wx.getStorageSync('staffSubPromptDate');
+        this.globalData.needSubscribeReminder = (lastDate !== today);
+        console.log('📨 订阅提醒标记:', this.globalData.needSubscribeReminder);
+      },
+      fail: () => {
+        this.globalData.needSubscribeReminder = false;
+      }
+    });
   },
 
   /** 拉取未读数并更新所有页面的 tabBar 红点 */

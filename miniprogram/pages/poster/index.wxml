@@ -1,0 +1,74 @@
+<view class="page">
+
+  <!-- 主题选择 -->
+  <view class="section">
+    <text class="section-label">选择主题</text>
+    <view class="theme-grid">
+      <view
+        class="theme-card {{activeTheme === item.key ? 'active' : ''}}"
+        wx:for="{{themes}}" wx:key="key"
+        bindtap="onThemeSelect"
+        data-key="{{item.key}}"
+        style="border-color:{{activeTheme === item.key ? item.color : 'transparent'}}"
+      >
+        <text class="theme-icon">{{item.icon}}</text>
+        <text class="theme-name">{{item.name}}</text>
+        <view class="theme-dot" style="background:{{item.color}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 文案选择 -->
+  <view class="section" wx:if="{{activeTheme}}">
+    <view class="text-header">
+      <text class="section-label">选择文案</text>
+      <view
+        class="ai-text-btn {{generatingText ? 'disabled' : ''}}"
+        bindtap="onGenerateText"
+      >
+        <text>{{generatingText ? '生成中...' : '✨ AI重新生成'}}</text>
+      </view>
+    </view>
+    <!-- 骨架屏：AI预生成中 -->
+    <view class="text-list" wx:if="{{generatingText && currentTexts.length === 0}}">
+      <view class="text-item skeleton" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-line sk-main"></view>
+        <view class="skeleton-line sk-sub"></view>
+      </view>
+    </view>
+
+    <!-- 文案列表 -->
+    <view class="text-list" wx:else>
+      <view
+        class="text-item {{activeTextIndex === index ? 'active' : ''}}"
+        wx:for="{{currentTexts}}" wx:key="index"
+        bindtap="onTextSelect"
+        data-index="{{index}}"
+      >
+        <text class="text-main">{{item.main}}，{{item.sub}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 生成按钮 -->
+  <view
+    class="generate-btn {{(generating || activeTextIndex < 0) ? 'disabled' : ''}}"
+    bindtap="onGenerate"
+  >
+    <text class="generate-text">{{generating ? '✨ 海报生成中...' : '✨ 生成海报'}}</text>
+  </view>
+
+  <!-- 隐藏的 Canvas（用于合成） -->
+  <canvas
+    type="2d"
+    id="poster-canvas"
+    class="poster-canvas"
+  ></canvas>
+
+  <!-- 生成后：缩略图 + 再次分享入口 -->
+  <view class="thumb-wrap" wx:if="{{posterPath}}" bindtap="onShowShare">
+    <image class="thumb-img" src="{{posterPath}}" mode="aspectFit"></image>
+    <view class="thumb-tip">👆 点击再次分享 / 保存</view>
+  </view>
+
+</view>

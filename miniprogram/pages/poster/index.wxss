@@ -1,0 +1,130 @@
+.page {
+  min-height: 100vh;
+  background: #1a0a2e;
+  padding: 30rpx 30rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.section { margin-bottom: 44rpx; }
+
+.section-label {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 2rpx;
+  margin-bottom: 24rpx;
+  text-transform: uppercase;
+}
+
+/* 主题卡片 */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 12rpx 20rpx;
+  background: rgba(255,255,255,0.06);
+  border-radius: 20rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+.theme-card.active { background: rgba(255,255,255,0.14); }
+.theme-icon { font-size: 40rpx; margin-bottom: 10rpx; }
+.theme-name { font-size: 24rpx; color: #fff; margin-bottom: 12rpx; }
+.theme-dot { width: 10rpx; height: 10rpx; border-radius: 50%; }
+
+/* 文案标题行 */
+.text-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+.text-header .section-label { margin-bottom: 0; }
+
+.ai-text-btn {
+  padding: 10rpx 24rpx;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1rpx solid rgba(168, 85, 247, 0.5);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: #c084fc;
+}
+.ai-text-btn.disabled { opacity: 0.4; }
+
+/* 骨架屏 */
+.skeleton-line {
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.sk-main { height: 28rpx; width: 65%; margin-bottom: 12rpx; }
+.sk-sub  { height: 22rpx; width: 45%; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* 文案列表 */
+.text-list { display: flex; flex-direction: column; gap: 16rpx; }
+.text-item {
+  padding: 28rpx 28rpx;
+  background: rgba(255,255,255,0.06);
+  border-radius: 18rpx;
+  border: 2rpx solid transparent;
+}
+.text-item.active {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.3);
+}
+.text-main {
+  display: block;
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1.5;
+}
+
+/* 生成按钮 */
+.generate-btn {
+  margin: 10rpx 0 44rpx;
+  height: 96rpx;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 32rpx rgba(124,58,237,0.4);
+}
+.generate-btn.disabled { opacity: 0.45; }
+.generate-text { font-size: 32rpx; color: #fff; font-weight: bold; letter-spacing: 2rpx; }
+
+/* 隐藏 Canvas */
+.poster-canvas {
+  position: fixed;
+  left: -9999rpx;
+  top: 0;
+  width: 375px;
+  height: 640px;
+}
+
+/* 生成后缩略图（点击再次唤起分享弹窗） */
+.thumb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12rpx;
+}
+.thumb-img {
+  width: 240rpx;
+  height: 426rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.5);
+}
+.thumb-tip {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.45);
+}

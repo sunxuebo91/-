@@ -23,16 +23,28 @@ const LEVEL_OPTIONS = [
   { key: 'junior', label: '初级' }
 ];
 
-// 工种类型选项（自定义弹层，不受 ActionSheet 6 条限制）
+// 工种类型选项（大类，不受 ActionSheet 6 条限制）
 const TYPE_OPTIONS = [
   { key: null, label: '全部', emoji: '📋', iconClass: 'icon-all' },
   { key: 'yuesao', label: '月嫂', icon: '/images/icons/yuexin.svg', iconClass: 'icon-yuexin' },
-  { key: 'zhujia-yuer', label: '住家育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
-  { key: 'baiban-yuer', label: '白班育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
-  { key: 'zhujia-baomu', label: '住家保姆', icon: '/images/icons/baomu.svg', iconClass: 'icon-baomu' },
-  { key: 'baiban-baomu', label: '白班保姆', icon: '/images/icons/baomu.svg', iconClass: 'icon-baomu' },
-  { key: 'xiaoshi', label: '小时工', emoji: '⏰', iconClass: 'icon-xiaoshi' },
+  { key: 'yuer', label: '育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
+  { key: 'baomu', label: '保姆', icon: '/images/icons/baomu.svg', iconClass: 'icon-baomu' },
   { key: 'zhujia-hulao', label: '住家护老', emoji: '👴', iconClass: 'icon-hulao' }
+];
+
+// 育儿嫂住家/白班子类型（第二筛选栏）
+const YUER_SUB_OPTIONS = [
+  { key: null, label: '全部' },
+  { key: 'zhujia-yuer', label: '住家育儿' },
+  { key: 'baiban-yuer', label: '白班育儿' }
+];
+
+// 保姆子类型（第二筛选栏）
+const BAOMU_SUB_OPTIONS = [
+  { key: null, label: '全部' },
+  { key: 'zhujia-baomu', label: '住家保姆' },
+  { key: 'baiban-baomu', label: '白班保姆' },
+  { key: 'xiaoshi', label: '小时工' }
 ];
 
 // 视频预加载管理器
@@ -206,14 +218,16 @@ Page({
     sortText: "默认",
     activeTab: '',  // 当前激活的 tab
     total: 0,  // 总数
-    selectedLevel: null,  // 当前选中的等级筛选
-    selectedLevelText: '服务等级',  // 当前选中的等级文本
-    selectedType: null,  // 当前选中的职位类型筛选
-    selectedTypeText: '全部',  // 当前选中的职位类型文本（默认显示全部）
+    selectedLevel: null,     // 月嫂服务等级筛选
+    selectedType: null,      // 工种大类：null | 'yuesao' | 'yuer' | 'baomu' | 'zhujia-hulao'
+    selectedTypeText: '全部',
+    selectedSubType: null,   // 育儿嫂/保姆子类型：null | 'zhujia-yuer' | 'baiban-yuer' | 等
+    secondTabMode: 'hidden', // 第二筛选栏模式：'level' | 'yuer' | 'baomu' | 'hidden'
+    secondTabText: '服务等级', // 第二筛选栏显示文本
     typeSheetVisible: false,
     typeOptions: TYPE_OPTIONS,
     levelSheetVisible: false,
-    levelOptions: LEVEL_OPTIONS,
+    levelOptions: LEVEL_OPTIONS,  // 第二筛选栏选项（动态随工种切换）
     isStaff: false  // 员工标识（非员工看脱敏名字）
   },
 
@@ -229,23 +243,26 @@ Page({
     if (jobType) {
       console.log('🔍 从 URL 参数获取工种:', jobType);
 
-      // 根据工种映射到对应的筛选项（找不到则直接用原值，如 yuesao 直接匹配）
+      // 根据工种映射到大类 key
       const typeMapping = {
-        'baomu': 'zhujia-baomu',      // 保姆 -> 住家保姆
-        'yuer': 'zhujia-yuer',        // 育儿嫂 -> 住家育儿嫂
-        'hulao': 'zhujia-hulao'       // 护老 -> 住家护老
+        'baomu': 'baomu',        // 保姆 -> 保姆大类
+        'yuer': 'yuer',          // 育儿嫂 -> 育儿嫂大类
+        'hulao': 'zhujia-hulao'  // 护老
       };
 
       const mappedType = typeMapping[jobType] || jobType;
-      console.log('🔍 映射后的工种:', mappedType);
+      console.log('🔍 映射后的工种大类:', mappedType);
 
       const typeOption = TYPE_OPTIONS.find(opt => opt.key === mappedType);
       if (typeOption) {
         console.log('🔍 设置工种筛选:', typeOption.label, '(', mappedType, ')');
-        // 设置筛选条件
+        const secondTab = this.getSecondTabConfig(mappedType);
         this.setData({
           selectedType: mappedType,
-          selectedTypeText: typeOption.label
+          selectedTypeText: typeOption.label,
+          secondTabMode: secondTab.mode,
+          secondTabText: secondTab.text,
+          levelOptions: secondTab.options
         });
       }
     }
@@ -325,6 +342,18 @@ Page({
     this.setData({ keyword: e.detail.value });
   },
 
+  // 按回车/确认键触发搜索
+  onKeywordConfirm() {
+    this.reload();
+  },
+
+  // 清空搜索关键词并重新加载
+  onKeywordClear() {
+    this.setData({ keyword: '' }, () => {
+      this.reload();
+    });
+  },
+
   async reload() {
     this.setData({ page: 1, resumes: [], hasMore: true });
     await this.loadMore();
@@ -335,25 +364,52 @@ Page({
     this.setData({ loading: true });
 
     try {
-      const { page, pageSize, keyword, selectedLevel, selectedType } = this.data;
-      console.log('📋 开始加载简历列表, page:', page, 'pageSize:', pageSize, 'keyword:', keyword, 'level:', selectedLevel, 'type:', selectedType);
+      const { page, pageSize, keyword, selectedLevel, selectedType, selectedSubType, secondTabMode } = this.data;
+      console.log('📋 开始加载简历列表, page:', page, 'pageSize:', pageSize, 'keyword:', keyword, 'level:', selectedLevel, 'type:', selectedType, 'subType:', selectedSubType);
+
+      // ── 多条件关键词解析 ──────────────────────────────────────────────────
+      // 支持全角/半角逗号分隔，如 "孙，黑龙江" → ['孙','黑龙江']
+      const searchTerms = keyword
+        ? keyword.split(/[，,]/).map(t => t.trim()).filter(Boolean)
+        : [];
+      // API 只传第一个词缩小候选集，多余条件由前端二次过滤
+      const apiKeyword = searchTerms.length > 0 ? searchTerms[0] : '';
+
+      // ── 判断是否为大类筛选（yuer/baomu 且未选子类型）──────────────────────
+      // 大类筛选时 API 不能精准过滤，需要拉取更多数据供前端二次过滤
+      const isCategoryFilter = (selectedType === 'yuer' || selectedType === 'baomu') && !selectedSubType;
+
+      // 计算有效的 API jobType：
+      // - 育儿嫂/保姆大类（无子类型）→ 不传 jobType（大类 key 如 'yuer' CRM 不认识，会导致过滤失效或返回 0 条）
+      //   改为拉取更大 pageSize 后由前端二次过滤
+      // - 育儿嫂/保姆（选了子类型）→ 传具体子类型
+      // - 月嫂/护老/null → 直接传
+      let apiJobType = null;
+      if (selectedType === 'yuer' || selectedType === 'baomu') {
+        apiJobType = selectedSubType || null;  // 大类不传，只传子类型
+      } else {
+        apiJobType = selectedType;
+      }
+
+      // 大类筛选时放大 pageSize，避免 API 只返回少量数据经前端过滤后数量不足
+      const effectivePageSize = isCategoryFilter ? 100 : pageSize;
 
       // 使用 CRM API 获取简历列表（使用 /resumes 接口）
       const params = {
         page,
-        pageSize,
-        keyword
+        pageSize: effectivePageSize,
+        keyword: apiKeyword  // 只传第一个条件词
       };
 
-      // 如果选择了等级筛选，添加到请求参数
-      if (selectedLevel) {
+      // 月嫂等级筛选
+      if (selectedLevel && secondTabMode === 'level') {
         params.maternityNurseLevel = selectedLevel;
       }
 
-      // 如果选择了职位类型筛选，添加到请求参数
-      if (selectedType) {
-        params.jobType = selectedType;
-        console.log('🔍 职位类型筛选:', selectedType);
+      // 职位类型筛选
+      if (apiJobType) {
+        params.jobType = apiJobType;
+        console.log('🔍 职位类型筛选:', apiJobType);
       }
 
       const resp = await resumeService.getResumeList(params);
@@ -370,21 +426,52 @@ Page({
         // 兜底：如果后端未实现筛选，这里前端也做一次过滤，保证“有反应”
         let list = rawList;
 
-        // 等级筛选
-        if (selectedLevel) {
+        // 月嫂等级筛选（前端兜底）
+        if (selectedLevel && secondTabMode === 'level') {
           list = list.filter(item => item.maternityNurseLevel === selectedLevel);
         }
 
-        // 职位类型筛选
-        if (selectedType) {
+        // 职位类型前端兜底筛选
+        if (selectedType === 'yuer' && !selectedSubType) {
+          // 育儿嫂大类：住家育儿 + 白班育儿 + 直接标记为 'yuer' 大类的简历都显示
+          // 注意：CRM 中部分简历 jobType 可能保存为父级 key 'yuer'，需一并包含
+          list = list.filter(item =>
+            item.jobType === 'zhujia-yuer' ||
+            item.jobType === 'baiban-yuer' ||
+            item.jobType === 'yuer'
+          );
+        } else if (selectedType === 'baomu' && !selectedSubType) {
+          // 保姆大类：所有保姆子类 + 直接标记为 'baomu' 大类的都显示
+          list = list.filter(item => ['zhujia-baomu', 'baiban-baomu', 'xiaoshi', 'baomu'].includes(item.jobType));
+        } else if (apiJobType) {
           list = list.filter(item => {
             console.log('🔍 简历职位类型:', item.name, item.jobType);
-            return item.jobType === selectedType;
+            return item.jobType === apiJobType;
           });
         }
 
+        // ── 多条件关键词前端模糊过滤（员工搜索功能）───────────────────────
+        // 对原始字段构建可搜索文本，支持：姓名、手机号、地区、技能标签等
+        // 所有条件必须同时命中（AND 逻辑）
+        if (searchTerms.length > 0) {
+          list = list.filter(item => {
+            const haystack = [
+              item.name || '',
+              item.phone || item.mobile || '',
+              item.nativePlace || '',
+              item.currentAddress || '',
+              (item.skills || []).join(' '),
+              item.selfIntroduction || '',
+              String(item.age || ''),
+              String(item.experienceYears || '')
+            ].join(' ').toLowerCase();
+            return searchTerms.every(term => haystack.includes(term.toLowerCase()));
+          });
+          console.log('🔍 多条件搜索 [', searchTerms.join(' & '), '] 结果:', list.length, '条');
+        }
+
         console.log('📋 获取到', rawListLength, '条简历',
-          (selectedLevel || selectedType) ? `（筛选后 ${list.length} 条）` : '');
+          (selectedLevel || selectedType || searchTerms.length) ? `（筛选后 ${list.length} 条）` : '');
 
         // 转换数据格式以兼容现有页面
         const formattedList = list.map(item => {
@@ -563,7 +650,8 @@ Page({
             education: item.education,
             educationText,
             infoLine,
-            updatedAt: item.updatedAt
+            updatedAt: item.updatedAt,
+            phone: item.phone || item.mobile || ''  // 员工搜索用（不对外展示）
           };
         });
 
@@ -572,10 +660,10 @@ Page({
         this.setData({
           resumes: this.data.resumes.concat(formattedList),
           page: page + 1,
-          // 是否还有更多：使用服务端返回的原始条数判断，避免前端过滤导致提前停止
-          hasMore: rawListLength === pageSize,
+          // 是否还有更多：与实际请求的 pageSize 比较（大类筛选时用 effectivePageSize）
+          hasMore: rawListLength === effectivePageSize,
           // 开启筛选时不使用服务端 total（通常是未筛选的总数），让 header 回退到 resumes.length
-          total: selectedLevel ? 0 : (resp.data.total || this.data.resumes.length + formattedList.length)
+          total: (selectedLevel || selectedSubType) ? 0 : (resp.data.total || this.data.resumes.length + formattedList.length)
         });
 
         // 加载完成后，立即开始预加载所有视频
@@ -662,18 +750,58 @@ Page({
     });
   },
 
+  // 根据工种大类获取第二筛选栏配置
+  getSecondTabConfig(category) {
+    if (category === 'yuesao') {
+      return { mode: 'level', text: '服务等级', options: LEVEL_OPTIONS };
+    } else if (category === 'yuer') {
+      return { mode: 'yuer', text: '住家/白班', options: YUER_SUB_OPTIONS };
+    } else if (category === 'baomu') {
+      return { mode: 'baomu', text: '保姆类型', options: BAOMU_SUB_OPTIONS };
+    } else {
+      return { mode: 'hidden', text: '服务等级', options: LEVEL_OPTIONS };
+    }
+  },
+
   // 根据月嫂等级筛选
   filterByLevel(level) {
     console.log('筛选等级:', level);
     const levelText = level ? MATERNITY_LEVEL_MAP[level] : '服务等级';
-    this.setData({ 
+    this.setData({
       selectedLevel: level,
-      selectedLevelText: levelText,
+      secondTabText: levelText,
       levelSheetVisible: false,
-      activeTab: ''  // 关闭tab激活状态
+      activeTab: ''
     }, () => {
       this.reload();
     });
+  },
+
+  // 育儿嫂/保姆子类型筛选
+  filterBySubType(subType) {
+    const { secondTabMode } = this.data;
+    const defaultText = secondTabMode === 'yuer' ? '住家/白班' : '保姆类型';
+    const options = secondTabMode === 'yuer' ? YUER_SUB_OPTIONS : BAOMU_SUB_OPTIONS;
+    const option = options.find(opt => opt.key === subType);
+    const subText = subType ? (option ? option.label : defaultText) : defaultText;
+    this.setData({
+      selectedSubType: subType,
+      secondTabText: subText,
+      levelSheetVisible: false,
+      activeTab: ''
+    }, () => {
+      this.reload();
+    });
+  },
+
+  // 第二筛选栏统一入口（月嫂→等级，育儿嫂/保姆→子类型）
+  onPickSecondTabItem(e) {
+    const key = e.currentTarget.dataset.key;
+    if (this.data.secondTabMode === 'level') {
+      this.filterByLevel(key);
+    } else {
+      this.filterBySubType(key);
+    }
   },
 
   closeLevelSheet() {
@@ -682,29 +810,31 @@ Page({
 
   noop() {},
 
-  onPickLevel(e) {
-    const level = e.currentTarget.dataset.level;
-    this.filterByLevel(level);
-  },
-
   // 选择工种类型
   onPickType(e) {
     const type = e.currentTarget.dataset.type;
     this.filterByType(type);
   },
 
-  // 根据工种类型筛选
+  // 根据工种大类筛选（同时重置第二筛选栏）
   filterByType(type) {
-    console.log('筛选工种:', type);
-    // 从 TYPE_OPTIONS 中找到对应的 label
+    console.log('筛选工种大类:', type);
     const typeOption = TYPE_OPTIONS.find(opt => opt.key === type);
-    const typeText = typeOption ? typeOption.label : '月嫂';
+    const typeText = typeOption ? typeOption.label : '全部';
+
+    // 根据工种大类更新第二筛选栏配置
+    const secondTab = this.getSecondTabConfig(type);
 
     this.setData({
       selectedType: type,
       selectedTypeText: typeText,
+      selectedSubType: null,           // 重置子类型
+      selectedLevel: null,             // 重置月嫂等级
+      secondTabMode: secondTab.mode,
+      secondTabText: secondTab.text,
+      levelOptions: secondTab.options,
       typeSheetVisible: false,
-      activeTab: ''  // 关闭tab激活状态
+      activeTab: ''
     }, () => {
       this.reload();
     });

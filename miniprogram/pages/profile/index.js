@@ -1,5 +1,7 @@
 const userService = require('../../services/userService.js');
 
+const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+
 Page({
   data: {
     me: {
@@ -7,6 +9,7 @@ Page({
       avatarUrl: "",
     },
     isLoggedIn: false,
+    showSubscribeBanner: false,  // 是否显示订阅提醒横幅
   },
 
   onShow() {
@@ -21,7 +24,10 @@ Page({
         selected: 2
       });
     }
-    this.loadMe();
+    this.loadMe().then(() => {
+      // loadMe 完成后，检查员工是否需要订阅提醒
+      this.checkSubscribeBanner();
+    });
     this.refreshLoginStatus();
     this.checkPendingContact();
   },
@@ -188,6 +194,50 @@ Page({
     wx.navigateTo({
       url: '/pages/test-customer-service/index'
     });
+  },
+
+  // 检查是否显示订阅提醒横幅（员工 + 今天未提示过 + 未永久授权）
+  checkSubscribeBanner() {
+    const me = this.data.me;
+    if (!me.isStaff) return;  // 非员工不显示
+
+    const app = getApp();
+    const needReminder = app.globalData && app.globalData.needSubscribeReminder;
+    if (!needReminder) return;
+
+    this.setData({ showSubscribeBanner: true });
+  },
+
+  // 员工点击"开启提醒"按钮 → 在用户手势中调微信 API
+  onSubscribe() {
+    wx.requestSubscribeMessage({
+      tmplIds: [RESUME_VIEW_TEMPLATE_ID],
+      success: (res) => {
+        console.log('📨 订阅结果:', res);
+        // 标记今天已提示，隐藏横幅
+        wx.setStorageSync('staffSubPromptDate', new Date().toLocaleDateString());
+        const app = getApp();
+        if (app.globalData) app.globalData.needSubscribeReminder = false;
+        this.setData({ showSubscribeBanner: false });
+
+        if (res[RESUME_VIEW_TEMPLATE_ID] === 'accept') {
+          wx.showToast({ title: '提醒已开启 ✅', icon: 'none' });
+        }
+      },
+      fail: (err) => {
+        console.warn('⚠️ 订阅请求失败:', err);
+        wx.setStorageSync('staffSubPromptDate', new Date().toLocaleDateString());
+        this.setData({ showSubscribeBanner: false });
+      }
+    });
+  },
+
+  // 关闭横幅（今天不再提示）
+  onDismissSubscribeBanner() {
+    wx.setStorageSync('staffSubPromptDate', new Date().toLocaleDateString());
+    const app = getApp();
+    if (app.globalData) app.globalData.needSubscribeReminder = false;
+    this.setData({ showSubscribeBanner: false });
   },
 
   // 退出登录

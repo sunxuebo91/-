@@ -192,6 +192,9 @@ function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
 const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 
+// 简历查看订阅通知模板 ID（与 app.js / settings / profile 保持一致）
+const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+
 Page({
   onHide() {
     this.pauseHeroVideo();
@@ -343,6 +346,15 @@ Page({
               },
               sharerIsStaff: true  // 海报二维码：查到员工信息则确认是员工分享
             });
+            // 修复竞争条件：loadDetail() 与本调用并发，若简历已加载完成则在此补发通知
+            // （若 loadDetail 尚未完成，sharerIsStaff 已为 true，loadDetail 完成后会正常触发通知）
+            if (this.data.loaded && this.data.detail) {
+              const nurseName = (this.data.detail && this.data.detail.name) || '';
+              const resumeId = this.data.id || (this.data.detail && this.data.detail._id) || '';
+              if (nurseName && resumeId) {
+                this._sendResumeViewNotify(nurseName, resumeId);
+              }
+            }
           }
         }).catch(err => {
           console.warn('⚠️ 拉取顾问信息失败（不影响主流程）:', err);
@@ -1105,6 +1117,19 @@ Page({
         // 加载员工评价数据
         this.loadEvaluations(resumeId);
 
+        // 员工分享的简历被查看 → 发订阅消息通知员工
+        console.log('🔔 通知条件检查:', {
+          isShared: this.data.isShared,
+          sharerIsStaff: this.data.sharerIsStaff,
+          sharerInfo: this.data.sharerInfo,
+          sharerPhone: this.data.sharerInfo && this.data.sharerInfo.phone
+        });
+        if (this.data.isShared && this.data.sharerIsStaff && this.data.sharerInfo && this.data.sharerInfo.phone) {
+          this._sendResumeViewNotify(detailWithAvatar.name || detail.name, resumeId);
+        } else {
+          console.warn('🔕 通知未触发，条件不满足（见上方条件检查日志）');
+        }
+
       } else {
         wx.showToast({ title: resp.message || "简历不存在", icon: "none" });
         this.setData({ loaded: true });
@@ -1114,6 +1139,42 @@ Page({
       wx.showToast({ title: "加载失败", icon: "none" });
       this.setData({ loaded: true });
     }
+  },
+
+  // 发送"简历被查看"通知给分享该简历的员工（fire-and-forget，不影响主流程）
+  _sendResumeViewNotify(nurseName, resumeId) {
+    // 防止竞争条件导致重复发送（海报二维码路径：getStaffPublicInfo 与 loadDetail 并发时均可能触发）
+    if (this._resumeViewNotifySent) return;
+    this._resumeViewNotifySent = true;
+
+    const sharerInfo = this.data.sharerInfo || {};
+    const sharerPhone = sharerInfo.phone || '';
+    if (!sharerPhone) return;
+
+    // 客户姓名：优先用微信昵称，其次手机号，都没有用默认值
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const customerName = crmUserInfo.nickname || wx.getStorageSync('userName') || '新客户';
+
+    console.log('📨 发送简历查看通知 → 员工:', sharerPhone, '阿姨:', nurseName);
+
+    wx.cloud.callFunction({
+      name: 'notificationService',
+      data: {
+        action: 'sendResumeViewNotify',
+        sharerPhone,
+        customerName,
+        nurseName,
+        resumeId
+      }
+    }).then(res => {
+      if (res && res.result && res.result.success) {
+        console.log('✅ 简历查看通知发送成功');
+      } else {
+        console.warn('⚠️ 简历查看通知发送失败:', res && res.result && res.result.errMsg);
+      }
+    }).catch(err => {
+      console.warn('⚠️ 简历查看通知调用异常:', err);
+    });
   },
 
   onTapHeroThumb(e) {
@@ -1779,8 +1840,9 @@ Page({
     return wechat.substring(0, 2) + '****' + wechat.substring(wechat.length - 2);
   },
 
-  // 图片分享：生成含照片+信息栏+小程序码的海报
-  async onGeneratePoster() {
+  // 图片分享入口（同步 tap handler）：必须保持同步以调起订阅弹窗
+  // wx.requestSubscribeMessage 只能在同步 tap 上下文中调用，async 函数会丢失手势权限
+  onGeneratePoster() {
     const detail = this.data.detail || {};
     const photoUrl = detail.avatarSrc || detail.coverFileId || '';
 
@@ -1789,6 +1851,24 @@ Page({
       return;
     }
 
+    // ① 直接在同步 tap handler 中调用，保证手势上下文有效
+    wx.requestSubscribeMessage({
+      tmplIds: [RESUME_VIEW_TEMPLATE_ID],
+      success: (res) => {
+        console.log('📨 订阅配额申请结果:', res[RESUME_VIEW_TEMPLATE_ID]);
+      },
+      fail: (err) => {
+        console.warn('⚠️ 订阅配额申请失败（不影响海报生成）:', err);
+      }
+    });
+
+    // ② 异步执行后续海报生成逻辑（不阻塞订阅弹窗）
+    this._doGeneratePoster(detail);
+  },
+
+  // 海报生成的异步实现，由 onGeneratePoster 调用
+  async _doGeneratePoster(detail) {
+    const photoUrl = detail.avatarSrc || detail.coverFileId || '';
     // 先从后端获取 AI 推荐文案并复制到剪贴板，显示提示后再弹生成海报的 loading
     const recText = await this._fetchRecommendationText();
     if (recText) {
@@ -2317,6 +2397,23 @@ Page({
 
   // "分享简历"按钮 tap 处理器：先复制推荐文案，open-type=share 随后触发原生分享
   async onBeforeShare() {
+    // ① 在用户点击事件中申请订阅配额（与 open-type=share 并行，不阻塞分享面板弹出）
+    this._requestResumeViewSubscription();
+
+    // ② 同步员工手机号到 users 集合（确保 notificationService 能按手机号找到 openid）
+    // 与"图片分享"路径的 saveStaffProfile 保持一致
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
+    const staffPhone = crmUserInfo.phone || '';
+    const staffName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
+    const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    if (staffId && staffPhone) {
+      wx.cloud.callFunction({
+        name: 'userService',
+        data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
+      }).catch(err => console.warn('⚠️ saveStaffProfile 失败（不影响分享）:', err));
+    }
+
     const text = await this._fetchRecommendationText();
     if (!text) return;
     wx.setClipboardData({
@@ -2324,6 +2421,26 @@ Page({
       success: () => {
         wx.showToast({ title: '推荐理由复制成功', icon: 'success', duration: 2000 });
       }
+    });
+  },
+
+  // 申请"简历被查看"订阅通知配额（在用户点击事件中调用，fire-and-forget）
+  // 每次分享前调用，确保有可用配额；已永久订阅时微信自动跳过弹窗
+  _requestResumeViewSubscription() {
+    return new Promise((resolve) => {
+      wx.requestSubscribeMessage({
+        tmplIds: [RESUME_VIEW_TEMPLATE_ID],
+        success: (res) => {
+          const status = res[RESUME_VIEW_TEMPLATE_ID];
+          console.log('📨 订阅配额申请结果:', status);
+          resolve(status === 'accept');
+        },
+        fail: (err) => {
+          // 非员工或模板配置问题时忽略，不影响分享主流程
+          console.warn('⚠️ 订阅配额申请失败（不影响分享）:', err);
+          resolve(false);
+        }
+      });
     });
   }
 });

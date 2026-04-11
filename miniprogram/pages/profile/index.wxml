@@ -12,14 +12,21 @@
   </view>
 
 
-  <!-- 员工功能区 -->
-  <view class="section" wx:if="{{me.role === 'staff'}}">
-    <view class="section-title">员工功能</view>
-    <view class="menu-item" bindtap="goResumeManage">
-      <view class="menu-label">简历管理</view>
-      <view class="menu-arrow">›</view>
+  <!-- 员工订阅提醒横幅 -->
+  <view class="subscribe-banner" wx:if="{{showSubscribeBanner}}">
+    <view class="subscribe-banner-content">
+      <text class="subscribe-banner-icon">🔔</text>
+      <view class="subscribe-banner-text">
+        <text class="subscribe-banner-title">开启简历查看提醒</text>
+        <text class="subscribe-banner-desc">客户查看您分享的简历时，第一时间通知您</text>
+      </view>
+    </view>
+    <view class="subscribe-banner-actions">
+      <button class="subscribe-btn" bindtap="onSubscribe">开启提醒</button>
+      <text class="subscribe-dismiss" bindtap="onDismissSubscribeBanner">今日不再提示</text>
     </view>
   </view>
+
 
   <!-- 我的服务：图标宫格 -->
   <view class="section service-section">

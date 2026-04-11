@@ -26,6 +26,7 @@
     "pages/nannyPricing/index",
     "pages/eldercarePricing/index",
 
+    "pages/poster/index",
     "pages/qaService/index",
     "pages/houseRules/index",
     "pages/contractPreview/index",

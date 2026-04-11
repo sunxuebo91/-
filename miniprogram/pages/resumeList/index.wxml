@@ -24,15 +24,35 @@
 
 
   <!-- Tab 筛选栏 -->
-  <view class="tabs">
-    <view class="tab {{activeTab === 'type' ? 'active' : ''}} {{selectedType ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="type">
-      {{selectedTypeText}} <text class="tab-arrow">▼</text>
+  <view class="tabs {{isStaff ? 'tabs-with-search' : ''}}">
+    <!-- 筛选行 -->
+    <view class="tabs-row">
+      <view class="tab {{activeTab === 'type' ? 'active' : ''}} {{selectedType ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="type">
+        {{selectedTypeText}} <text class="tab-arrow">▼</text>
+      </view>
+      <view wx:if="{{secondTabMode !== 'hidden'}}" class="tab {{activeTab === 'level' ? 'active' : ''}} {{activeTab === 'level' ? 'level-theme' : ''}} {{(selectedLevel || selectedSubType) ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="level">
+        {{secondTabText}} <text class="tab-arrow">▼</text>
+      </view>
+      <view class="tab {{activeTab === 'sort' ? 'active' : ''}}" bindtap="onTabChange" data-tab="sort">
+        默认 <text class="tab-arrow">▼</text>
+      </view>
     </view>
-    <view class="tab {{activeTab === 'level' ? 'active' : ''}} {{activeTab === 'level' ? 'level-theme' : ''}} {{selectedLevel ? 'has-filter' : ''}}" bindtap="onTabChange" data-tab="level">
-      {{selectedLevelText}} <text class="tab-arrow">▼</text>
-    </view>
-    <view class="tab {{activeTab === 'sort' ? 'active' : ''}}" bindtap="onTabChange" data-tab="sort">
-      默认 <text class="tab-arrow">▼</text>
+    <!-- 员工专属搜索框 -->
+    <view wx:if="{{isStaff}}" class="staff-search-row">
+      <view class="staff-search-box">
+        <text class="staff-search-icon">🔍</text>
+        <input
+          class="staff-search-input"
+          type="text"
+          placeholder="姓名、手机号、地区… 多条件用，隔开"
+          placeholder-class="staff-search-placeholder"
+          value="{{keyword}}"
+          bindinput="onKeywordInput"
+          bindconfirm="onKeywordConfirm"
+          confirm-type="search"
+        />
+        <text wx:if="{{keyword}}" class="staff-search-clear" bindtap="onKeywordClear">✕</text>
+      </view>
     </view>
   </view>
 
@@ -55,7 +75,7 @@
   <!-- 服务等级弹层（自定义，不受 ActionSheet 条数限制） -->
   <view wx:if="{{levelSheetVisible}}" class="sheet-mask" catchtap="closeLevelSheet" catchtouchmove="noop">
     <view class="sheet-panel" catchtap="noop" catchtouchmove="noop">
-      <view class="sheet-item" wx:for="{{levelOptions}}" wx:key="label" data-level="{{item.key}}" bindtap="onPickLevel">
+      <view class="sheet-item" wx:for="{{levelOptions}}" wx:key="label" data-key="{{item.key}}" bindtap="onPickSecondTabItem">
         {{item.label}}
       </view>
       <view class="sheet-cancel" bindtap="closeLevelSheet">取消</view>
@@ -63,7 +83,7 @@
   </view>
 
   <!-- 简历列表 -->
-  <view class="list">
+  <view class="list {{isStaff ? 'list-with-search' : ''}}">
     <view
       class="card resume-card"
       wx:for="{{resumes}}"

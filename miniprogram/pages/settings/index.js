@@ -1,9 +1,12 @@
+const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+
 Page({
   data: {
     me: {
       nickname: "",
       avatarUrl: "",
       phone: "",
+      role: "",
     },
     tempAvatarUrl: "", // 临时头像
     tempNickname: "", // 临时昵称
@@ -242,11 +245,33 @@ Page({
     }
   },
 
-  async onSave() {
-    const { tempNickname, tempAvatarUrl } = this.data;
+  // 手动开启简历查看订阅提醒（员工专用）
+  onManualSubscribe() {
+    wx.requestSubscribeMessage({
+      tmplIds: [RESUME_VIEW_TEMPLATE_ID],
+      success: (res) => {
+        console.log('📨 手动订阅结果:', res);
+        if (res[RESUME_VIEW_TEMPLATE_ID] === 'accept') {
+          wx.showToast({ title: '提醒已开启 ✅', icon: 'none' });
+          // 清除每日提示标记（已永久授权，下次 getSetting 会检测到）
+          wx.removeStorageSync('staffSubPromptDate');
+        } else {
+          wx.showToast({ title: '未开启提醒', icon: 'none' });
+        }
+      },
+      fail: (err) => {
+        console.warn('⚠️ 订阅请求失败:', err);
+        wx.showToast({ title: '请求失败，请重试', icon: 'none' });
+      }
+    });
+  },
 
-    if (!tempNickname) {
-      wx.showToast({ title: "请输入昵称", icon: "none" });
+  async onSave() {
+    const { tempNickname, tempAvatarUrl, me } = this.data;
+
+    // 手机号是唯一必填项
+    if (!me.phone) {
+      wx.showToast({ title: "请先授权手机号", icon: "none" });
       return;
     }
 
@@ -270,14 +295,16 @@ Page({
         }
       }
 
+      // 构建更新数据（昵称/头像选填，有值才更新）
+      const updateData = {};
+      if (tempNickname) updateData.nickname = tempNickname;
+      if (avatarUrl) updateData.avatarUrl = avatarUrl;
+
       const res = await wx.cloud.callFunction({
         name: "userService",
         data: {
           action: "updateMe",
-          data: {
-            nickname: tempNickname,
-            avatarUrl: avatarUrl,
-          },
+          data: updateData,
         },
       });
 
@@ -289,13 +316,13 @@ Page({
         throw new Error(res.result?.errMsg || '保存失败');
       }
 
-      // 同步到本地缓存，供分享卡片/海报直接读取（避免还要异步调云函数）
-      wx.setStorageSync('userName', tempNickname);
+      // 同步到本地缓存（仅有值时更新）
+      if (tempNickname) wx.setStorageSync('userName', tempNickname);
       if (avatarUrl) wx.setStorageSync('userAvatar', avatarUrl);
 
       // 同步更新 crmUserInfo 本地存储，确保个人中心页能显示最新数据
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-      crmUserInfo.nickname = tempNickname;
+      if (tempNickname) crmUserInfo.nickname = tempNickname;
       if (avatarUrl) crmUserInfo.avatarUrl = avatarUrl;
       wx.setStorageSync('crmUserInfo', crmUserInfo);
       console.log('✅ 已同步更新 crmUserInfo:', crmUserInfo);
@@ -309,7 +336,7 @@ Page({
           header: { 'Content-Type': 'application/json' },
           data: {
             openid:   saveOpenid,
-            nickname: tempNickname,
+            nickname: tempNickname || crmUserInfo.nickname || '',
             avatar:   avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '',
           },
           success: (r) => console.log('✅ 昵称/头像已同步到CRM:', r.data),
@@ -322,7 +349,7 @@ Page({
       // 同步更新全局 app.globalData.userInfo
       const app = getApp();
       if (app.globalData && app.globalData.userInfo) {
-        app.globalData.userInfo.nickname = tempNickname;
+        if (tempNickname) app.globalData.userInfo.nickname = tempNickname;
         if (avatarUrl) app.globalData.userInfo.avatarUrl = avatarUrl;
       }
 

@@ -1,11 +1,80 @@
+page {
+  background: linear-gradient(180deg, #8766F3 0%, #A694FF 100%);
+}
+
 .page {
   background: #f5f5f5;
   min-height: 100vh;
 }
 
+/* 员工订阅提醒横幅 */
+.subscribe-banner {
+  margin: 24rpx 24rpx 0;
+  background: linear-gradient(135deg, #f0ebff 0%, #e8e0ff 100%);
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  border: 1rpx solid rgba(135, 102, 243, 0.2);
+}
+
+.subscribe-banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.subscribe-banner-icon {
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.subscribe-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.subscribe-banner-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #8766F3;
+}
+
+.subscribe-banner-desc {
+  font-size: 24rpx;
+  color: #888;
+  line-height: 1.5;
+}
+
+.subscribe-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.subscribe-btn {
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  border-radius: 32rpx;
+  padding: 14rpx 40rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  border: none;
+  line-height: 1;
+}
+
+.subscribe-btn::after {
+  border: none;
+}
+
+.subscribe-dismiss {
+  font-size: 24rpx;
+  color: #aaa;
+}
+
 /* 顶部用户卡片 */
 .header-card {
-  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  background: linear-gradient(180deg, #8766F3 0%, #A694FF 100%);
   padding: 60rpx 32rpx 40rpx;
   display: flex;
   align-items: center;
