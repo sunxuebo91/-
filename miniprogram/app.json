@@ -25,6 +25,7 @@
     "pages/maternityPricing/index",
     "pages/nannyPricing/index",
     "pages/eldercarePricing/index",
+    "pages/serviceFee/index",
 
     "pages/poster/index",
     "pages/qaService/index",

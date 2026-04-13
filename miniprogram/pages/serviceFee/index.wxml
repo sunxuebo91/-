@@ -1,0 +1,60 @@
+<view class="page">
+
+  <!-- ① 服务费计算方式 -->
+  <view class="fee-hero">
+    <view class="fee-hero-label">服务费标准（所有工种统一）</view>
+    <view class="fee-formula">
+      <view class="formula-item">
+        <text class="formula-num">100%</text>
+        <text class="formula-sub">阿姨月工资</text>
+      </view>
+      <text class="formula-eq">=</text>
+      <view class="formula-item formula-result">
+        <text class="formula-num result-num">服务费</text>
+      </view>
+    </view>
+    <view class="fee-example">例：阿姨月薪 8,000 元 → 服务费 8,000 元</view>
+  </view>
+
+  <!-- ② 签约优惠 -->
+  <view class="promo-card">
+    <view class="promo-badge">限时优惠</view>
+    <view class="promo-main">
+      <text class="promo-icon">🎁</text>
+      <view class="promo-text">
+        <view class="promo-title">签约 2 年，送 1 年</view>
+        <view class="promo-desc">签订两年服务合同，第三年服务费全免，超值省心</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ③ 服务特色 -->
+  <view class="section-title">
+    <view class="section-line"></view>
+    <text class="section-text">我们的服务承诺</text>
+    <view class="section-line"></view>
+  </view>
+
+  <view class="features-grid">
+    <view class="feature-card" wx:for="{{features}}" wx:key="title">
+      <view class="feature-head">
+        <text class="feature-icon">{{item.icon}}</text>
+        <view class="feature-title">{{item.title}}</view>
+      </view>
+      <view class="feature-desc">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <!-- ④ 底部说明 -->
+  <view class="bottom-note">
+    <view class="note-title">📌 温馨提示</view>
+    <view class="note-item">· 阿姨首月工资由平台代收代付，次月起由客户直接发放</view>
+    <view class="note-item">· 具体价格以实际签约合同为准</view>
+    <view class="note-item">· 如有疑问请联系客服，我们随时为您解答</view>
+    <button class="contact-btn" open-type="contact">
+      <text class="contact-icon">💬</text>
+      <text class="contact-text">联系客服</text>
+    </button>
+  </view>
+
+</view>

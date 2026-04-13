@@ -83,9 +83,26 @@ Page({
     cachedTexts: {}   // 缓存各主题已生成的文�?{ emotion: [...], career: [...] }
   },
 
-  /** 页面加载：后台预生成全部4个主题的文案 */
+  /** 页面加载：初始化 */
   onLoad() {
     this.setData({ generatingText: true });
+    this._preGenerateAllThemes();
+  },
+
+  /** 每次显示页面时重新生成文案，避免反复看到同一批文案 */
+  onShow() {
+    // 第一次进入时 onLoad 已触发，跳过
+    if (!this._hasLoaded) { this._hasLoaded = true; return; }
+    // 清缓存、重置选中状态，重新拉取全部主题文案
+    this.setData({
+      cachedTexts: {},
+      currentTexts: this.data.activeTheme
+        ? (THEMES.find(t => t.key === this.data.activeTheme)?.texts || [])
+        : [],
+      activeTextIndex: -1,
+      generatingText: true,
+      posterPath: ''
+    });
     this._preGenerateAllThemes();
   },
 
@@ -219,8 +236,17 @@ Page({
 
   /** 调用豆包文案模型（doubao-seed-2-0-mini）*/
   _callDoubaoTextAPI(themeName) {
+    // 每次随机选一种写作视角，让文案风格更多样
+    const angles = [
+      '用诗意比喻，意象鲜明',
+      '用口语化表达，亲切自然',
+      '用反问句式，引发共鸣',
+      '用递进句式，层层推进力量',
+      '用对比手法，突出转变'
+    ];
+    const angle = angles[Math.floor(Math.random() * angles.length)];
     const prompt = `你是专为中年女性写心灵激励文案的创作者。目标读者：35-50岁普通女性，经历过生活的起伏，渴望被看见、被鼓励，正在努力活出自己。请为「${themeName}」主题生成3条文案，每条包含：
-- 主句：不超过12字，有力量感，不说教，像朋友说的话，能触动人心
+- 主句：不超过12字，有力量感，不说教，像朋友说的话，能触动人心（写作风格：${angle}）
 - 副句：不超过18字，温柔呼应主句，给人温暖和勇气
 严格按以下格式输出，不要序号、不要解释：
 主句1|副句1

@@ -38,6 +38,13 @@ Page({
     wx.navigateTo({
       url: '/pages/eldercarePricing/index'
     });
+  },
+
+  // 跳转到服务费报价页面
+  goServiceFee() {
+    wx.navigateTo({
+      url: '/pages/serviceFee/index'
+    });
   }
 });
 

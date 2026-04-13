@@ -6,87 +6,78 @@ page {
   min-height: 100vh;
 }
 
-/* 内容区域 */
+/* 内容区域：4个一行，超出换行 */
 .content {
-  padding: 10px;
+  padding: 24rpx 20rpx;
   display: flex;
-  flex-direction: column;
-  gap: 24rpx;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16rpx;
 }
 
-/* 报价卡片通用样式 */
+/* 报价卡片通用样式：正方形，4个一行 */
 .price-card {
-  border-radius: 24rpx;
-  padding: 40rpx;
+  /* 4 per row: (100% - 3×gap) / 4 = 25% - 12rpx */
+  flex: 0 0 calc(25% - 12rpx);
+  aspect-ratio: 1 / 1;
+  border-radius: 20rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 12rpx;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .price-card:active {
-  transform: translateY(4rpx);
+  transform: scale(0.95);
 }
 
 /* 月嫂报价卡片 - 粉色 */
 .price-card-pink {
   background: linear-gradient(135deg, #FF6B9D 0%, #FFA8C5 100%);
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.3);
-}
-
-.price-card-pink:active {
-  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(255, 107, 157, 0.35);
 }
 
 /* 育儿报价卡片 - 紫色 */
 .price-card-purple {
   background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
-  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.3);
-}
-
-.price-card-purple:active {
-  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(135, 102, 243, 0.35);
 }
 
 /* 保姆报价卡片 - 橙色 */
 .price-card-orange {
   background: linear-gradient(135deg, #FF9A56 0%, #FF6B35 100%);
-  box-shadow: 0 8rpx 24rpx rgba(255, 154, 86, 0.3);
-}
-
-.price-card-orange:active {
-  box-shadow: 0 4rpx 12rpx rgba(255, 154, 86, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(255, 154, 86, 0.35);
 }
 
 /* 护老报价卡片 - 橙黄色 */
 .price-card-yellow {
   background: linear-gradient(135deg, #FFB800 0%, #FFA500 100%);
-  box-shadow: 0 8rpx 24rpx rgba(255, 184, 0, 0.3);
+  box-shadow: 0 8rpx 20rpx rgba(255, 184, 0, 0.35);
 }
 
-.price-card-yellow:active {
-  box-shadow: 0 4rpx 12rpx rgba(255, 184, 0, 0.2);
-}
-
-.price-card-content {
-  flex: 1;
-}
-
-.price-card-title {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 12rpx;
-}
-
-.price-card-subtitle {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.9);
+/* 服务费报价卡片 - 青绿色 */
+.price-card-teal {
+  background: linear-gradient(135deg, #20B2A0 0%, #48D1C4 100%);
+  box-shadow: 0 8rpx 20rpx rgba(32, 178, 160, 0.35);
 }
 
 .price-card-image {
-  width: 120rpx;
-  height: 120rpx;
-  margin-left: 24rpx;
+  width: 72rpx;
+  height: 72rpx;
+}
+
+/* 服务费卡片用 emoji 替代 SVG */
+.price-card-emoji {
+  font-size: 60rpx;
+  line-height: 1;
+}
+
+.price-card-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
 }
 
