@@ -31,144 +31,124 @@ function decodeHtmlEntities(str) {
   return s;
 }
 
-function toRichTextNodes(rawContent, options = {}) {
+// 段落/标题公共样式
+// 注意：标题不设 margin-top，靠上一段落的 margin-bottom 产生间距
+// 这样第一个元素不会在 rich-text 顶部产生大空白
+const P_STYLE = 'margin:0 0 20px 0;line-height:1.95;color:#333;font-size:15px;word-break:break-all;';
+const H1_STYLE = 'font-size:19px;font-weight:700;color:#111;margin:0 0 10px;line-height:1.5;word-break:break-all;';
+const H2_STYLE = 'font-size:17px;font-weight:700;color:#111;margin:0 0 8px;line-height:1.5;word-break:break-all;';
+const H3_STYLE = 'font-size:15px;font-weight:700;color:#222;margin:0 0 6px;line-height:1.5;word-break:break-all;';
+const H46_STYLE = 'font-size:14px;font-weight:600;color:#333;margin:0 0 4px;line-height:1.5;word-break:break-all;';
+const LI_STYLE = 'margin:0 0 8px;padding-left:14px;line-height:1.9;color:#333;font-size:15px;word-break:break-all;';
+
+function toRichTextHtml(rawContent, options = {}) {
   const skipImages = !!options.skipImages;
 
-  // rich-text 支持 nodes 数组；为兼容低基础库，这里尽量转成 nodes
   let html = decodeHtmlEntities(rawContent);
   html = String(html || '').trim();
-  if (!html) return [];
+  if (!html) return '';
 
   // 去掉 script/style
   html = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '');
 
-  // 将常见容器标签当成段落
-  html = html
-    .replace(/<(\/)?(div|section|article|header|footer|main|figure|figcaption|blockquote)[^>]*>/gi, (m, slash) => (slash ? '</p>' : '<p>'));
-
-  // 先把除 p/br/img 以外的标签剥离（保留文本）
-  html = html.replace(/<(?!\/?(?:p|br|img)\b)[^>]+>/gi, '');
-
   // 统一换行
   html = html.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // 如果完全没有标签，按纯文本处理：按空行分段
-  const hasTag = /<(p|br|img)\b/i.test(html);
-  if (!hasTag) {
+  // 纯文本模式（无任何 HTML 标签）
+  if (!/<[a-zA-Z]/.test(html)) {
     const paragraphs = html.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-    return paragraphs.map(t => {
-      const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
-      const children = [];
-      lines.forEach((line, idx) => {
-        if (line) children.push({ type: 'text', text: line });
-        if (idx < lines.length - 1) children.push({ name: 'br' });
-      });
-
-      return {
-        name: 'p',
-        attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' },
-        children
-      };
-    });
+    if (!paragraphs.length) return '';
+    return paragraphs.map(para => {
+      const lines = para.split('\n').map(s => s.trim()).filter(Boolean);
+      return `<p style="${P_STYLE}">${lines.join('<br>')}</p>`;
+    }).join('');
   }
 
-  const nodes = [];
-  let currentP = null;
-  let currentChildren = null;
+  // ── HTML 模式 ──────────────────────────────────────────
 
-  const pushText = (text) => {
-    const t = String(text || '');
-    if (!t) return;
-    // rich-text 的 text 节点会保留换行但显示不稳定，这里转成空格/换行由 <br> 控制
-    const cleaned = t.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
-    if (!cleaned.trim()) return;
+  // 1. 标题标签 → 带样式的 p
+  html = html.replace(/<h1[^>]*>/gi, `<p style="${H1_STYLE}">`);
+  html = html.replace(/<h2[^>]*>/gi, `<p style="${H2_STYLE}">`);
+  html = html.replace(/<h3[^>]*>/gi, `<p style="${H3_STYLE}">`);
+  html = html.replace(/<h[4-6][^>]*>/gi, `<p style="${H46_STYLE}">`);
+  html = html.replace(/<\/h[1-6]>/gi, '</p>');
 
-    if (!currentP) {
-      currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-      currentChildren = currentP.children;
-      nodes.push(currentP);
-    }
-    currentChildren.push({ type: 'text', text: cleaned });
-  };
+  // 2. strong/b → span 加粗
+  html = html.replace(/<(?:strong|b)([^>]*)>/gi, '<span style="font-weight:700;color:#111;">');
+  html = html.replace(/<\/(?:strong|b)>/gi, '</span>');
 
-  const parseImgAttrs = (attrStr) => {
-    const attrs = {};
-    String(attrStr || '').replace(/([a-zA-Z0-9_-]+)\s*=\s*(['\"])(.*?)\2/g, (_, k, _q, v) => {
-      attrs[k] = v;
-      return '';
-    });
-    return attrs;
-  };
+  // 3. em/i → span（斜体，给一点颜色区分）
+  html = html.replace(/<(?:em|i)([^>]*)>/gi, '<span style="font-style:italic;color:#555;">');
+  html = html.replace(/<\/(?:em|i)>/gi, '</span>');
 
-  const tagRe = /<(\/)?(p|br|img)\b([^>]*)>/gi;
-  let lastIndex = 0;
-  let match;
+  // 4. li → 带 bullet 的 p
+  html = html.replace(/<li[^>]*>/gi, `<p style="${LI_STYLE}">• `);
+  html = html.replace(/<\/li>/gi, '</p>');
+  html = html.replace(/<\/?(ul|ol)[^>]*>/gi, '');
 
-  while ((match = tagRe.exec(html)) !== null) {
-    const [full, closing, tagNameRaw, attrPart] = match;
-    const tagName = String(tagNameRaw || '').toLowerCase();
-    const index = match.index;
+  // 5. a 标签 → span（防止小程序内跳链接）
+  html = html.replace(/<a[^>]*>/gi, '<span style="color:#8766F3;">');
+  html = html.replace(/<\/a>/gi, '</span>');
 
-    // text before tag
-    if (index > lastIndex) {
-      pushText(html.slice(lastIndex, index));
-    }
+  // 6. 容器块级标签 → p
+  html = html.replace(
+    /<(\/)?(div|section|article|header|footer|main|figure|figcaption|blockquote)[^>]*>/gi,
+    (m, slash) => (slash ? '</p>' : '<p>')
+  );
 
-    if (tagName === 'p') {
-      if (!closing) {
-        currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-        currentChildren = currentP.children;
-        nodes.push(currentP);
-      } else {
-        currentP = null;
-        currentChildren = null;
-      }
-    } else if (tagName === 'br') {
-      if (!currentP) {
-        currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-        currentChildren = currentP.children;
-        nodes.push(currentP);
-      }
-      currentChildren.push({ name: 'br' });
-    } else if (tagName === 'img' && !closing) {
-      if (skipImages) {
-        // 跳过正文内图片：只保留顶部封面图
-      } else {
-        const attrs = parseImgAttrs(attrPart);
-        const src = attrs.src || attrs['data-src'] || attrs['data-original'] || '';
-        if (src) {
-          if (!currentP) {
-            currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-            currentChildren = currentP.children;
-            nodes.push(currentP);
-          }
-          currentChildren.push({
-            name: 'img',
-            attrs: {
-              src,
-              style: 'max-width:100%;height:auto;display:block;margin:12px 0;border-radius:12px;'
-            }
-          });
-        }
-      }
-    }
+  // 7. 表格标签 → 去掉（保留文字）
+  html = html.replace(/<\/?(table|thead|tbody|tfoot|tr|td|th|col|colgroup)[^>]*>/gi, ' ');
 
-    lastIndex = index + full.length;
-  }
-
-  // trailing text
-  if (lastIndex < html.length) {
-    pushText(html.slice(lastIndex));
-  }
-
-  // 最后兜底清理：去掉空段落
-  return nodes.filter(n => {
-    if (n?.name !== 'p') return true;
-    const ch = Array.isArray(n.children) ? n.children : [];
-    return ch.some(c => c?.name === 'img' || c?.name === 'br' || (c?.type === 'text' && String(c.text || '').trim()));
+  // 8. 给没有自定义 style 的 <p> 补上默认样式
+  html = html.replace(/<p(?:\s[^>]*)?>/gi, (m) => {
+    if (/style=/i.test(m)) return m;
+    return `<p style="${P_STYLE}">`;
   });
+
+  // 9. 图片处理
+  if (skipImages) {
+    html = html.replace(/<img[^>]*\/?>/gi, '');
+  } else {
+    html = html.replace(/<img([^>]*)(?:\/)?>/gi, (m, attrs) => {
+      const srcMatch = attrs.match(/src=["']([^"']+)["']/i)
+                    || attrs.match(/data-src=["']([^"']+)["']/i)
+                    || attrs.match(/data-original=["']([^"']+)["']/i);
+      if (!srcMatch) return '';
+      let src = srcMatch[1];
+      if (/^http:\/\//i.test(src)) src = src.replace(/^http:\/\//i, 'https://');
+      return `<img src="${src}" style="max-width:100%;height:auto;display:block;margin:14px 0;border-radius:12px;">`;
+    });
+  }
+
+  // 10. 剔除其余不识别标签（保留 p / br / img / span）
+  html = html.replace(/<(?!\/?(?:p|br|img|span)\b)[^>]+>/gi, '');
+
+  // 11. 标签之外残留的 \n → <br>（修复换行丢失的核心问题）
+  html = html.replace(/\n/g, '<br>');
+
+  // 12. 合并过多连续 <br>
+  html = html.replace(/(<br\s*\/?>[\s\u00A0]*){3,}/gi, '<br><br>');
+
+  // 13. 删除空段落：不靠猜格式，而是看 <p> 里有没有可见文字
+  html = html.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (match, inner) => {
+    // 把所有标签去掉，剩余内容去掉所有空白类字符
+    const visible = inner.replace(/<[^>]*>/g, '').replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '');
+    if (!visible) return ''; // 没有可见文字 → 整个 <p> 删掉
+    return match;
+  });
+
+  // 14. 去掉开头残留的裸 <br>
+  html = html.replace(/^([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+/gi, '').trim();
+
+  // 15. 去掉结尾残留的裸 <br>
+  html = html.replace(/([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+$/gi, '').trim();
+
+  // 16. 再清一轮开头的空白（可能上面删完空 p 后又暴露出来了）
+  html = html.replace(/^([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+/gi, '').trim();
+
+  return html;
 }
 
 function safeToDate(v) {
@@ -248,7 +228,7 @@ Page({
     id: '',
     loading: true,
     article: {},
-    contentNodes: [],
+    contentHtml: '',
     viewCount: 0,
     shareLogo: '',
     images: [],  // 小红书风格：多图数组
@@ -260,7 +240,9 @@ Page({
 
   async onLoad(options) {
     const id = options?.id ? decodeURIComponent(options.id) : '';
-    this.setData({ id });
+    // 用屏幕宽度 * 0.65 设置默认高度，避免图片加载前 swiper 高度为 0
+    const { windowWidth } = wx.getSystemInfoSync();
+    this.setData({ id, swiperHeight: Math.round(windowWidth * 0.65) });
 
     if (!id) {
       wx.showToast({ title: '文章ID缺失', icon: 'none' });
@@ -352,7 +334,7 @@ Page({
         title: raw?.title || '文章详情',
         author: raw?.author || '安得褓贝',
         source: raw?.source || '',
-        summary: raw?.summary || '',
+        summary: decodeHtmlEntities(raw?.summary || '').replace(/<[^>]+>/g, '').replace(/[\s\u00A0\u200B\n\r\t]+/g, ' ').trim(),
         coverImage,
         publishedAtText: raw?.publishedAt ? formatDateTime(raw.publishedAt) : (raw?.createdAt ? formatDateTime(raw.createdAt) : '')
       };
@@ -360,7 +342,10 @@ Page({
       const content = pickContent(raw);
       // 只有当有独立封面图字段时才过滤正文图片，避免重复
       // 如果封面图是从HTML提取的，则保留正文中的所有图片
-      const contentNodes = toRichTextNodes(content, { skipImages: hasExplicitCover });
+      const contentHtml = toRichTextHtml(content, { skipImages: hasExplicitCover });
+
+      console.log('📝 summary:', JSON.stringify(article.summary));
+      console.log('📝 contentHtml 前200字符:', contentHtml.substring(0, 200));
 
       // 小红书风格：提取多图
       const images = this.extractImages(raw);
@@ -368,7 +353,7 @@ Page({
 
       this.setData({
         article,
-        contentNodes,
+        contentHtml,
         images,
         currentImageIndex: 0
       });

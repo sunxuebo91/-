@@ -3,7 +3,7 @@
   <view class="top-image-container" wx:if="{{images && images.length > 0 && !loading}}">
     <swiper
       class="top-swiper"
-      style="height: {{swiperHeight ? swiperHeight + 'px' : '100vw'}};"
+      style="height: {{swiperHeight + 'px'}};"
       indicator-dots="{{false}}"
       autoplay="{{false}}"
       circular="{{true}}"
@@ -13,7 +13,7 @@
         <image
           class="top-image"
           src="{{item}}"
-          mode="aspectFit"
+          mode="aspectFill"
           bindtap="previewImage"
           bindload="onImageLoad"
           data-index="{{index}}"
@@ -50,11 +50,11 @@
       <view class="summary" wx:if="{{article.summary}}">{{article.summary}}</view>
 
       <!-- 正文 -->
-      <view class="content" wx:if="{{contentNodes && contentNodes.length}}">
-        <rich-text nodes="{{contentNodes}}"></rich-text>
+      <view class="content" wx:if="{{contentHtml}}">
+        <rich-text nodes="{{contentHtml}}" space="nbsp"></rich-text>
       </view>
 
-      <view class="content-empty" wx:if="{{!contentNodes || !contentNodes.length}}">暂无内容</view>
+      <view class="content-empty" wx:if="{{!contentHtml}}">暂无内容</view>
     </view>
   </view>
 
