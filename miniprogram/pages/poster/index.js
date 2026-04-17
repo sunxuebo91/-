@@ -9,8 +9,10 @@ const W = 375, H = 640; // 海报画布尺寸 (px)
 const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 
 // 本地路径缓存：Logo 和 QR 不变，只下载一次
-let _logoPathCache = '';
-let _qrPathCache   = '';
+let _logoPathCache       = '';
+let _qrPathCache         = '';   // 首页 QR（普通海报）
+let _referrerQrCache     = '';   // 推荐注册页 QR（客户推荐海报，按 staffId 区分）
+let _referrerQrCacheKey  = '';   // 缓存对应的 staffId+phone，key 变了重新生成
 
 // 通用质量后缀（不再强制要求人像，让风格更多样）
 const BASE_SUFFIX = '，无文字，无英文字母，无logo，无水印，竖版构图，2k超高清，电影级光线';
@@ -80,13 +82,39 @@ Page({
     generatingText: false,
     generating: false,
     posterPath: '',
-    cachedTexts: {}   // 缓存各主题已生成的文�?{ emotion: [...], career: [...] }
+    cachedTexts: {},   // 缓存各主题已生成的文�?{ emotion: [...], career: [...] }
+    // 客户推荐海报模式
+    customerMode: false,
+    customerInfo: null,
   },
 
   /** 页面加载：初始化 */
-  onLoad() {
-    this.setData({ generatingText: true });
-    this._preGenerateAllThemes();
+  onLoad(options) {
+    if (options && options.customerId) {
+      // 客户推荐海报模式：从 Storage 读取完整数据
+      wx.setNavigationBarTitle({ title: '生成推荐海报' });
+      const stored = wx.getStorageSync('pendingPosterCustomer') || {};
+      const needs  = stored.needs || {};
+      this.setData({
+        customerMode: true,
+        customerInfo: {
+          id:             options.customerId,
+          name:           stored.name || '',
+          orderType:      needs.orderType      || '',
+          salary:         needs.salary         || '',
+          serviceAddress: needs.serviceAddress || '',
+          onboardingTime: needs.onboardingTime || '',
+          familyMembers:  needs.familyMembers  || needs.familyMemberCount || '',
+          houseArea:      needs.houseArea      || '',
+          workContent:    needs.workContent    || needs.jobDescription    || '',
+          remarks:        needs.remarks        || needs.specialRequirements || '',
+        },
+      });
+    } else {
+      // 普通心语海报模式
+      this.setData({ generatingText: true });
+      this._preGenerateAllThemes();
+    }
   },
 
   /** 每次显示页面时重新生成文案，避免反复看到同一批文案 */
@@ -387,6 +415,30 @@ Page({
     }
   },
 
+  /** 获取推荐人注册页小程序码本地路径（按员工+客户 key 缓存，不同客户海报各自独立）*/
+  async _getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId) {
+    const cacheKey = (staffId || '') + '|' + (staffPhone || '') + '|' + (customerId || '');
+    if (_referrerQrCache && _referrerQrCacheKey === cacheKey) return _referrerQrCache;
+    try {
+      const cfRes = await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: { type: 'getReferrerRegisterMiniCode', staffId: staffId || '', staffPhone: staffPhone || '', customerId: customerId || '' }
+      });
+      const fileID = cfRes?.result?.fileID;
+      if (!fileID) return '';
+      const tempRes = await wx.cloud.getTempFileURL({ fileList: [fileID] });
+      const tempUrl = tempRes?.fileList?.[0]?.tempFileURL || '';
+      if (!tempUrl) return '';
+      _referrerQrCache    = await this._downloadImage(tempUrl);
+      _referrerQrCacheKey = cacheKey;
+      return _referrerQrCache;
+    } catch (err) {
+      console.error('获取推荐注册小程序码失败:', err);
+      wx.showToast({ title: '二维码生成失败，请先发布小程序正式版', icon: 'none', duration: 3000 });
+      return '';
+    }
+  },
+
   /** 获取首页小程序码本地路径（缓存，同一会话只下载一次）*/
   async _getHomeMiniCodePath() {
     if (_qrPathCache) return _qrPathCache;
@@ -622,6 +674,332 @@ Page({
     }
     if (line) lines.push(line);
     return lines;
+  },
+
+  /** 客户模式：一键生成推荐海报（员工头像铺底 + 客户需求信息卡） */
+  async onGenerateCustomerPoster() {
+    if (this.data.generating) return;
+    this.setData({ generating: true });
+    wx.showLoading({ title: '海报生成中...', mask: true });
+    try {
+      const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+      const avatarUrl   = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || '';
+      const staffName   = crmUserInfo.crmName   || crmUserInfo.nickname  || '';
+      const staffPhone  = crmUserInfo.phone      || '';
+      const staffId     = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
+      const customerId  = (this.data.customerInfo && this.data.customerInfo.id) || '';
+      // 写入 staff_profiles，确保推荐人扫码注册后 getReferralDetail 能查到归属人姓名
+      if ((staffId || staffPhone) && (staffName || staffPhone)) {
+        wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: avatarUrl, company: '安得褓贝' },
+        }).catch(err => console.warn('[poster] saveStaffProfile 失败(不影响海报生成):', err));
+      }
+
+      const [avatarPath, qrPath, logoPath] = await Promise.all([
+        avatarUrl ? this._downloadImage(avatarUrl) : Promise.resolve(''),
+        this._getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId),
+        this._getLogoPath(),
+      ]);
+      const posterPath = await this._renderCustomerCanvas(
+        avatarPath, qrPath, logoPath, this.data.customerInfo, staffName, staffPhone
+      );
+      this.setData({ posterPath });
+      wx.hideLoading();
+      wx.showShareImageMenu({
+        path: posterPath,
+        fail: () => wx.saveImageToPhotosAlbum({
+          filePath: posterPath,
+          success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+          fail:    () => wx.showToast({ title: '请长按图片保存', icon: 'none' })
+        })
+      });
+    } catch (err) {
+      console.error('生成客户海报失败:', err);
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '生成失败，请重试', icon: 'none' });
+    } finally {
+      this.setData({ generating: false });
+    }
+  },
+
+  /** 客户推荐海报 Canvas
+   *  短字段(≤3行)→单列横排；(>3行)→双列网格
+   *  长字段(工作内容/需求备注)→全宽行追加在下方
+   */
+  _renderCustomerCanvas(avatarLocalPath, qrLocalPath, logoLocalPath, info, staffName, staffPhone) {
+    return new Promise((resolve, reject) => {
+      const query = wx.createSelectorQuery().in(this);
+      query.select('#poster-canvas').fields({ node: true, size: true }).exec(async (res) => {
+        const canvas = res[0]?.node;
+        if (!canvas) return reject(new Error('Canvas 未找到'));
+        const dpr = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).pixelRatio || 2;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        try {
+          // ── 工具 ──
+          const rrp = (x, y, w, h, r) => {
+            ctx.beginPath();
+            ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+            ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r);
+            ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h);
+            ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r);
+            ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+          };
+          const cut = (s, n) => (!s ? '' : s.length > n ? s.slice(0, n-1)+'…' : s);
+
+          // ── L1 背景 ──
+          ctx.fillStyle = '#0f051e'; ctx.fillRect(0, 0, W, H);
+
+          // ── L2 头像 cover ──
+          if (avatarLocalPath) {
+            const av = canvas.createImage(); av.src = avatarLocalPath;
+            await new Promise(r => { av.onload = r; av.onerror = r; });
+            const sc = Math.max(W/av.width, H/av.height);
+            ctx.drawImage(av, (W-av.width*sc)/2, Math.min(0,(H-av.height*sc)*0.1), av.width*sc, av.height*sc);
+          }
+
+          // ── L3 渐变遮罩 ──
+          const gr = ctx.createLinearGradient(0, 0, 0, H);
+          gr.addColorStop(0,    'rgba(15,5,30,0.1)');
+          gr.addColorStop(0.25, 'rgba(15,5,30,0.5)');
+          gr.addColorStop(0.5,  'rgba(15,5,30,0.8)');
+          gr.addColorStop(1,    'rgba(15,5,30,0.97)');
+          ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+
+          // L4: 左上品牌文字已移除
+
+          // ── L5 信息卡 ──
+          // 短字段（可双列）
+          const shortRows = [];
+          if (info.orderType)      shortRows.push({ key:'服务类型', val: cut(info.orderType,10),      color:'#FAF6EE' });
+          if (info.salary)         shortRows.push({ key:'期望薪资', val:`¥${info.salary}/月`,          color:'#C8A0FF' });
+          if (info.familyMembers)  shortRows.push({ key:'家庭成员', val:`${info.familyMembers}人`,     color:'#FAF6EE' });
+          if (info.houseArea)      shortRows.push({ key:'房屋面积', val:`${info.houseArea}㎡`,         color:'#FAF6EE' });
+          if (info.serviceAddress) shortRows.push({ key:'服务地址', val: cut(info.serviceAddress,10),  color:'#FAF6EE' });
+          if (info.onboardingTime) shortRows.push({ key:'上户时间', val: cut(info.onboardingTime,10),  color:'#FAF6EE' });
+          // 长字段（全宽，自动换行）
+          const fullRowsSrc = [];
+          if (info.workContent) fullRowsSrc.push({ key:'工作内容', val: info.workContent, color:'#FAF6EE' });
+          if (info.remarks)     fullRowsSrc.push({ key:'需求备注', val: info.remarks,     color:'#FCA5A5' });
+
+          const TWO_COL   = shortRows.length > 3;
+          const HDR_H     = 42;
+          const CELL_H    = 62;
+          const S_ROW_H   = 52;
+          const PAD_B     = 16;
+          const CARD_X    = 18, CARD_W = W - 36;
+
+          // 换行辅助：按像素宽度切分
+          const F_FONT    = '15px "PingFang SC",sans-serif';
+          const F_LINE_H  = 22;  // 每行文字高
+          const F_LABEL_H = 20;  // 标签行高
+          const F_PAD_V   = 14;  // 每个长字段的上下内边距合计
+          const maxTextW  = CARD_W - 32;
+          const wrapText  = (text) => {
+            ctx.font = F_FONT;
+            const lines = []; let line = '';
+            for (const ch of String(text || '').split('')) {
+              const test = line + ch;
+              if (ctx.measureText(test).width > maxTextW && line.length > 0) {
+                lines.push(line); line = ch;
+              } else { line = test; }
+            }
+            if (line) lines.push(line);
+            return lines;
+          };
+
+          // 预算每个长字段高度
+          const fullRows = fullRowsSrc.map(row => {
+            const lines = wrapText(row.val);
+            return { ...row, lines, rowH: F_PAD_V + F_LABEL_H + lines.length * F_LINE_H };
+          });
+
+          const gridRows  = TWO_COL ? Math.ceil(shortRows.length / 2) : shortRows.length;
+          const shortH    = TWO_COL ? gridRows * CELL_H : gridRows * S_ROW_H;
+          const sepH      = fullRows.length > 0 ? 8 : 0;
+          const fullH     = fullRows.reduce((s, r) => s + r.rowH, 0);
+          const CARD_H    = HDR_H + shortH + sepH + fullH + PAD_B;
+
+          // 在安全区 [22, 518] 内垂直居中（左上角文字已去掉，顶部留白缩小）
+          const CARD_Y    = Math.round((22 + 518 - CARD_H) / 2);
+
+          // 卡片背景
+          rrp(CARD_X, CARD_Y, CARD_W, CARD_H, 16);
+          ctx.fillStyle = 'rgba(255,255,255,0.11)'; ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 0.8; ctx.stroke();
+
+          // 卡片标题
+          ctx.fillStyle = '#C8A96E';
+          ctx.font = 'bold 18px "PingFang SC",sans-serif';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText('客户服务需求', CARD_X + 16, CARD_Y + HDR_H / 2);
+          ctx.strokeStyle = 'rgba(200,169,110,0.35)'; ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(CARD_X+16, CARD_Y+HDR_H-1);
+          ctx.lineTo(CARD_X+CARD_W-16, CARD_Y+HDR_H-1);
+          ctx.stroke();
+
+          // ── 短字段区域 ──
+          if (TWO_COL) {
+            const COL0_X = CARD_X + 16;
+            const COL1_X = CARD_X + 16 + (CARD_W - 32) / 2 + 4;
+            // 水平分割线
+            for (let r = 1; r < gridRows; r++) {
+              const ly = CARD_Y + HDR_H + r * CELL_H;
+              ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.4;
+              ctx.beginPath(); ctx.moveTo(CARD_X+14,ly); ctx.lineTo(CARD_X+CARD_W-14,ly); ctx.stroke();
+            }
+            // 竖向分割线
+            const vx = CARD_X + CARD_W / 2;
+            ctx.beginPath(); ctx.moveTo(vx, CARD_Y+HDR_H+4); ctx.lineTo(vx, CARD_Y+HDR_H+shortH-4); ctx.stroke();
+            shortRows.forEach((row, i) => {
+              const cellX = (i%2===0) ? COL0_X : COL1_X;
+              const cellY = CARD_Y + HDR_H + Math.floor(i/2) * CELL_H;
+              ctx.fillStyle = 'rgba(255,255,255,0.45)';
+              ctx.font = '14px "PingFang SC",sans-serif';
+              ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+              ctx.fillText(row.key, cellX, cellY + 8);
+              ctx.fillStyle = row.color;
+              ctx.font = 'bold 19px "PingFang SC",sans-serif';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(row.val, cellX, cellY + CELL_H - 8);
+            });
+          } else {
+            shortRows.forEach((row, i) => {
+              const midY = CARD_Y + HDR_H + i * S_ROW_H + S_ROW_H / 2;
+              if (i > 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.4;
+                ctx.beginPath(); ctx.moveTo(CARD_X+16,CARD_Y+HDR_H+i*S_ROW_H); ctx.lineTo(CARD_X+CARD_W-16,CARD_Y+HDR_H+i*S_ROW_H); ctx.stroke();
+              }
+              ctx.fillStyle = 'rgba(255,255,255,0.45)';
+              ctx.font = '15px "PingFang SC",sans-serif';
+              ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+              ctx.fillText(row.key, CARD_X+16, midY);
+              ctx.fillStyle = row.color;
+              ctx.font = 'bold 20px "PingFang SC",sans-serif';
+              ctx.textAlign = 'right';
+              ctx.fillText(row.val, CARD_X+CARD_W-16, midY);
+            });
+          }
+
+          // ── 长字段区域（全宽，自动换行）──
+          if (fullRows.length > 0) {
+            const sepY = CARD_Y + HDR_H + shortH + sepH / 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 0.5;
+            ctx.beginPath(); ctx.moveTo(CARD_X+14, sepY); ctx.lineTo(CARD_X+CARD_W-14, sepY); ctx.stroke();
+
+            let curY = CARD_Y + HDR_H + shortH + sepH;
+            fullRows.forEach((row, i) => {
+              if (i > 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.4;
+                ctx.beginPath(); ctx.moveTo(CARD_X+16, curY); ctx.lineTo(CARD_X+CARD_W-16, curY); ctx.stroke();
+              }
+              // 标签
+              ctx.fillStyle = 'rgba(255,255,255,0.4)';
+              ctx.font = '13px "PingFang SC",sans-serif';
+              ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+              ctx.fillText(row.key, CARD_X+16, curY + 7);
+              // 换行文字
+              ctx.fillStyle = row.color;
+              ctx.font = F_FONT;
+              row.lines.forEach((line, li) => {
+                ctx.fillText(line, CARD_X+16, curY + F_LABEL_H + li * F_LINE_H + 4);
+              });
+              curY += row.rowH;
+            });
+          }
+          ctx.textAlign = 'left';
+
+          // 卡片下方提示
+          ctx.fillStyle = 'rgba(255,255,255,0.32)';
+          ctx.font = '11px "PingFang SC",sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.fillText('有合适该订单的阿姨辛苦向我推荐', W/2, CARD_Y+CARD_H+11);
+
+          // ── L6 底部分割线 ──
+          const Y_SEP = 532;
+
+          // 卡片与分割线之间：推荐奖金文案（宽度与卡片对齐，贴分割线上方10px）
+          ctx.fillStyle = '#C8A96E';
+          ctx.font = 'bold 29px "PingFang SC",sans-serif';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+          const _tipText = '推荐阿姨签单赚推荐奖金';
+          const _tipW = ctx.measureText(_tipText).width;
+          ctx.save();
+          ctx.translate(CARD_X, Y_SEP - 10);
+          ctx.scale(CARD_W / _tipW, 1);
+          ctx.fillText(_tipText, 0, 0);
+          ctx.restore();
+          ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.6;
+          ctx.beginPath(); ctx.moveTo(16, Y_SEP); ctx.lineTo(W-16, Y_SEP); ctx.stroke();
+
+          // ── L7 QR 码 ──
+          const QW=72, QH=72, QX=W-QW-16, QY=Y_SEP+(H-Y_SEP-QH-16)/2;
+          rrp(QX,QY,QW,QH,8); ctx.fillStyle='#fff'; ctx.fill();
+          if (qrLocalPath) {
+            const qr=canvas.createImage(); qr.src=qrLocalPath;
+            await new Promise(r=>{qr.onload=r;qr.onerror=r;});
+            ctx.save(); rrp(QX+5,QY+5,QW-10,QH-10,4); ctx.clip();
+            ctx.drawImage(qr,QX+5,QY+5,QW-10,QH-10); ctx.restore();
+          }
+          ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='10px sans-serif';
+          ctx.textAlign='center'; ctx.fillText('扫码推荐阿姨', QX+QW/2, QY+QH+14);
+
+          // ── L8 返费文案 + 联系人信息 ──
+          const parseSal = s => {
+            const c = String(s||'').replace(/[^\d\-]/g,'');
+            if (c.includes('-')) { const p=c.split('-').map(Number).filter(n=>n>0); return p.length>=2?(p[0]+p[1])/2:p[0]||0; }
+            return parseInt(c,10)||0;
+          };
+          const rebate = Math.round(parseSal(info.salary)*0.1);
+          ctx.textBaseline='middle';
+          const _rebateCX   = (QX-8)/2;
+          const _rebateY    = Y_SEP + (H-Y_SEP)*0.36;   // 上移，给联系人留空间
+          const _contactY   = Y_SEP + (H-Y_SEP)*0.72;   // 联系人信息行
+          ctx.font='bold 21px "PingFang SC",Georgia,serif';
+          if (rebate) {
+            const _pre = '本单预计返费', _num = String(rebate), _suf = '元';
+            const _pw = ctx.measureText(_pre).width;
+            const _nw = ctx.measureText(_num).width;
+            const _sw = ctx.measureText(_suf).width;
+            let _tx = _rebateCX - (_pw+_nw+_sw)/2;
+            ctx.textAlign='left';
+            ctx.fillStyle='#C8A96E'; ctx.fillText(_pre, _tx, _rebateY); _tx+=_pw;
+            ctx.fillStyle='#FF6B35'; ctx.fillText(_num, _tx, _rebateY); _tx+=_nw;
+            ctx.fillStyle='#C8A96E'; ctx.fillText(_suf, _tx, _rebateY);
+          } else {
+            ctx.fillStyle='#C8A96E'; ctx.textAlign='center';
+            ctx.fillText('为爱，全力以赴', _rebateCX, _rebateY);
+          }
+          // 联系人姓名 + 电话
+          if (staffName || staffPhone) {
+            const _contact = [
+              staffName  ? `联系人：${staffName}` : '',
+              staffPhone ? `电话：${staffPhone}`  : '',
+            ].filter(Boolean).join('，');
+            ctx.font = '12px "PingFang SC",sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.textAlign = 'center';
+            ctx.fillText(_contact, _rebateCX, _contactY);
+          }
+
+          // ── L9 Logo 右上角 ──
+          if (logoLocalPath) {
+            const logo=canvas.createImage(); logo.src=logoLocalPath;
+            await new Promise(r=>{logo.onload=r;logo.onerror=r;});
+            ctx.drawImage(logo, W-88, 10, 78, 78);
+          }
+
+          wx.canvasToTempFilePath({
+            canvas, fileType:'jpg', quality:0.95,
+            success:r=>resolve(r.tempFilePath),
+            fail:err=>reject(new Error(err.errMsg||'导出失败'))
+          });
+        } catch(err){reject(err);}
+      });
+    });
   },
 
   // 点击缩略图再次唤起分享浮窗

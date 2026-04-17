@@ -1,0 +1,45 @@
+<view class="page">
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="state-wrap">
+    <view class="state-icon">⏳</view>
+    <view class="state-text">加载中...</view>
+  </view>
+
+  <block wx:else>
+    <!-- 审批中 -->
+    <view wx:if="{{status === 'pending_approval'}}" class="status-block">
+      <view class="status-icon">🕐</view>
+      <view class="status-title">申请审核中</view>
+      <view class="status-desc">管理员将在1~3个工作日内审核您的申请，审核结果将通过小程序通知您</view>
+      <view class="info-card">
+        <view class="info-row"><text class="info-label">姓名</text><text class="info-value">{{info.name}}</text></view>
+        <view class="info-row"><text class="info-label">手机号</text><text class="info-value">{{info.phone}}</text></view>
+        <view class="info-row"><text class="info-label">微信号</text><text class="info-value">{{info.wechatId}}</text></view>
+        <view class="info-row last"><text class="info-label">提交时间</text><text class="info-value">{{info.createdAtFmt}}</text></view>
+      </view>
+    </view>
+
+    <!-- 已通过 -->
+    <view wx:elif="{{status === 'approved'}}" class="status-block">
+      <view class="status-icon">✅</view>
+      <view class="status-title">审核已通过</view>
+      <view class="status-desc">恭喜您成为推荐人！现在可以开始录入推荐阿姨信息了</view>
+      <button class="action-btn" bindtap="goStart">开始推荐</button>
+    </view>
+
+    <!-- 已拒绝 -->
+    <view wx:elif="{{status === 'rejected'}}" class="status-block">
+      <view class="status-icon">❌</view>
+      <view class="status-title">申请未通过</view>
+      <view class="reject-reason-card">
+        <view class="reject-reason-label">拒绝原因</view>
+        <view class="reject-reason-text">{{info.rejectedReason || '暂无说明'}}</view>
+      </view>
+      <view class="status-desc">如有疑问请联系客服，或重新提交申请</view>
+      <button class="action-btn action-btn-outline" bindtap="goReapply">重新申请</button>
+    </view>
+
+  </block>
+
+</view>

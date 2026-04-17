@@ -1,5 +1,53 @@
 <view class="page">
 
+  <!-- ══ 客户推荐海报模式 ══ -->
+  <block wx:if="{{customerMode}}">
+    <view class="customer-needs-section">
+      <text class="section-label">客户需求</text>
+      <view class="customer-needs-card">
+        <view class="cn-row" wx:if="{{customerInfo.orderType}}">
+          <text class="cn-key">服务类型</text>
+          <text class="cn-val">{{customerInfo.orderType}}</text>
+        </view>
+        <view class="cn-row" wx:if="{{customerInfo.salary}}">
+          <text class="cn-key">期望薪资</text>
+          <text class="cn-val cn-val-salary">¥{{customerInfo.salary}}/月</text>
+        </view>
+        <view class="cn-row" wx:if="{{customerInfo.familyMembers}}">
+          <text class="cn-key">家庭成员</text>
+          <text class="cn-val">{{customerInfo.familyMembers}}人</text>
+        </view>
+        <view class="cn-row" wx:if="{{customerInfo.serviceAddress}}">
+          <text class="cn-key">服务地址</text>
+          <text class="cn-val">{{customerInfo.serviceAddress}}</text>
+        </view>
+        <view class="cn-row" wx:if="{{customerInfo.houseArea}}">
+          <text class="cn-key">房屋面积</text>
+          <text class="cn-val">{{customerInfo.houseArea}}㎡</text>
+        </view>
+        <view class="cn-row" wx:if="{{customerInfo.onboardingTime}}">
+          <text class="cn-key">上户时间</text>
+          <text class="cn-val">{{customerInfo.onboardingTime}}</text>
+        </view>
+        <view class="cn-row cn-row-block" wx:if="{{customerInfo.workContent}}">
+          <text class="cn-key">工作内容</text>
+          <text class="cn-val cn-val-block">{{customerInfo.workContent}}</text>
+        </view>
+        <view class="cn-row cn-row-block" wx:if="{{customerInfo.remarks}}">
+          <text class="cn-key">需求备注</text>
+          <text class="cn-val cn-val-block cn-val-warn">{{customerInfo.remarks}}</text>
+        </view>
+      </view>
+      <text class="customer-tip">以您的头像为背景，自动生成推荐海报</text>
+    </view>
+    <view class="generate-btn {{generating ? 'disabled' : ''}}" bindtap="onGenerateCustomerPoster">
+      <text class="generate-text">{{generating ? '✨ 海报生成中...' : '✨ 生成推荐海报'}}</text>
+    </view>
+  </block>
+
+  <!-- ══ 普通心语海报模式 ══ -->
+  <block wx:else>
+
   <!-- 主题选择 -->
   <view class="section">
     <text class="section-label">选择主题</text>
@@ -57,6 +105,8 @@
   >
     <text class="generate-text">{{generating ? '✨ 海报生成中...' : '✨ 生成海报'}}</text>
   </view>
+
+  </block><!-- end 普通模式 -->
 
   <!-- 隐藏的 Canvas（用于合成） -->
   <canvas

@@ -10,6 +10,8 @@ Page({
     },
     isLoggedIn: false,
     showSubscribeBanner: false,  // 是否显示订阅提醒横幅
+    referralLabel: '推荐有礼',   // 推荐入口文案（按角色变化）
+    referralBadge: 0,            // 推荐角标数量（员工/管理员待处理数）
   },
 
   onShow() {
@@ -58,6 +60,8 @@ Page({
               avatarUrl: d.avatar   || '',   // CRM 字段 avatar → 前端 avatarUrl
               phone:     d.phone    || '',
               isStaff:   !!d.isStaff,
+              // 角色：CRM 直接返回 role 最优先；否则从 isAdmin/isStaff 推断
+              role: d.role || (d.isAdmin ? 'admin' : d.isStaff ? 'staff' : null),
             };
             console.log('✅ CRM profile loadMe:', serverMe);
           }
@@ -78,6 +82,8 @@ Page({
           avatarUrl: wxMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '',
           phone:     wxMe.phone     || crmUserInfo.phone     || '',
           isStaff:   crmUserInfo.isStaff || false,
+          // 云函数 getOrCreateMe 现已返回 role（customer/referrer/staff/admin）
+          role: wxMe.role || (crmUserInfo.isStaff ? 'staff' : null),
         };
         console.log('✅ 云函数 profile loadMe 兜底:', serverMe);
       }
@@ -91,6 +97,18 @@ Page({
 
       this.setData({ me: mergedMe });
       console.log('✅ 合并后的用户信息:', mergedMe);
+
+      // 推荐入口：按角色派生标签，异步加载角标
+      // referrer / 推荐官 → 推荐有礼；staff → 推荐审核；admin → 推荐管理
+      const REFERRAL_LABELS = {
+        'referrer':  '推荐有礼',
+        '推荐官':    '推荐有礼',
+        'staff':     '推荐审核',
+        'admin':     '推荐管理',
+      };
+      const role = mergedMe.role || 'customer';
+      this.setData({ referralLabel: REFERRAL_LABELS[role] || '推荐有礼' });
+      this.loadReferralBadge(role);
 
       // 有手机号就调 staff/info，静默刷新员工姓名/头像
       if (phone) {
@@ -186,6 +204,48 @@ Page({
 
   goMyOrders() {
     wx.navigateTo({ url: "/pages/myOrders/index" });
+  },
+
+  goPoster() {
+    wx.navigateTo({ url: '/pages/posterCustomerList/index' });
+  },
+
+  // 推荐入口导航：按角色跳转不同页面
+  goReferral() {
+    const role = this.data.me.role || 'customer';
+    const routes = {
+      'referrer': '/pages/myReferrals/index',          // 推荐官：我的推荐记录
+      '推荐官':   '/pages/myReferrals/index',          // 推荐官（中文角色值兼容）
+      'staff':    '/pages/admin/referralReview/index', // 员工：待审核简历列表
+      'admin':    '/pages/admin/referralManage/index', // 管理员：全量推荐管理
+    };
+    const url = routes[role];
+    if (url) {
+      wx.navigateTo({ url });
+    }
+    // customer 角色按钮已隐藏，此处不再跳转注册页
+  },
+
+  // 异步加载推荐角标数量（员工/管理员专用，不阻塞主流程）
+  async loadReferralBadge(role) {
+    if (!role || role === 'customer' || role === 'referrer') return;
+    try {
+      let action, params;
+      if (role === 'staff') {
+        // 员工：待我审核的简历数
+        action = 'getMyAssignedReferrals';
+        params = { action, reviewStatus: 'pending_review', pageSize: 1 };
+      } else if (role === 'admin') {
+        // 管理员：待审批的推荐人申请数
+        action = 'listPendingReferrers';
+        params = { action, pageSize: 1 };
+      }
+      const res = await wx.cloud.callFunction({ name: 'referralService', data: params });
+      const count = res.result && (res.result.total || 0);
+      if (count > 0) this.setData({ referralBadge: count });
+    } catch (e) {
+      console.warn('⚠️ 推荐角标加载失败:', e);
+    }
   },
 
 

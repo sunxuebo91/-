@@ -1,0 +1,149 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 0 0 60rpx;
+  box-sizing: border-box;
+}
+
+/* 搜索栏 */
+.search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.search-inner {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 40rpx;
+  padding: 14rpx 24rpx;
+  gap: 12rpx;
+}
+.search-icon { font-size: 28rpx; }
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 空/加载状态 */
+.state-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 140rpx;
+}
+.state-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.state-text { font-size: 32rpx; color: #555; font-weight: 500; }
+.state-sub  { font-size: 26rpx; color: #999; margin-top: 12rpx; }
+
+/* 列表 */
+.list { padding: 20rpx 24rpx 0; }
+
+/* 客户卡片 */
+.customer-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+/* 顶部：姓名 + 状态 */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+}
+.customer-name {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #222;
+}
+.customer-phone {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 状态角标 */
+.status-badge {
+  font-size: 22rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.status-contracted   { background: #f0fdf4; color: #16a34a; }
+.status-contracting  { background: #eff6ff; color: #3b82f6; }
+.status-matching     { background: #fefce8; color: #ca8a04; }
+.status-interviewed  { background: #fff7ed; color: #f97316; }
+.status-lost         { background: #fef0f0; color: #e74c3c; }
+.status-default      { background: #f5f5f5; color: #888; }
+
+/* 卡片内容 */
+.card-body { margin-bottom: 20rpx; }
+
+/* 2×2 网格 */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx 16rpx;
+}
+.info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+.info-label {
+  font-size: 22rpx;
+  color: rgba(0,0,0,0.38);
+  letter-spacing: 0.5rpx;
+}
+.info-value {
+  font-size: 28rpx;
+  color: #111;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.info-value.salary { color: #8b5cf6; }
+.info-value.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 卡片底部 */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1rpx solid #f5f5f5;
+  padding-top: 16rpx;
+}
+.poster-hint { font-size: 26rpx; color: #8b5cf6; }
+.arrow { font-size: 40rpx; color: #ccc; }
+
+/* 加载更多 / 无更多 */
+.load-more {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 28rpx;
+  color: #8b5cf6;
+}
+.no-more {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 26rpx;
+  color: #bbb;
+}

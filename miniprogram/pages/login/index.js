@@ -130,6 +130,39 @@ Page({
 
             const crmData = crmRes.data.data || {};
 
+            // 保存 CRM Token（注册/登录接口返回的 JWT，供 authenticatedRequest 使用）
+            const crmToken = crmRes.data.access_token || crmRes.data.token
+              || crmData.access_token || crmData.token;
+            if (crmToken) {
+              wx.setStorageSync('access_token', crmToken);
+              wx.setStorageSync('token', crmToken);
+              console.log('✅ CRM Token 已保存');
+            } else {
+              console.warn('⚠️ CRM 注册接口未返回 token，尝试调用 miniprogram-login 获取');
+              // 尝试用 openid + phone 换取 token（兼容不同版本的 CRM 后端）
+              try {
+                const loginRes = await new Promise((resolve, reject) => {
+                  wx.request({
+                    url: 'https://crm.andejiazheng.com/api/miniprogram-users/login',
+                    method: 'POST',
+                    data: { openid, phone },
+                    header: { 'Content-Type': 'application/json' },
+                    success: resolve,
+                    fail: reject,
+                  });
+                });
+                const loginToken = loginRes.data?.access_token || loginRes.data?.token
+                  || loginRes.data?.data?.access_token || loginRes.data?.data?.token;
+                if (loginToken) {
+                  wx.setStorageSync('access_token', loginToken);
+                  wx.setStorageSync('token', loginToken);
+                  console.log('✅ CRM Token（miniprogram-login）已保存');
+                }
+              } catch (tokenErr) {
+                console.warn('⚠️ 获取 CRM Token 失败（不影响主流程）:', tokenErr);
+              }
+            }
+
             // 额外调用 staff/info 接口，用手机号拉取 CRM 管理员维护的真实姓名和头像
             // 该接口只有员工才有记录，普通用户会返回 404 / success:false，catch 后静默处理
             let crmName = crmData.name || crmData.nickname || '';

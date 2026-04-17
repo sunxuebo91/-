@@ -28,6 +28,7 @@
     "pages/serviceFee/index",
 
     "pages/poster/index",
+    "pages/posterCustomerList/index",
     "pages/qaService/index",
     "pages/houseRules/index",
     "pages/contractPreview/index",
@@ -40,6 +41,12 @@
 
     "pages/admin/resumeManage/index",
     "pages/admin/resumeEdit/index",
+
+    "pages/referrerRegister/index",
+    "pages/referrerRegister/pending",
+    "pages/referralSubmit/index",
+    "pages/myReferrals/index",
+    "pages/myReferrals/detail",
 
     "pages/test-article-api",
     "pages/test-user-api/index",

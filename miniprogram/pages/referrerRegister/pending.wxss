@@ -1,0 +1,74 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 80rpx 40rpx 48rpx;
+  box-sizing: border-box;
+}
+
+/* 加载 */
+.state-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  margin-top: 200rpx;
+}
+.state-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.state-text { font-size: 30rpx; color: #888; }
+
+/* 状态主体 */
+.status-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.status-icon { font-size: 100rpx; margin-bottom: 28rpx; }
+.status-title { font-size: 44rpx; font-weight: 700; color: #222; margin-bottom: 20rpx; }
+.status-desc { font-size: 28rpx; color: #888; text-align: center; line-height: 1.7; margin-bottom: 40rpx; max-width: 580rpx; }
+
+/* 申请信息卡片 */
+.info-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 0 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+  margin-bottom: 40rpx;
+}
+.info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.info-row.last { border-bottom: none; }
+.info-label { font-size: 28rpx; color: #999; }
+.info-value { font-size: 28rpx; color: #333; font-weight: 500; }
+
+/* 拒绝原因卡片 */
+.reject-reason-card {
+  width: 100%;
+  background: #fff5f5;
+  border: 1rpx solid #fdd;
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  margin-bottom: 32rpx;
+}
+.reject-reason-label { font-size: 26rpx; color: #e74c3c; margin-bottom: 12rpx; }
+.reject-reason-text { font-size: 28rpx; color: #555; line-height: 1.7; }
+
+/* 操作按钮 */
+.action-btn {
+  width: 480rpx;
+  height: 96rpx;
+  background: #8766F3;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  border: none;
+  line-height: 96rpx;
+  margin-top: 16rpx;
+}
+.action-btn-outline {
+  background: #fff !important;
+  color: #8766F3 !important;
+  border: 2rpx solid #8766F3 !important;
+}

@@ -139,6 +139,30 @@ App({
         };
         wx.setStorageSync('crmUserInfo', merged);
 
+        // 调小程序专属登录接口换取 JWT Token，供 authenticatedRequest 使用
+        try {
+          const tokenRes = await new Promise((resolve, reject) => {
+            wx.request({
+              url: 'https://crm.andejiazheng.com/api/auth/miniprogram/login',
+              method: 'POST',
+              data: { openid },
+              header: { 'Content-Type': 'application/json' },
+              success: resolve,
+              fail: reject,
+            });
+          });
+          const jwtToken = tokenRes.data?.data?.token || tokenRes.data?.token;
+          if (jwtToken) {
+            wx.setStorageSync('access_token', jwtToken);
+            wx.setStorageSync('token', jwtToken);
+            console.log('✅ 小程序 JWT Token 已保存');
+          } else {
+            console.warn('⚠️ miniprogram/login 未返回 token:', tokenRes.data);
+          }
+        } catch (tokenErr) {
+          console.warn('⚠️ 获取小程序 JWT Token 失败（不影响主流程）:', tokenErr);
+        }
+
         console.log('✅ 自动登录成功:', merged);
         console.log('📱 是否已授权手机号:', merged.phone ? '是' : '否');
 

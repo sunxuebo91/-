@@ -376,46 +376,105 @@ Page({
       const apiKeyword = searchTerms.length > 0 ? searchTerms[0] : '';
 
       // ── 判断是否为大类筛选（yuer/baomu 且未选子类型）──────────────────────
-      // 大类筛选时 API 不能精准过滤，需要拉取更多数据供前端二次过滤
       const isCategoryFilter = (selectedType === 'yuer' || selectedType === 'baomu') && !selectedSubType;
 
-      // 计算有效的 API jobType：
-      // - 育儿嫂/保姆大类（无子类型）→ 不传 jobType（大类 key 如 'yuer' CRM 不认识，会导致过滤失效或返回 0 条）
-      //   改为拉取更大 pageSize 后由前端二次过滤
-      // - 育儿嫂/保姆（选了子类型）→ 传具体子类型
-      // - 月嫂/护老/null → 直接传
-      let apiJobType = null;
-      if (selectedType === 'yuer' || selectedType === 'baomu') {
-        apiJobType = selectedSubType || null;  // 大类不传，只传子类型
-      } else {
-        apiJobType = selectedType;
-      }
-
-      // 大类筛选时放大 pageSize，避免 API 只返回少量数据经前端过滤后数量不足
-      const effectivePageSize = isCategoryFilter ? 100 : pageSize;
-
-      // 使用 CRM API 获取简历列表（使用 /resumes 接口）
-      const params = {
-        page,
-        pageSize: effectivePageSize,
-        keyword: apiKeyword  // 只传第一个条件词
+      // 大类子类型映射：后端不认识 'yuer'/'baomu' 大类 key，需拆成各子类型分别查询后合并
+      const CATEGORY_SUBTYPES = {
+        yuer:  ['zhujia-yuer', 'baiban-yuer', 'yuer'],
+        baomu: ['zhujia-baomu', 'baiban-baomu', 'xiaoshi', 'baomu'],
       };
 
-      // 月嫂等级筛选
-      if (selectedLevel && secondTabMode === 'level') {
-        params.maternityNurseLevel = selectedLevel;
+      // 精确子类型/月嫂/护老 → 直接传 jobType
+      let apiJobType = null;
+      if (!isCategoryFilter) {
+        if (selectedType === 'yuer' || selectedType === 'baomu') {
+          apiJobType = selectedSubType || null;
+        } else {
+          apiJobType = selectedType;
+        }
       }
 
-      // 职位类型筛选
-      if (apiJobType) {
-        params.jobType = apiJobType;
-        console.log('🔍 职位类型筛选:', apiJobType);
+      const effectivePageSize = pageSize;  // 统一用默认 pageSize，保证 offset 正确
+
+      // ── API 请求：大类并行多流，其他单流 ────────────────────────────────
+      let rawList = [];
+      let hasMoreFromAPI = false;
+
+      if (isCategoryFilter) {
+        // 并行查询各子类型，合并去重
+        const subtypes = CATEGORY_SUBTYPES[selectedType] || [];
+        const baseParams = { page, pageSize: effectivePageSize, keyword: apiKeyword };
+        if (selectedLevel && secondTabMode === 'level') {
+          baseParams.maternityNurseLevel = selectedLevel;
+        }
+
+        const responses = await Promise.all(
+          subtypes.map(st =>
+            resumeService.getResumeList({ ...baseParams, jobType: st })
+              .catch(() => ({ success: false, data: { items: [], total: 0, totalPages: 0 } }))
+          )
+        );
+
+        console.log('📋 大类并行请求结果:', subtypes, responses.map(r => ({
+          items: r.data?.items?.length,
+          total: r.data?.total,
+          totalPages: r.data?.totalPages
+        })));
+
+        const seenIds = new Set();
+        responses.forEach((resp) => {
+          const items = (resp.success && resp.data?.items) || [];
+          const subtypeTotal = (resp.success && resp.data?.total) || 0;
+          const subtypeTotalPages = (resp.success && resp.data?.totalPages) || 0;
+
+          // 优先用 API 的 total/totalPages 判断是否还有更多；兜底用条数比较
+          if (subtypeTotal > 0 && page < subtypeTotalPages) {
+            hasMoreFromAPI = true;
+          }
+          if (items.length >= effectivePageSize) hasMoreFromAPI = true;
+
+          items.forEach(item => {
+            if (!seenIds.has(item._id)) {
+              seenIds.add(item._id);
+              rawList.push(item);
+            }
+          });
+        });
+      } else {
+        // 单流请求（原有逻辑）
+        const params = {
+          page,
+          pageSize: effectivePageSize,
+          keyword: apiKeyword,
+        };
+        if (selectedLevel && secondTabMode === 'level') {
+          params.maternityNurseLevel = selectedLevel;
+        }
+        if (apiJobType) {
+          params.jobType = apiJobType;
+          console.log('🔍 职位类型筛选:', apiJobType);
+        }
+
+        const resp = await resumeService.getResumeList(params);
+        console.log('📋 简历列表API响应:', resp);
+        console.log('📋 请求参数:', params);
+
+        if (!resp.success) {
+          console.error('📋 简历列表API失败:', resp.message);
+          wx.showToast({ title: resp.message || '加载失败', icon: 'none' });
+          this.setData({ loading: false });
+          return;
+        }
+        rawList = (resp.data && resp.data.items) || [];
+        // 优先用 API 的 total/totalPages，兜底用条数比较
+        const singleTotal = resp.data?.total || 0;
+        const singleTotalPages = resp.data?.totalPages || 0;
+        hasMoreFromAPI = (singleTotal > 0 && page < singleTotalPages) || rawList.length >= effectivePageSize;
       }
 
-      const resp = await resumeService.getResumeList(params);
-
-      console.log('📋 简历列表API响应:', resp);
-      console.log('📋 请求参数:', params);
+      // 统一走下面的处理流程（兼容原有 if(resp.success) 块）
+      const fakeResp = { success: true, data: { items: rawList, total: 0 } };
+      const resp = fakeResp;
 
       // CRM API 响应格式: { success: true, data: { items: [...] }, message: "..." }
       if (resp.success) {
@@ -657,11 +716,15 @@ Page({
 
         console.log('📋 共获取', formattedList.length, '条简历');
 
+        // hasMore：大类并行流用 hasMoreFromAPI，单流用 rawListLength
+        const hasMore = isCategoryFilter
+          ? hasMoreFromAPI
+          : rawListLength >= effectivePageSize;
+
         this.setData({
           resumes: this.data.resumes.concat(formattedList),
           page: page + 1,
-          // 是否还有更多：与实际请求的 pageSize 比较（大类筛选时用 effectivePageSize）
-          hasMore: rawListLength === effectivePageSize,
+          hasMore,
           // 开启筛选时不使用服务端 total（通常是未筛选的总数），让 header 回退到 resumes.length
           total: (selectedLevel || selectedSubType) ? 0 : (resp.data.total || this.data.resumes.length + formattedList.length)
         });
@@ -671,10 +734,7 @@ Page({
         setTimeout(() => {
           this.preloadAllVideos();
         }, 300);
-      } else {
-        console.error('📋 简历列表API失败:', resp.message);
-        wx.showToast({ title: resp.message || "加载失败", icon: "none" });
-      }
+      }  // end if (resp.success)
     } catch (e) {
       console.error('📋 加载简历列表异常:', e);
       wx.showToast({ title: e.message || "加载失败", icon: "none" });

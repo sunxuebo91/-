@@ -1,0 +1,271 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx 24rpx 200rpx;
+  box-sizing: border-box;
+}
+
+/* 顶部介绍卡片 */
+.intro-card {
+  background: linear-gradient(135deg, #8766F3, #a48ef5);
+  border-radius: 20rpx;
+  padding: 28rpx 40rpx;
+  text-align: center;
+  margin-bottom: 24rpx;
+  color: #fff;
+}
+.intro-icon { font-size: 52rpx; margin-bottom: 10rpx; }
+.intro-title { font-size: 32rpx; font-weight: 700; }
+
+/* 表单卡片 */
+.form-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx 32rpx 8rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+.form-section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 28rpx;
+}
+.form-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 0;
+  height: 100rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.form-item.last { border-bottom: none; }
+.form-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  min-width: 130rpx;
+  flex-shrink: 0;
+}
+.required { color: #e74c3c; }
+.form-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #222;
+  height: 100rpx;
+  line-height: 100rpx;
+  text-align: right;
+}
+.form-input::placeholder { color: #c0c0c0; }
+
+/* 规则卡片 */
+.rule-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+.rule-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+.rule-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.8;
+  margin-bottom: 8rpx;
+}
+
+/* 手机号只读展示（已授权） */
+.phone-readonly-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10rpx;
+}
+.phone-readonly-val {
+  font-size: 28rpx;
+  color: #222;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+.phone-lock-icon { font-size: 26rpx; }
+
+/* 未授权时的提示文字（右对齐，与输入框对齐） */
+.phone-auth-hint {
+  flex: 1;
+  font-size: 26rpx;
+  color: #c0c0c0;
+  text-align: right;
+  line-height: 1.4;
+}
+
+/* 协议勾选行 */
+.agreement-row {
+  display: flex;
+  align-items: center;
+  padding: 0 8rpx 32rpx;
+  gap: 16rpx;
+}
+/* 自定义勾选框（避免原生 checkbox 拦截事件） */
+.custom-checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #ccc;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.checkbox-checked {
+  background: #8766F3;
+  border-color: #8766F3;
+}
+.check-mark {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+}
+.agree-text { font-size: 26rpx; color: #666; }
+
+/* 加载占位 */
+.loading-wrap { display: flex; align-items: center; justify-content: center; height: 400rpx; }
+.loading-text { font-size: 28rpx; color: #999; }
+
+/* 状态卡片（审核中 / 已拒绝） */
+.status-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 60rpx 40rpx 48rpx;
+  margin-bottom: 24rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+.status-icon-big { font-size: 80rpx; margin-bottom: 24rpx; }
+.status-title { font-size: 34rpx; font-weight: 700; color: #333; margin-bottom: 16rpx; }
+.status-desc { font-size: 26rpx; color: #888; line-height: 1.7; }
+.status-info-card {
+  background: #f8f6ff;
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  margin-top: 32rpx;
+  text-align: left;
+}
+.status-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #ede9ff;
+  font-size: 28rpx;
+}
+.status-info-row:last-child { border-bottom: none; }
+.status-info-label { color: #888; }
+.status-info-val { color: #333; font-weight: 500; }
+.reject-reason {
+  background: #fff5f5;
+  border-radius: 12rpx;
+  padding: 20rpx 28rpx;
+  margin: 24rpx 0 16rpx;
+  font-size: 26rpx;
+  color: #e74c3c;
+  text-align: left;
+  line-height: 1.6;
+}
+
+/* 底部来源员工信息栏 */
+.bottom-contact {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 28rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 252, 247, 0.98);
+  border-top: 1rpx solid #efe4d6;
+  box-shadow: 0 -8rpx 24rpx rgba(103, 82, 57, 0.08);
+  z-index: 101;
+}
+.advisor-mini {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+}
+.advisor-mini-avatar {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 38rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #a48ef5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 27rpx;
+  font-weight: bold;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.advisor-avatar-img { width: 100%; height: 100%; }
+.advisor-mini-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.advisor-mini-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+.advisor-mini-company {
+  font-size: 22rpx;
+  color: #999;
+}
+.contact-btn {
+  flex-shrink: 0;
+  height: 68rpx;
+  line-height: 68rpx;
+  padding: 0 32rpx;
+  background: #8766F3;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 34rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 提交按钮（有顾问栏时上移，避免遮挡） */
+.btn-wrap {
+  position: fixed;
+  bottom: calc(120rpx + env(safe-area-inset-bottom)); left: 0; right: 0;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 12rpx rgba(0,0,0,0.06);
+}
+.submit-btn {
+  width: 100%;
+  height: 96rpx;
+  background: #8766F3;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  border: none;
+  /* 用 flexbox 保证文字绝对居中，line-height 在 button 组件上不可靠 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+.btn-disabled { background: #c4b8f5 !important; }

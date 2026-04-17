@@ -1,0 +1,90 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx 24rpx 160rpx;
+  box-sizing: border-box;
+}
+
+/* 统计卡片 */
+.stats-card {
+  background: linear-gradient(135deg, #8766F3, #a48ef5);
+  border-radius: 20rpx;
+  padding: 36rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 28rpx;
+}
+.stat-item { display: flex; flex-direction: column; align-items: center; }
+.stat-num { font-size: 44rpx; font-weight: 700; color: #fff; }
+.stat-num.green { color: #b8f5c8; }
+.stat-label { font-size: 24rpx; color: rgba(255,255,255,0.8); margin-top: 8rpx; }
+.stat-divider { width: 1rpx; height: 60rpx; background: rgba(255,255,255,0.3); }
+
+/* 空状态 */
+.state-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  margin-top: 120rpx;
+}
+.state-icon { font-size: 80rpx; margin-bottom: 24rpx; }
+.state-text { font-size: 32rpx; color: #555; font-weight: 500; }
+.state-sub { font-size: 26rpx; color: #999; margin-top: 12rpx; }
+
+/* 推荐卡片 */
+.referral-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+.auntie-name { font-size: 34rpx; font-weight: 600; color: #222; }
+
+/* 状态标签 */
+.status-tag {
+  font-size: 22rpx; padding: 6rpx 18rpx;
+  border-radius: 20rpx; font-weight: 500;
+}
+.status-pending         { background: #f5f5f5; color: #888; }
+.status-pending_review  { background: #f5f5f5; color: #888; }
+.status-rejected        { background: #fef0f0; color: #e74c3c; }
+.status-following_up    { background: #eff6ff; color: #3b82f6; }
+.status-contracted      { background: #f0fdf4; color: #16a34a; }
+.status-onboarded       { background: #fffbeb; color: #d97706; }
+.status-reward_pending  { background: #fff7ed; color: #f97316; }
+.status-reward_paid     { background: #dcfce7; color: #15803d; }
+.status-invalid         { background: #fef0f0; color: #e74c3c; }
+
+/* 卡片中部 */
+.card-body { margin-bottom: 20rpx; }
+.info-row { display: flex; align-items: center; margin-bottom: 10rpx; }
+.info-label { font-size: 26rpx; color: #999; width: 130rpx; }
+.info-value { font-size: 28rpx; color: #333; }
+.reward-row { margin-top: 4rpx; }
+.reward-val { color: #22c55e; font-weight: 600; font-size: 30rpx; }
+
+/* 卡片底部 */
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1rpx solid #f5f5f5; padding-top: 16rpx;
+}
+.submit-time { font-size: 24rpx; color: #bbb; }
+.arrow { font-size: 40rpx; color: #ccc; }
+
+/* FAB 悬浮按钮 */
+.fab {
+  position: fixed;
+  bottom: 48rpx; right: 40rpx;
+  background: #8766F3;
+  border-radius: 60rpx;
+  padding: 22rpx 36rpx;
+  display: flex; align-items: center; gap: 8rpx;
+  box-shadow: 0 8rpx 24rpx rgba(135,102,243,0.45);
+}
+.fab-icon { font-size: 40rpx; color: #fff; font-weight: 300; line-height: 1; }
+.fab-text { font-size: 28rpx; color: #fff; font-weight: 600; }

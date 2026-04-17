@@ -44,6 +44,28 @@
         </view>
         <text class="service-label">宝贝日记</text>
       </view>
+
+      <!-- 推荐有礼：仅推荐官（referrer / 推荐官）可见；员工/管理员显示各自管理入口 -->
+      <view class="service-item" bindtap="goReferral"
+        wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.role === 'staff' || me.role === 'admin'}}">
+        <view class="service-icon-wrap service-icon-referral">
+          <!-- 角标：员工/管理员有待处理时显示 -->
+          <view class="referral-badge" wx:if="{{referralBadge > 0}}">
+            <text class="referral-badge-text">{{referralBadge > 99 ? '99+' : referralBadge}}</text>
+          </view>
+          <image class="service-icon-img" src="/images/icons/referral.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">{{referralLabel}}</text>
+      </view>
+
+      <!-- 推荐海报：仅员工（招生老师、派单老师）和管理员可见；兼容同时身为推荐官的员工（role='referrer' 但 isStaff=true） -->
+      <view class="service-item" bindtap="goPoster"
+        wx:if="{{me.role === 'staff' || me.role === 'admin' || me.isStaff}}">
+        <view class="service-icon-wrap service-icon-poster">
+          <image class="service-icon-img" src="/images/icons/poster.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">推荐海报</text>
+      </view>
     </view>
   </view>
 

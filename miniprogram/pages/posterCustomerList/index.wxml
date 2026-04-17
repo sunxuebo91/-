@@ -1,0 +1,93 @@
+<view class="page">
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-inner">
+      <text class="search-icon">🔍</text>
+      <input class="search-input"
+             placeholder="搜索姓名或手机号"
+             value="{{keyword}}"
+             bindinput="onSearch"
+             confirm-type="search"/>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading && list.length === 0}}" class="state-wrap">
+    <view class="state-icon">⏳</view>
+    <view class="state-text">加载中...</view>
+  </view>
+
+  <!-- 空状态 / 未授权 -->
+  <view wx:elif="{{!loading && list.length === 0}}" class="state-wrap">
+    <view class="state-icon">👥</view>
+    <block wx:if="{{loadError === 'auth'}}">
+      <view class="state-text">登录状态已过期</view>
+      <view class="state-sub">请退出后重新登录小程序</view>
+    </block>
+    <block wx:else>
+      <view class="state-text">暂无客户</view>
+      <view class="state-sub">没有找到匹配的客户记录</view>
+    </block>
+  </view>
+
+  <!-- 客户列表 -->
+  <view wx:else class="list">
+    <view class="customer-card"
+          wx:for="{{list}}"
+          wx:key="id"
+          bindtap="onTapCustomer"
+          data-id="{{item.id}}"
+          data-item="{{item}}">
+
+      <!-- 卡片顶部：姓名 + 状态 -->
+      <view class="card-header">
+        <view class="name-row">
+          <text class="customer-name">{{item.name || '未知客户'}}</text>
+          <text class="customer-phone">{{item.phoneMasked}}</text>
+        </view>
+        <view class="status-badge status-{{item.statusClass}}">
+          {{item.contractStatus || '未知'}}
+        </view>
+      </view>
+
+      <!-- 卡片内容：需求信息 2×2 网格 -->
+      <view class="card-body">
+        <view class="info-grid">
+          <view class="info-cell" wx:if="{{item.needs.orderType}}">
+            <text class="info-label">服务类型</text>
+            <text class="info-value">{{item.needs.orderType}}</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.needs.salary}}">
+            <text class="info-label">期望薪资</text>
+            <text class="info-value salary">¥{{item.needs.salary}}/月</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.needs.serviceAddress}}">
+            <text class="info-label">服务地址</text>
+            <text class="info-value ellipsis">{{item.needs.serviceAddress}}</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.needs.onboardingTime}}">
+            <text class="info-label">上户时间</text>
+            <text class="info-value">{{item.needs.onboardingTime}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 卡片底部 -->
+      <view class="card-footer">
+        <text class="poster-hint">📋 生成推荐海报</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMore">
+      <text wx:if="{{loadingMore}}">加载中...</text>
+      <text wx:else>加载更多</text>
+    </view>
+    <view class="no-more" wx:if="{{!hasMore && list.length > 0}}">
+      已加载全部 {{total}} 位客户
+    </view>
+  </view>
+
+</view>

@@ -1,0 +1,130 @@
+<view class="page">
+
+  <!-- 加载中占位 -->
+  <view wx:if="{{statusLoading}}" class="loading-wrap">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <!-- ===== 已提交/审核状态视图 ===== -->
+  <block wx:elif="{{referrerStatus === 'pending_approval' || referrerStatus === 'rejected'}}">
+
+    <!-- 顶部说明卡片 -->
+    <view class="intro-card">
+      <view class="intro-icon">🎁</view>
+      <view class="intro-title">推荐阿姨赚返费</view>
+    </view>
+
+    <!-- 审核中 -->
+    <view wx:if="{{referrerStatus === 'pending_approval'}}" class="status-card">
+      <view class="status-icon-big">🕐</view>
+      <view class="status-title">申请审核中</view>
+      <view class="status-desc">管理员将在1~3个工作日内审核您的申请，审核结果将通过小程序消息通知您</view>
+      <view class="status-info-card">
+        <view class="status-info-row">
+          <text class="status-info-label">姓名</text>
+          <text class="status-info-val">{{referrerInfo.name}}</text>
+        </view>
+        <view class="status-info-row">
+          <text class="status-info-label">手机号</text>
+          <text class="status-info-val">{{referrerInfo.phone}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 已拒绝 -->
+    <view wx:elif="{{referrerStatus === 'rejected'}}" class="status-card">
+      <view class="status-icon-big">❌</view>
+      <view class="status-title">申请未通过</view>
+      <view class="reject-reason">{{referrerInfo.rejectedReason || '暂无说明，请联系客服'}}</view>
+      <view class="status-desc">如有疑问请联系客服</view>
+    </view>
+
+  </block>
+
+  <!-- ===== 申请表单视图（无记录 or 需重新申请） ===== -->
+  <block wx:else>
+
+  <!-- 顶部说明卡片 -->
+  <view class="intro-card">
+    <view class="intro-icon">🎁</view>
+    <view class="intro-title">推荐阿姨赚返费</view>
+  </view>
+
+  <!-- 申请表单 -->
+  <view class="form-card">
+    <view class="form-section-title">填写您的信息</view>
+
+    <!-- 姓名：使用微信 type="nickname" 可唤起微信昵称填写 -->
+    <view class="form-item">
+      <text class="form-label">姓名 <text class="required">*</text></text>
+      <input type="nickname" class="form-input" placeholder="请输入您的姓名"
+             value="{{name}}" bindinput="onInput" data-field="name"/>
+    </view>
+
+    <!-- 手机号：已授权才显示，未授权时隐藏此行（通过下方按钮授权）-->
+    <view class="form-item last" wx:if="{{maskedPhone}}">
+      <text class="form-label">手机号</text>
+      <view class="phone-readonly-row">
+        <text class="phone-readonly-val">{{maskedPhone}}</text>
+        <text class="phone-lock-icon">🔒</text>
+      </view>
+    </view>
+
+
+  </view>
+
+  <!-- 规则说明 -->
+  <view class="rule-card">
+    <view class="rule-title">📋 返费规则</view>
+    <view class="rule-item">· 推荐的阿姨审核通过、签单上户后计算</view>
+    <view class="rule-item">· 上户满30天后由公司进行打款</view>
+    <view class="rule-item">· 同一位阿姨不可重复推荐</view>
+    <view class="rule-item">· 申请成为推荐官，通过后即可开始推荐</view>
+  </view>
+
+  <!-- 协议勾选 -->
+  <view class="agreement-row" bindtap="toggleAgree">
+    <view class="custom-checkbox {{agreed ? 'checkbox-checked' : ''}}">
+      <text wx:if="{{agreed}}" class="check-mark">✓</text>
+    </view>
+    <text class="agree-text">我已阅读并同意以上返费规则</text>
+  </view>
+
+  <!-- 提交按钮区域 -->
+  <view class="btn-wrap">
+    <!-- 已有手机号（已登录）：普通提交 -->
+    <button wx:if="{{existingPhone}}"
+            class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+            bindtap="onSubmitDirect"
+            disabled="{{submitting}}">
+      {{submitting ? '提交中...' : '提交申请'}}
+    </button>
+
+    <!-- 未有手机号：必须微信授权手机号 -->
+    <button wx:else
+            class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+            open-type="getPhoneNumber"
+            bindgetphonenumber="onGetPhoneNumber"
+            disabled="{{submitting}}">
+      {{submitting ? '提交中...' : '授权并提交申请'}}
+    </button>
+  </view>
+
+  </block><!-- end 表单视图 -->
+
+  <!-- 底部来源员工信息栏 -->
+  <view wx:if="{{sharerInfo}}" class="bottom-contact">
+    <view class="advisor-mini">
+      <view class="advisor-mini-avatar">
+        <image wx:if="{{sharerInfo.avatar}}" src="{{sharerInfo.avatar}}" mode="aspectFill" class="advisor-avatar-img" />
+        <text wx:else>{{sharerInfo.name ? sharerInfo.name.charAt(0) : '顾'}}</text>
+      </view>
+      <view class="advisor-mini-info">
+        <view class="advisor-mini-name">{{sharerInfo.name || '安得褓贝顾问'}}</view>
+        <view class="advisor-mini-company">{{sharerInfo.company || '安得褓贝'}}</view>
+      </view>
+    </view>
+    <button class="contact-btn" bindtap="onContactAdvisor">联系顾问</button>
+  </view>
+
+</view>

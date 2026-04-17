@@ -1,0 +1,9 @@
+{
+  "name": "baobei",
+  "version": "1.0.0",
+  "description": "安得褓贝 - 客户列表云函数代理",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,162 @@
+<view class="page" wx:if="{{!loading}}">
+
+  <!-- 状态头部 -->
+  <view class="status-header">
+    <view class="status-tag status-{{detail.status}}">{{detail.statusText}}</view>
+    <view class="auntie-name">{{detail.name}}</view>
+    <view class="service-type">{{detail.serviceTypeText}}</view>
+  </view>
+
+  <!-- 审核结果（审核未通过时显示原因）-->
+  <view class="section-card" wx:if="{{detail.isRejected}}">
+    <view class="section-title">审核结果</view>
+    <view class="reject-reason">
+      <text class="reject-label">拒绝原因：</text>
+      <text class="reject-text">{{detail.reviewNote || '暂无说明，请联系顾问'}}</text>
+    </view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="section-card">
+    <view class="section-title">推荐信息</view>
+    <view class="info-row"><text class="label">服务类型</text><text class="value">{{detail.serviceTypeText}}</text></view>
+    <view class="info-row" wx:if="{{detail.maskedPhone}}">
+      <text class="label">手机号</text><text class="value">{{detail.maskedPhone}}</text>
+    </view>
+    <view class="info-row" wx:if="{{detail.experience}}">
+      <text class="label">从业经验</text><text class="value">{{detail.experience}}</text>
+    </view>
+    <view class="info-row" wx:if="{{detail.remark}}">
+      <text class="label">备注</text><text class="value">{{detail.remark}}</text>
+    </view>
+    <view class="info-row" wx:if="{{detail.sourceStaffName}}">
+      <text class="label">推荐归属人</text><text class="value">{{detail.sourceStaffName}}</text>
+    </view>
+    <view class="info-row last"><text class="label">提交时间</text><text class="value">{{detail.createdAtFmt}}</text></view>
+  </view>
+
+  <!-- 签单信息（已签单及以后） -->
+  <view class="section-card" wx:if="{{detail.isContracted}}">
+    <view class="section-title">签单信息</view>
+    <view class="info-row"><text class="label">签单时间</text><text class="value">{{detail.contractedAtFmt}}</text></view>
+    <view class="info-row" wx:if="{{detail.onboardedAtFmt}}">
+      <text class="label">上户时间</text><text class="value">{{detail.onboardedAtFmt}}</text>
+    </view>
+    <view class="info-row" wx:if="{{detail.onboardedDays !== null}}">
+      <text class="label">上户已满</text>
+      <text class="value {{detail.onboardedDays >= 30 ? 'green' : ''}}">
+        {{detail.onboardedDays}}天 {{detail.onboardedDays >= 30 ? '✅ 已满30天' : '（还需' + (30 - detail.onboardedDays) + '天）'}}
+      </text>
+    </view>
+    <view class="info-row" wx:if="{{detail.serviceFee}}">
+      <text class="label">客户服务费</text><text class="value">¥{{detail.serviceFee}}</text>
+    </view>
+    <view class="info-row last" wx:if="{{detail.rewardAmount}}">
+      <text class="label">预计返费</text><text class="value reward-val">¥{{detail.rewardAmount}}</text>
+    </view>
+  </view>
+
+  <!-- 返费信息（返费阶段） -->
+  <view class="section-card" wx:if="{{detail.isContracted}}">
+    <view class="section-title">返费进度</view>
+    <view class="info-row"><text class="label">预计到账</text><text class="value">{{detail.rewardExpectedAtFmt || '签单满30天后'}}</text></view>
+    <view class="info-row last">
+      <text class="label">到账状态</text>
+      <text class="value {{detail.status === 'reward_paid' ? 'green' : detail.status === 'reward_approved' ? 'blue' : 'orange'}}">
+        {{detail.status === 'reward_paid' ? '已打款 ' + detail.rewardPaidAtFmt
+          : detail.status === 'reward_approved' ? '审核通过，待打款'
+          : detail.status === 'reward_pending' ? '审核中'
+          : '等待中'}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 合同记录（签单后由 CRM 返回，未签单时显示占位） -->
+  <view class="section-card">
+    <view class="section-title">合同记录</view>
+    <block wx:if="{{detail.contract.orderNumber}}">
+      <view class="info-row">
+        <text class="label">订单编号</text><text class="value contract-num">{{detail.contract.orderNumber}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.orderType}}">
+        <text class="label">订单类型</text><text class="value">{{detail.contract.orderType}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.serviceFee !== ''}}">
+        <text class="label">服务费金额</text><text class="value fee-val">¥{{detail.contract.serviceFee}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.onboardDate}}">
+        <text class="label">上户时间</text><text class="value">{{detail.contract.onboardDate}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.nannySalary !== ''}}">
+        <text class="label">阿姨工资</text><text class="value">¥{{detail.contract.nannySalary}}/月</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.contractPeriod}}">
+        <text class="label">合同周期</text><text class="value">{{detail.contract.contractPeriod}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contract.rewardAmount !== ''}}">
+        <text class="label">预计返费</text><text class="value reward-val">¥{{detail.contract.rewardAmount}}</text>
+      </view>
+      <view class="info-row last" wx:if="{{detail.contract.createdByName}}">
+        <text class="label">合同创建人</text><text class="value">{{detail.contract.createdByName}}</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="info-row last">
+        <text class="label contract-empty">暂无合同记录</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- 底部申请结算按钮（已上户状态） -->
+  <view class="bottom-bar" wx:if="{{detail.status === 'onboarded'}}">
+    <view class="settle-btn" bindtap="onOpenSettlement">申请结算</view>
+  </view>
+
+</view>
+
+<!-- 申请结算弹窗 -->
+<view class="settle-mask" wx:if="{{settlementVisible}}" bindtap="onCloseSettlement"></view>
+<view class="settle-sheet" wx:if="{{settlementVisible}}">
+  <view class="settle-sheet-title">申请结算</view>
+
+  <view class="settle-field">
+    <text class="settle-label">收款姓名 *</text>
+    <input class="settle-input" value="{{settlementForm.payeeName}}" placeholder="请输入真实姓名"
+           data-field="payeeName" bindinput="onSettlementInput"/>
+  </view>
+  <view class="settle-field">
+    <text class="settle-label">收款手机号 *</text>
+    <input class="settle-input" type="number" value="{{settlementForm.payeePhone}}" placeholder="请输入手机号"
+           data-field="payeePhone" bindinput="onSettlementInput"/>
+  </view>
+  <view class="settle-field">
+    <text class="settle-label">银行卡号 *</text>
+    <input class="settle-input" type="number" value="{{settlementForm.bankCard}}" placeholder="请输入银行卡号"
+           data-field="bankCard" bindinput="onSettlementInput"/>
+  </view>
+  <view class="settle-field">
+    <text class="settle-label">开户行 *</text>
+    <input class="settle-input" value="{{settlementForm.bankName}}" placeholder="如：中国工商银行北京分行"
+           data-field="bankName" bindinput="onSettlementInput"/>
+  </view>
+  <view class="settle-field">
+    <text class="settle-label">结算金额</text>
+    <view class="settle-amount-row">
+      <text class="settle-amount">¥{{detail.rewardAmount || detail.contract.rewardAmount || '待确认'}}</text>
+      <text class="settle-amount-tip">由系统确定，不可修改</text>
+    </view>
+  </view>
+
+  <view class="settle-actions">
+    <view class="settle-cancel" bindtap="onCloseSettlement">取消</view>
+    <view class="settle-confirm {{settlementSubmitting ? 'disabled' : ''}}" bindtap="onSubmitSettlement">
+      {{settlementSubmitting ? '提交中...' : '确认提交'}}
+    </view>
+  </view>
+</view>
+
+<!-- 加载中 -->
+<view wx:if="{{loading}}" class="loading-wrap">
+  <view class="loading-icon">⏳</view>
+  <view class="loading-text">加载中...</view>
+</view>

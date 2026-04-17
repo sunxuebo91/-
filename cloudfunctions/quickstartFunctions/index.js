@@ -118,6 +118,36 @@ const getHomeMiniCode = async () => {
   return { success: true, fileID: upload.fileID };
 };
 
+// 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）
+// 发布正式版后扫码即可跳转到推荐人注册页
+const getReferrerRegisterMiniCode = async (event) => {
+  const staffId    = (event.staffId    || '').toString();
+  const staffPhone = (event.staffPhone || '').toString();
+  const customerId = (event.customerId || '').toString();  // 关联客户订单 ID
+
+  const basePath = 'pages/referrerRegister/index';
+  const params = [];
+  if (staffId)    params.push(`staffId=${encodeURIComponent(staffId)}`);
+  if (staffPhone) params.push(`p=${encodeURIComponent(staffPhone)}`);
+  if (customerId) params.push(`cid=${encodeURIComponent(customerId)}`);  // 携带订单关联
+  const fullPath = params.length > 0 ? `${basePath}?${params.join('&')}` : basePath;
+  const path = fullPath.length <= 128 ? fullPath : basePath;
+
+  const resp = await cloud.openapi.wxacode.get({
+    path,
+    width:      200,
+    is_hyaline: true,
+  });
+
+  // 每个客户对应独立的 QR 文件，避免多客户共享同一张码
+  const staffKey  = staffPhone.replace(/\D/g, '') || staffId.slice(0, 16) || 'default';
+  const cidKey    = customerId ? `-${customerId.slice(0, 12)}` : '';
+  const cacheKey  = `${staffKey}${cidKey}`;
+  const cloudPath = `referrer-qrcodes/referrer-${cacheKey}.png`;
+  const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
+  return { success: true, fileID: upload.fileID };
+};
+
 // 创建集合
 const createCollection = async () => {
   try {
@@ -274,5 +304,7 @@ exports.main = async (event, context) => {
       return await getResumeMiniCode(event);
     case "getHomeMiniCode":
       return await getHomeMiniCode();
+    case "getReferrerRegisterMiniCode":
+      return await getReferrerRegisterMiniCode(event);
   }
 };

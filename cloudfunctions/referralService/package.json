@@ -1,0 +1,11 @@
+{
+  "name": "referralService",
+  "version": "1.0.0",
+  "description": "推荐奖励服务",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}
