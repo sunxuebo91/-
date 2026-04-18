@@ -45,7 +45,7 @@ Page({
     detail: {},
     // 申请结算弹窗
     settlementVisible:    false,
-    settlementForm:       { payeeName: '', payeePhone: '', bankCard: '', bankName: '' },
+    settlementForm:       { idCard: '', payeeName: '', payeePhone: '', bankCard: '', bankName: '' },
     settlementSubmitting: false,
   },
 
@@ -126,6 +126,7 @@ Page({
       this.setData({
         settlementVisible: true,
         settlementForm: {
+          idCard:     info.idCard || '',
           payeeName:  info.name  || '',
           payeePhone: info.phone || '',
           bankCard:   '',
@@ -150,9 +151,11 @@ Page({
   async onSubmitSettlement() {
     if (this.data.settlementSubmitting) return;
     const { settlementForm, detail } = this.data;
-    const { payeeName, payeePhone, bankCard, bankName } = settlementForm;
+    const { idCard, payeeName, payeePhone, bankCard, bankName } = settlementForm;
 
     if (!payeeName.trim())  return wx.showToast({ title: '请填写收款姓名', icon: 'none' });
+    if (!idCard.trim())     return wx.showToast({ title: '请填写身份证号', icon: 'none' });
+    if (!/^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/.test(idCard.trim())) return wx.showToast({ title: '身份证号格式不正确', icon: 'none' });
     if (!payeePhone.trim()) return wx.showToast({ title: '请填写收款手机号', icon: 'none' });
     if (!/^1[3-9]\d{9}$/.test(payeePhone)) return wx.showToast({ title: '手机号格式不正确', icon: 'none' });
     if (!bankCard.trim())   return wx.showToast({ title: '请填写银行卡号', icon: 'none' });
@@ -167,6 +170,7 @@ Page({
           action:       'applySettlement',
           referralId:   detail._id,
           crmId:        detail.crmId || '',
+          idCard:       idCard.trim(),
           payeeName:    payeeName.trim(),
           payeePhone:   payeePhone.trim(),
           bankCard:     bankCard.trim(),

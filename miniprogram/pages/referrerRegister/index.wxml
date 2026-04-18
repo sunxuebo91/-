@@ -77,8 +77,9 @@
   <view class="rule-card">
     <view class="rule-title">📋 返费规则</view>
     <view class="rule-item">· 推荐的阿姨审核通过、签单上户后计算</view>
-    <view class="rule-item">· 上户满30天后由公司进行打款</view>
-    <view class="rule-item">· 同一位阿姨不可重复推荐</view>
+    <view class="rule-item">· 返费金额为实际服务费金额的10%</view>
+    <view class="rule-item">· 任意一个订单上户满30天后由公司进行打款</view>
+    <view class="rule-item">· 同一位阿姨不可重复推荐，且只享受一次返费</view>
     <view class="rule-item">· 申请成为推荐官，通过后即可开始推荐</view>
   </view>
 
@@ -94,19 +95,19 @@
   <view class="btn-wrap">
     <!-- 已有手机号（已登录）：普通提交 -->
     <button wx:if="{{existingPhone}}"
-            class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+            class="submit-btn {{(submitting || submitted) ? 'btn-disabled' : ''}}"
             bindtap="onSubmitDirect"
-            disabled="{{submitting}}">
-      {{submitting ? '提交中...' : '提交申请'}}
+            disabled="{{submitting || submitted}}">
+      {{submitted ? '审批中' : (submitting ? '提交中...' : '提交申请')}}
     </button>
 
     <!-- 未有手机号：必须微信授权手机号 -->
     <button wx:else
-            class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+            class="submit-btn {{(submitting || submitted) ? 'btn-disabled' : ''}}"
             open-type="getPhoneNumber"
             bindgetphonenumber="onGetPhoneNumber"
-            disabled="{{submitting}}">
-      {{submitting ? '提交中...' : '授权并提交申请'}}
+            disabled="{{submitting || submitted}}">
+      {{submitted ? '审批中' : (submitting ? '提交中...' : '授权并提交申请')}}
     </button>
   </view>
 

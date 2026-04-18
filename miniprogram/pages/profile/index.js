@@ -34,6 +34,19 @@ Page({
     this.checkPendingContact();
   },
 
+  // 下拉刷新：重新拉取用户信息和登录状态
+  async onPullDownRefresh() {
+    try {
+      await this.loadMe();
+      this.checkSubscribeBanner();
+      this.refreshLoginStatus();
+    } catch (e) {
+      console.warn('下拉刷新失败:', e);
+    } finally {
+      wx.stopPullDownRefresh();
+    }
+  },
+
 
   async loadMe() {
     try {
@@ -109,6 +122,11 @@ Page({
       const role = mergedMe.role || 'customer';
       this.setData({ referralLabel: REFERRAL_LABELS[role] || '推荐有礼' });
       this.loadReferralBadge(role);
+
+      // 兼职推荐官判定：同一 openid 可能既是员工又是已审批通过的推荐官，
+      // CRM role 字段按优先级只返回最高角色（staff 优于 referrer），
+      // 这里用 getReferrerInfo 兜底识别，保证员工身份的推荐官也能看到推荐入口
+      this.loadReferrerFlag();
 
       // 有手机号就调 staff/info，静默刷新员工姓名/头像
       if (phone) {
@@ -211,7 +229,12 @@ Page({
   },
 
   // 推荐入口导航：按角色跳转不同页面
+  // 兼职推荐官（me.isReferrer=true）优先走"我的推荐"，避免员工身份覆盖推荐官入口
   goReferral() {
+    if (this.data.me.isReferrer) {
+      wx.navigateTo({ url: '/pages/myReferrals/index' });
+      return;
+    }
     const role = this.data.me.role || 'customer';
     const routes = {
       'referrer': '/pages/myReferrals/index',          // 推荐官：我的推荐记录
@@ -224,6 +247,24 @@ Page({
       wx.navigateTo({ url });
     }
     // customer 角色按钮已隐藏，此处不再跳转注册页
+  },
+
+  // 查询推荐官身份：识别兼职推荐官（如员工同时通过推荐官审核），
+  // approvalStatus=approved 时置 me.isReferrer 并将入口文案改为"推荐有礼"
+  async loadReferrerFlag() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'referralService',
+        data: { action: 'getReferrerInfo' },
+      });
+      const info = res.result && res.result.data;
+      const isReferrer = !!(info && info.approvalStatus === 'approved');
+      const update = { 'me.isReferrer': isReferrer };
+      if (isReferrer) update.referralLabel = '推荐有礼';
+      this.setData(update);
+    } catch (e) {
+      console.warn('⚠️ 推荐官身份校验失败:', e);
+    }
   },
 
   // 异步加载推荐角标数量（员工/管理员专用，不阻塞主流程）

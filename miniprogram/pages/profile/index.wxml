@@ -32,7 +32,7 @@
   <view class="section service-section">
     <view class="section-title">我的服务</view>
     <view class="service-grid">
-      <view class="service-item" bindtap="goMyOrders" wx:if="{{me.role !== 'staff' && me.phone}}">
+      <view class="service-item" bindtap="goMyOrders" wx:if="{{me.phone}}">
         <view class="service-icon-wrap service-icon-order">
           <image class="service-icon-img" src="/images/icons/my-orders.svg" mode="aspectFit"/>
         </view>
@@ -45,14 +45,10 @@
         <text class="service-label">宝贝日记</text>
       </view>
 
-      <!-- 推荐有礼：仅推荐官（referrer / 推荐官）可见；员工/管理员显示各自管理入口 -->
+      <!-- 推荐有礼：推荐官（referrer / 推荐官）或员工兼职推荐官（isReferrer）可见；员工/管理员审核与管理入口暂不开放 -->
       <view class="service-item" bindtap="goReferral"
-        wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.role === 'staff' || me.role === 'admin'}}">
+        wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.isReferrer}}">
         <view class="service-icon-wrap service-icon-referral">
-          <!-- 角标：员工/管理员有待处理时显示 -->
-          <view class="referral-badge" wx:if="{{referralBadge > 0}}">
-            <text class="referral-badge-text">{{referralBadge > 99 ? '99+' : referralBadge}}</text>
-          </view>
           <image class="service-icon-img" src="/images/icons/referral.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">{{referralLabel}}</text>

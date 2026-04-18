@@ -57,6 +57,7 @@
 .status-contracted      { background: #f0fdf4; color: #16a34a; }
 .status-onboarded       { background: #fffbeb; color: #d97706; }
 .status-reward_pending  { background: #fff7ed; color: #f97316; }
+.status-reward_approved { background: #e0f2fe; color: #0369a1; }
 .status-reward_paid     { background: #dcfce7; color: #15803d; }
 .status-invalid         { background: #fef0f0; color: #e74c3c; }
 

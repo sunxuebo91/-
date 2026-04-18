@@ -3,6 +3,7 @@ Page({
     name: '',
     agreed: false,
     submitting: false,
+    submitted: false,      // 已成功提交申请（按钮文案改为"审批中"并禁用）
     sourceStaffId: '',
     sourceCustomerId: '',  // 来源客户订单 ID（扫海报时携带）
     existingPhone: '',     // 已登录用户的手机号
@@ -211,13 +212,16 @@ Page({
       if (res.result && res.result.success) {
         wx.removeStorageSync('referral_source_staff_id');
         wx.removeStorageSync('referral_source_customer_id');
+        // 成功提交后按钮切换为"审批中"并保持禁用
+        this.setData({ submitting: false, submitted: true });
         wx.showModal({
           title: '申请已提交',
           content: '请等待审核，审核结果将通过消息通知您',
           showCancel: false,
           confirmText: '确定',
           success() {
-            wx.navigateBack({ delta: 1 });
+            // 回到小程序首页 tab
+            wx.switchTab({ url: '/pages/home/index' });
           },
         });
       } else {
