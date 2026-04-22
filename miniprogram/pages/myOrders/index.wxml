@@ -1,62 +1,163 @@
 <view class="page">
-  <!-- 加载中 -->
-  <view wx:if="{{loading}}" class="state-wrap">
-    <view class="state-icon">⏳</view>
-    <view class="state-text">加载中...</view>
-  </view>
-
-  <!-- 暂无合同 -->
-  <view wx:elif="{{empty}}" class="state-wrap">
-    <view class="state-icon">📋</view>
-    <view class="state-text">暂无合同订单</view>
-    <view class="state-sub">您的服务合同信息将在这里显示</view>
-  </view>
-
-  <!-- 合同列表 -->
-  <view wx:else class="list">
-    <block wx:for="{{contracts}}" wx:key="_id">
-      <!-- 历史记录分隔线：第一条旧合同前插入 -->
-      <view wx:if="{{item.isHistory && (index === 0 || !contracts[index-1].isHistory)}}" class="history-divider">
-        <text class="history-divider-text">历史换人记录</text>
-      </view>
-
-    <view
-      class="contract-card {{item.isHistory ? 'card-history' : ''}}"
-      bindtap="goDetail"
-      data-id="{{item._id}}"
-    >
-      <!-- 顶部：服务类型 + 合同状态 -->
-      <view class="card-header">
-        <text class="service-type">{{item.serviceTypeText}}</text>
-        <view class="status-badge status-{{item.contractStatus}}">{{item.statusText}}</view>
-      </view>
-
-      <!-- 中部：阿姨姓名 + 开始日期 -->
-      <view class="card-body">
-        <view class="info-row">
-          <text class="label">服务阿姨</text>
-          <text class="value">{{item.nannyName || '待定'}}</text>
-        </view>
-        <view class="info-row" wx:if="{{item.startDateFmt}}">
-          <text class="label">开始日期</text>
-          <text class="value">{{item.startDateFmt}}</text>
-        </view>
-      </view>
-
-      <!-- 底部：操作按钮 + 箭头 -->
-      <view class="card-footer">
-        <view wx:if="{{item.showSign}}"
-              class="sign-btn"
-              catchtap="goSign"
-              data-id="{{item._id}}">去签约</view>
-        <view wx:elif="{{item.showOnboard}}"
-              class="onboard-btn"
-              catchtap="confirmOnboard"
-              data-id="{{item._id}}">去确认上户</view>
-        <text class="arrow">›</text>
-      </view>
+  <!-- Tab 栏 -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'housekeeping' ? 'active' : ''}}"
+          bindtap="onTabChange" data-tab="housekeeping">
+      <text>家政合同</text>
     </view>
-    </block>
+    <view class="tab-item {{activeTab === 'training' ? 'active' : ''}}"
+          bindtap="onTabChange" data-tab="training">
+      <text>职培订单</text>
+      <view class="tab-dot" wx:if="{{trainingBadge}}"></view>
+    </view>
   </view>
+
+  <!-- ═══ 家政合同 Tab ═══ -->
+  <block wx:if="{{activeTab === 'housekeeping'}}">
+    <view wx:if="{{loading}}" class="state-wrap">
+      <view class="state-icon">⏳</view>
+      <view class="state-text">加载中...</view>
+    </view>
+
+    <view wx:elif="{{empty}}" class="state-wrap">
+      <view class="state-icon">📋</view>
+      <view class="state-text">暂无合同订单</view>
+      <view class="state-sub">您的服务合同信息将在这里显示</view>
+    </view>
+
+    <view wx:else class="list">
+      <block wx:for="{{contracts}}" wx:key="_id">
+        <view wx:if="{{item.isHistory && (index === 0 || !contracts[index-1].isHistory)}}" class="history-divider">
+          <text class="history-divider-text">历史换人记录</text>
+        </view>
+
+        <view
+          class="contract-card {{item.isHistory ? 'card-history' : ''}}"
+          bindtap="goDetail"
+          data-id="{{item._id}}"
+        >
+          <view class="card-header">
+            <text class="service-type">{{item.serviceTypeText}}</text>
+            <view class="status-badge status-{{item.contractStatus}}">{{item.statusText}}</view>
+          </view>
+
+          <view class="card-body">
+            <view class="info-row">
+              <text class="label">服务阿姨</text>
+              <text class="value">{{item.nannyName || '待定'}}</text>
+            </view>
+            <view class="info-row" wx:if="{{item.startDateFmt}}">
+              <text class="label">开始日期</text>
+              <text class="value">{{item.startDateFmt}}</text>
+            </view>
+          </view>
+
+          <view class="card-footer">
+            <view wx:if="{{item.showSign}}"
+                  class="sign-btn"
+                  catchtap="goSign"
+                  data-id="{{item._id}}">去签约</view>
+            <view wx:elif="{{item.showOnboard}}"
+                  class="onboard-btn"
+                  catchtap="confirmOnboard"
+                  data-id="{{item._id}}">去确认上户</view>
+            <text class="arrow">›</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </block>
+
+  <!-- ═══ 职培订单 Tab ═══ -->
+  <block wx:elif="{{activeTab === 'training'}}">
+    <view wx:if="{{trainingLoading}}" class="state-wrap">
+      <view class="state-icon">⏳</view>
+      <view class="state-text">加载中...</view>
+    </view>
+
+    <view wx:elif="{{trainingEmpty || !trainingData}}" class="state-wrap">
+      <view class="state-icon">🎓</view>
+      <view class="state-text">暂无职培订单</view>
+      <view class="state-sub">如已报名请联系招生顾问核对手机号</view>
+    </view>
+
+    <block wx:else>
+      <!-- 学员档案 -->
+      <view class="training-card" wx:if="{{trainingData.lead}}">
+        <view class="training-card-title">学员档案</view>
+        <view class="info-row">
+          <text class="label">姓　名</text>
+          <text class="value">{{trainingData.lead.name || '—'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">手机号</text>
+          <text class="value">{{trainingData.lead.phone || '—'}}</text>
+        </view>
+      </view>
+
+      <!-- 合同列表 -->
+      <view class="training-card-title-outer" wx:if="{{trainingData.contracts.length}}">我的订单</view>
+      <view
+        wx:for="{{trainingData.contracts}}"
+        wx:key="id"
+        class="contract-card"
+      >
+        <view class="card-header">
+          <text class="service-type contract-no">{{item.contractNumber || '职培合同'}}</text>
+          <view class="status-badge status-{{item.contractStatus}}">{{item.statusText}}</view>
+        </view>
+
+        <view class="card-body">
+          <view class="info-row" wx:if="{{item.intendedCourses}}">
+            <text class="label">已报课程</text>
+            <text class="value">{{item.intendedCourses}}</text>
+          </view>
+          <view class="info-row">
+            <text class="label">课程金额</text>
+            <text class="value">¥{{item.courseAmountYuan}} 元</text>
+          </view>
+          <view class="info-row">
+            <text class="label">应付金额</text>
+            <view class="value-row">
+              <text class="value value-strong">¥{{item.amountYuan}} 元</text>
+              <view wx:if="{{item.showPay}}"
+                    class="pay-btn {{paying ? 'pay-btn-disabled' : ''}}"
+                    catchtap="goTrainingPayment"
+                    data-id="{{item.id}}">{{paying ? '支付中...' : '立即支付'}}</view>
+              <view wx:elif="{{item.paid}}" class="paid-tag">✓ 已支付</view>
+            </view>
+          </view>
+          <view class="info-row" wx:if="{{item.paid && item.paidAtFmt}}">
+            <text class="label">支付时间</text>
+            <text class="value">{{item.paidAtFmt}}</text>
+          </view>
+          <view class="info-row" wx:if="{{item.graduatedAtFmt}}">
+            <text class="label">毕业时间</text>
+            <text class="value">{{item.graduatedAtFmt}}</text>
+          </view>
+          <view class="info-row" wx:if="{{item.refundedAtFmt}}">
+            <text class="label">退款时间</text>
+            <text class="value">{{item.refundedAtFmt}}</text>
+          </view>
+          <view class="info-row" wx:if="{{item.createdAtFmt}}">
+            <text class="label">创建时间</text>
+            <text class="value">{{item.createdAtFmt}}</text>
+          </view>
+        </view>
+
+        <view class="card-footer card-footer-end"
+              wx:if="{{item.showSign || item.contractFileUrl}}">
+          <view wx:if="{{item.showSign}}"
+                class="sign-btn"
+                catchtap="goTrainingSign"
+                data-id="{{item.id}}">去签约</view>
+          <view wx:if="{{item.contractFileUrl}}"
+                class="onboard-btn"
+                catchtap="viewTrainingContract"
+                data-url="{{item.contractFileUrl}}">查看合同</view>
+        </view>
+      </view>
+    </block>
+  </block>
 </view>
 

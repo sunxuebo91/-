@@ -63,7 +63,7 @@ async function checkIsAdmin(openid) {
 
 /** 申请成为推荐人：纯 CRM 模式，小程序侧不落任何数据 */
 async function registerReferrer(openid, ev) {
-  const { name, phone, sourceStaffId, sourceCustomerId } = ev;
+  const { name, phone, sourceStaffId, sourcePhone, sourceOpenid, sourceCustomerId } = ev;
   console.log('[registerReferrer] openid=', openid, 'name=', name, 'phone=', phone, 'sourceCustomerId=', sourceCustomerId);
 
   if (!name || !phone) {
@@ -72,11 +72,14 @@ async function registerReferrer(openid, ev) {
 
   let crmRes;
   try {
+    // 身份三件套 sourceStaffId / sourcePhone / sourceOpenid 一并下发，CRM 端任一命中即可定位 staff
     crmRes = await crmPost('/referral/miniprogram/register-referrer', {
       openid,
       name:             name.trim(),
       phone,
       sourceStaffId:    sourceStaffId    || '',
+      sourcePhone:      sourcePhone      || '',
+      sourceOpenid:     sourceOpenid     || '',
       sourceCustomerId: sourceCustomerId || '',
     });
   } catch (e) {

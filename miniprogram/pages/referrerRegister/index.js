@@ -203,75 +203,29 @@ Page({
     }
   },
 
-  // 确保本地有可用的 JWT（启动时网络抖动未换到 / 用户清过缓存等极端情况兜底）
-  // 成本：一次 openid-only 的登录请求，静默，无用户感知
-  async _ensureJwtToken() {
-    let token = wx.getStorageSync('access_token') || '';
-    if (token) return token;
-    try {
-      const cloudRes = await wx.cloud.callFunction({ name: 'userService', data: { action: 'getOrCreateMe' } });
-      const openid = cloudRes && cloudRes.result && cloudRes.result.data && cloudRes.result.data._openid;
-      if (!openid) return '';
-      const tokenRes = await new Promise((resolve, reject) => {
-        wx.request({
-          url: 'https://crm.andejiazheng.com/api/auth/miniprogram/login',
-          method: 'POST',
-          data: { openid },
-          header: { 'Content-Type': 'application/json' },
-          success: resolve,
-          fail: reject,
-        });
-      });
-      token = (tokenRes.data && (tokenRes.data.data && tokenRes.data.data.token || tokenRes.data.token)) || '';
-      if (token) {
-        wx.setStorageSync('access_token', token);
-        wx.setStorageSync('token', token);
-      }
-      return token;
-    } catch (e) {
-      console.warn('[referrerRegister] 补换 JWT 失败:', e);
-      return '';
-    }
-  },
-
   // 核心提交逻辑（两条路径最终都调用这里）
-  // 直连 CRM：/api/referral/miniprogram/register-referrer
-  // 身份三件套 sourceStaffId / sourcePhone / sourceOpenid 一并下发，CRM 端任一命中即可定位 staff
+  // 走云函数 referralService.registerReferrer，由云函数侧通过 crmPost 下发到 CRM，
+  // 身份三件套 sourceStaffId / sourcePhone / sourceOpenid 一并透传，CRM 端任一命中即可定位 staff
   async _doRegister(phone) {
     const { name, sourceStaffId, sourceStaffPhone, sourceStaffOpenid, sourceCustomerId } = this.data;
     this.setData({ submitting: true });
 
-    const token = await this._ensureJwtToken();
-    if (!token) {
-      wx.showToast({ title: '登录状态异常，请重启小程序后重试', icon: 'none' });
-      this.setData({ submitting: false });
-      return;
-    }
-
     try {
-      const resp = await new Promise((resolve, reject) => {
-        wx.request({
-          url: 'https://crm.andejiazheng.com/api/referral/miniprogram/register-referrer',
-          method: 'POST',
-          header: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          data: {
-            name: name.trim(),
-            phone,
-            sourceStaffId,      // 向后兼容：旧海报里带的是 miniprogram_users._id，CRM 端按 _id 查不到时会降级匹配
-            sourcePhone:  sourceStaffPhone,
-            sourceOpenid: sourceStaffOpenid,
-            sourceCustomerId,
-          },
-          success: resolve,
-          fail: reject,
-        });
+      const res = await wx.cloud.callFunction({
+        name: 'referralService',
+        data: {
+          action: 'registerReferrer',
+          name: name.trim(),
+          phone,
+          sourceStaffId,      // 向后兼容：旧海报里带的是 miniprogram_users._id，CRM 端按 _id 查不到时会降级匹配
+          sourcePhone:  sourceStaffPhone,
+          sourceOpenid: sourceStaffOpenid,
+          sourceCustomerId,
+        },
       });
 
-      const body = resp && resp.data;
-      console.log('[registerReferrer] status=', resp && resp.statusCode, 'success=', body && body.success);
+      const body = res && res.result;
+      console.log('[registerReferrer] success=', body && body.success);
 
       if (body && body.success) {
         wx.removeStorageSync('referral_source_staff_id');

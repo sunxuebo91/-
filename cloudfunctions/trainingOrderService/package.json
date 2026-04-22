@@ -1,0 +1,14 @@
+{
+  "name": "trainingOrderService",
+  "version": "1.0.0",
+  "description": "褓贝小程序-职培订单（查询、签约链接、支付回写）",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.4.0"
+  }
+}

@@ -1,8 +1,42 @@
 .page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding: 24rpx 20rpx;
+  padding: 0 20rpx 24rpx;
   box-sizing: border-box;
+}
+
+/* Tab 栏 */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 24rpx 0;
+  padding: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.tab-item {
+  position: relative;
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  border-radius: 12rpx;
+  transition: all 0.2s;
+}
+.tab-item.active {
+  background: #8766F3;
+  color: #fff;
+  font-weight: 600;
+}
+.tab-dot {
+  position: absolute;
+  top: 14rpx;
+  right: 38rpx;
+  width: 12rpx;
+  height: 12rpx;
+  background: #ff4d4f;
+  border-radius: 50%;
 }
 
 /* 状态页（加载中/空） */
@@ -53,6 +87,12 @@
   font-weight: 600;
   color: #8766F3;
 }
+.service-type.contract-no {
+  font-size: 24rpx;
+  word-break: break-all;
+  flex: 1;
+  margin-right: 16rpx;
+}
 
 /* 历史合同卡片：灰化 */
 .card-history { opacity: 0.6; }
@@ -70,22 +110,30 @@
 .status-ended     { background: #f0f0f0; color: #999; }
 .status-cancelled { background: #f5e8f0; color: #a0407a; }
 .status-replaced  { background: #f0ecfd; color: #9b7ec8; }
+.status-graduated { background: #e6f7ea; color: #389e5e; }
+.status-refunded  { background: #fdeceb; color: #c0483f; }
 
 /* 卡片中部 */
 .card-body { margin-bottom: 24rpx; }
 .info-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12rpx;
 }
 .label {
   font-size: 26rpx;
   color: #999;
   width: 130rpx;
+  flex-shrink: 0;
+  line-height: 1.5;
 }
 .value {
   font-size: 28rpx;
   color: #333;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+  word-break: break-all;
 }
 
 /* 卡片底部 */
@@ -115,5 +163,59 @@
   border: 1rpx solid #8766F3;
   border-radius: 20rpx;
   padding: 8rpx 28rpx;
+}
+
+/* ─── 职培 Tab 专用 ─── */
+.training-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06);
+}
+.training-card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 16rpx;
+  border-left: 6rpx solid #8766F3;
+}
+.training-card-title-outer {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  padding: 12rpx 0 16rpx 8rpx;
+}
+.value-strong {
+  color: #8766F3;
+  font-weight: 600;
+  font-size: 30rpx;
+}
+.value-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  flex: 1;
+}
+.pay-btn {
+  font-size: 26rpx;
+  color: #fff;
+  background: #8766F3;
+  border-radius: 20rpx;
+  padding: 8rpx 28rpx;
+  margin-left: auto;
+}
+.pay-btn-disabled {
+  opacity: 0.6;
+}
+.paid-tag {
+  font-size: 24rpx;
+  color: #52c41a;
+  margin-left: auto;
+  font-weight: 500;
+}
+.card-footer-end {
+  justify-content: flex-end;
 }
 

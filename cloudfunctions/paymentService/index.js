@@ -81,7 +81,7 @@ function generateClientSn() {
   return `ADBP-${ts}-${rand}`;
 }
 
-/** 通知 CRM 支付已完成 */
+/** 通知 CRM 家政合同支付已完成 */
 function notifyCRM(contractId, phone, amount, sqbSn, paidAt) {
   return httpsRequest('POST', CRM_HOSTNAME, `/api/miniprogram/contracts/${contractId}/payment-confirm`, {
     phone, amount, sqb_sn: sqbSn, paidAt,
@@ -92,6 +92,27 @@ function notifyCRM(contractId, phone, amount, sqbSn, paidAt) {
     // CRM 通知失败不阻塞用户，记录日志即可
     console.error('[paymentService] CRM notify failed:', err.message);
   });
+}
+
+/** 通知 CRM 职培订单支付已完成 */
+function notifyTrainingCRM(contractId, phone, amount, sqbSn, paidAt) {
+  return httpsRequest('POST', CRM_HOSTNAME, `/api/miniprogram/training-orders/baobei/${contractId}/payment-confirm`, {
+    phone, amount, sqb_sn: sqbSn, paidAt,
+  }, {
+    'X-Service-Secret': CRM_SERVICE_SECRET,
+    'X-Client-Type': 'miniprogram',
+  }).catch(err => {
+    console.error('[paymentService] Training CRM notify failed:', err.message);
+  });
+}
+
+/** 按支付记录的 orderCategory 分发到对应 CRM 通知通道（老记录默认家政） */
+function notifyCRMByCategory(payment, paidAt) {
+  const cat = payment.orderCategory || 'housekeeping';
+  if (cat === 'training') {
+    return notifyTrainingCRM(payment.contractId, payment.phone, payment.amount, payment.sqb_sn, paidAt);
+  }
+  return notifyCRM(payment.contractId, payment.phone, payment.amount, payment.sqb_sn, paidAt);
 }
 
 // ═══════════════════════════════════════
@@ -221,10 +242,12 @@ async function precreate(event, openid) {
         notifyCRM(contractId, phone, existing.amount, existing.sqb_sn, new Date().toISOString());
         throw new Error('该合同已支付，请勿重复支付');
       }
-      if (orderStatus === 'CREATED' || orderStatus === 'IN_PROG') {
-        throw new Error('上一笔支付仍在进行中，请稍候再试');
+      // IN_PROG 是支付真正处理中的短暂状态，有重复扣款风险，必须拦截
+      if (orderStatus === 'IN_PROG') {
+        throw new Error('上一笔支付正在处理中，请稍候再试');
       }
-      // PAY_CANCELED / 其他终态 → 标记失败，允许重新支付
+      // CREATED（wx.requestPayment 取消或未完成）/ PAY_CANCELED / 其他终态
+      // 一律标记为 failed 并继续创建新订单；旧的收钱吧订单会自行超时
       await db.collection('payments').doc(existing._id).update({
         data: { paymentStatus: 'failed', updatedAt: db.serverDate() },
       });
@@ -367,8 +390,8 @@ async function queryPayment(event) {
     await db.collection('payments').doc(payment._id).update({
       data: { paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
     });
-    // 异步通知 CRM
-    notifyCRM(payment.contractId, payment.phone, payment.amount, payment.sqb_sn, new Date().toISOString());
+    // 异步通知 CRM（按订单类别分发）
+    notifyCRMByCategory(payment, new Date().toISOString());
     return { paymentStatus: 'paid', paidAt: new Date().toISOString() };
   }
   if (orderStatus === 'PAY_CANCELED' || orderStatus === 'CANCELED') {
@@ -383,14 +406,17 @@ async function queryPayment(event) {
 
 /**
  * 根据合同ID查支付记录（详情页用）
+ * event.orderCategory 可选：'training' | 'housekeeping'，传入时按类别过滤，避免串数据
  */
 async function getPaymentByContract(event) {
-  const { contractId } = event;
+  const { contractId, orderCategory } = event;
   if (!contractId) throw new Error('缺少 contractId');
-  const r = await db.collection('payments').where({
+  const where = {
     contractId,
     paymentStatus: _.in(['pending', 'paid']),
-  }).orderBy('createdAt', 'desc').limit(1).get();
+  };
+  if (orderCategory) where.orderCategory = orderCategory;
+  const r = await db.collection('payments').where(where).orderBy('createdAt', 'desc').limit(1).get();
 
   const payment = r.data?.[0];
   if (!payment) return { paymentStatus: 'unpaid' };
@@ -455,6 +481,150 @@ async function refund(event) {
   return { success: false, raw: res };
 }
 
+/**
+ * 预下单（职培订单，小程序支付）
+ * event: { contractId, phone, amount }  amount 单位为分，权威来源是 my-order 返回的 payableAmountCents
+ * 与家政 precreate 的差异：金额由客户端传入（来自 my-order 的 payableAmountCents），
+ * 服务端二次向 CRM 拉 my-order 核对 payableAmountCents 与 paymentEnabled，防客户端篡改
+ */
+async function precreateTraining(event, openid) {
+  const { contractId, phone, amount } = event;
+  if (!contractId) throw new Error('缺少 contractId');
+  if (!phone)      throw new Error('缺少 phone');
+  if (!openid)     throw new Error('缺少 openid');
+  if (!amount || Number(amount) <= 0) throw new Error('缺少支付金额');
+
+  const amountInCents = Math.round(Number(amount));
+  if (amountInCents <= 0 || amountInCents > 10000000) {
+    throw new Error('支付金额异常: ' + amount);
+  }
+
+  // ── 防重复：按 contractId + orderCategory=training 查 ──
+  const existCheck = await db.collection('payments').where({
+    contractId,
+    orderCategory: 'training',
+    paymentStatus: _.in(['pending', 'paid']),
+  }).limit(1).get();
+
+  if (existCheck.data.length > 0) {
+    const existing = existCheck.data[0];
+    if (existing.paymentStatus === 'paid') {
+      throw new Error('该合同已支付，请勿重复支付');
+    }
+    if (existing.paymentStatus === 'pending' && existing.sqb_sn) {
+      const terminal = await getTerminal();
+      const t = await ensureCheckin(terminal);
+      const qr = await sqbRequest('/upay/v2/query', {
+        terminal_sn: t.terminal_sn, sn: existing.sqb_sn,
+      }, { sn: t.terminal_sn, key: t.terminal_key });
+      const orderStatus = qr?.biz_response?.data?.order_status;
+      if (orderStatus === 'PAID') {
+        await db.collection('payments').doc(existing._id).update({
+          data: { paymentStatus: 'paid', paidAt: db.serverDate(), updatedAt: db.serverDate() },
+        });
+        notifyTrainingCRM(contractId, phone, existing.amount, existing.sqb_sn, new Date().toISOString());
+        throw new Error('该合同已支付，请勿重复支付');
+      }
+      // IN_PROG 是支付真正处理中的短暂状态，有重复扣款风险，必须拦截
+      if (orderStatus === 'IN_PROG') {
+        throw new Error('上一笔支付正在处理中，请稍候再试');
+      }
+      // CREATED（wx.requestPayment 取消或未完成）/ PAY_CANCELED / 其他终态
+      // 一律标记为 failed 并继续创建新订单；旧的收钱吧订单会自行超时
+      await db.collection('payments').doc(existing._id).update({
+        data: { paymentStatus: 'failed', updatedAt: db.serverDate() },
+      });
+    }
+  }
+
+  // ── 二次校验：向 CRM 拉 my-order，核对金额与 paymentEnabled，防客户端篡改 ──
+  const verifyRes = await httpsRequest('GET', CRM_HOSTNAME,
+    `/api/miniprogram/training-orders/baobei/my-order?phone=${encodeURIComponent(phone)}`, null, {
+      'X-Service-Secret': CRM_SERVICE_SECRET,
+      'X-Client-Type': 'miniprogram',
+    }).catch(() => null);
+
+  const contracts = verifyRes && verifyRes.data && verifyRes.data.contracts;
+  const target = Array.isArray(contracts)
+    ? contracts.find(c => String(c.id) === String(contractId))
+    : null;
+  if (!target) throw new Error('合同不存在或无权访问');
+  if (!target.paymentEnabled) throw new Error('该合同当前不可支付');
+  if (target.paymentStatus === 'paid') throw new Error('该合同已支付，请勿重复支付');
+  // 用应付金额（payableAmountCents）做防篡改比对；paymentAmount 是实付金额，未支付时为 null
+  if (Number(target.payableAmountCents) !== amountInCents) {
+    throw new Error(`支付金额不匹配（期望 ${target.payableAmountCents} 分）`);
+  }
+
+  // ── 获取终端并确保签到 ──
+  const terminal = await getTerminal();
+  const t = await ensureCheckin(terminal);
+
+  // ── 生成订单号并创建支付记录 ──
+  const clientSn = generateClientSn();
+  const paymentDoc = {
+    contractId, phone, openid,
+    orderCategory: 'training',
+    amount: amountInCents,
+    client_sn: clientSn,
+    sqb_sn: '',
+    paymentStatus: 'pending',
+    paidAt: null,
+    createdAt: db.serverDate(),
+    updatedAt: db.serverDate(),
+  };
+  const addRes = await db.collection('payments').add({ data: paymentDoc });
+  const paymentId = addRes._id;
+
+  // ── 调用收钱吧预下单 ──
+  const preBody = {
+    terminal_sn: t.terminal_sn,
+    client_sn: clientSn,
+    total_amount: String(amountInCents),
+    payway: '3',        // 微信
+    sub_payway: '4',    // 小程序
+    payer_uid: openid,
+    subject: '安得褓贝-职培订单',
+    operator: 'miniprogram',
+    extended: { sub_appid: SQB.WX_APPID },
+  };
+
+  console.log('===== 收钱吧预下单请求（职培） =====');
+  console.log('terminal_sn:', t.terminal_sn);
+  console.log('请求参数:', JSON.stringify(preBody, null, 2));
+
+  const res = await sqbRequest('/upay/v2/precreate', preBody, {
+    sn: t.terminal_sn, key: t.terminal_key,
+  });
+
+  console.log('===== 收钱吧预下单响应（职培） =====');
+  console.log('响应内容:', JSON.stringify(res, null, 2));
+
+  if (res.result_code !== '200' || !res.biz_response) {
+    await db.collection('payments').doc(paymentId).update({
+      data: { paymentStatus: 'failed', updatedAt: db.serverDate(), sqbRawResponse: res },
+    });
+    throw new Error('预下单失败: ' + JSON.stringify(res));
+  }
+
+  const biz = res.biz_response;
+  if (biz.result_code !== 'PRECREATE_SUCCESS') {
+    await db.collection('payments').doc(paymentId).update({
+      data: { paymentStatus: 'failed', updatedAt: db.serverDate(), sqbRawResponse: res },
+    });
+    throw new Error('预下单业务失败: ' + JSON.stringify(res));
+  }
+
+  const sqbSn = biz.data?.sn || '';
+  const wapPayRequest = biz.data?.wap_pay_request || '';
+
+  await db.collection('payments').doc(paymentId).update({
+    data: { sqb_sn: sqbSn, updatedAt: db.serverDate(), sqbRawResponse: res },
+  });
+
+  return { paymentId, clientSn, sqbSn, wapPayRequest };
+}
+
 // ═══════════════════════════════════════
 // 入口
 // ═══════════════════════════════════════
@@ -473,6 +643,8 @@ exports.main = async (event, context) => {
         return { success: true, data: await checkin() };
       case 'precreate':
         return { success: true, data: await precreate(event, openid) };
+      case 'precreateTraining':
+        return { success: true, data: await precreateTraining(event, openid) };
       case 'queryPayment':
         return { success: true, data: await queryPayment(event) };
       case 'getPaymentByContract':
