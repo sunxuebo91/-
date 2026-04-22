@@ -120,16 +120,18 @@ const getHomeMiniCode = async () => {
 
 // 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）
 // 发布正式版后扫码即可跳转到推荐人注册页
+// 身份 token：phone + openid（CRM 端任一命中即可定位 staff），不再写入 staffId
+// 原因：小程序端 crmUserInfo._id 是 miniprogram_users._id，和 staff._id 不是一张表
 const getReferrerRegisterMiniCode = async (event) => {
-  const staffId    = (event.staffId    || '').toString();
-  const staffPhone = (event.staffPhone || '').toString();
-  const customerId = (event.customerId || '').toString();  // 关联客户订单 ID
+  const staffPhone  = (event.staffPhone  || '').toString();
+  const staffOpenid = (event.staffOpenid || '').toString();
+  const customerId  = (event.customerId  || '').toString();  // 关联客户订单 ID
 
   const basePath = 'pages/referrerRegister/index';
   const params = [];
-  if (staffId)    params.push(`staffId=${encodeURIComponent(staffId)}`);
-  if (staffPhone) params.push(`p=${encodeURIComponent(staffPhone)}`);
-  if (customerId) params.push(`cid=${encodeURIComponent(customerId)}`);  // 携带订单关联
+  if (staffPhone)  params.push(`p=${encodeURIComponent(staffPhone)}`);
+  if (staffOpenid) params.push(`o=${encodeURIComponent(staffOpenid)}`);
+  if (customerId)  params.push(`cid=${encodeURIComponent(customerId)}`);  // 携带订单关联
   const fullPath = params.length > 0 ? `${basePath}?${params.join('&')}` : basePath;
   const path = fullPath.length <= 128 ? fullPath : basePath;
 
@@ -140,7 +142,7 @@ const getReferrerRegisterMiniCode = async (event) => {
   });
 
   // 每个客户对应独立的 QR 文件，避免多客户共享同一张码
-  const staffKey  = staffPhone.replace(/\D/g, '') || staffId.slice(0, 16) || 'default';
+  const staffKey  = staffPhone.replace(/\D/g, '') || staffOpenid.slice(0, 16) || 'default';
   const cidKey    = customerId ? `-${customerId.slice(0, 12)}` : '';
   const cacheKey  = `${staffKey}${cidKey}`;
   const cloudPath = `referrer-qrcodes/referrer-${cacheKey}.png`;

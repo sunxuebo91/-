@@ -22,7 +22,7 @@
     <view class="promo-main">
       <text class="promo-icon">🎁</text>
       <view class="promo-text">
-        <view class="promo-title">签约 2 年，送 1 年</view>
+        <view class="promo-title">签约 2 年，送 1 年<text class="promo-note">（两年为阿姨工资200%）</text></view>
         <view class="promo-desc">签订两年服务合同，第三年服务费全免，超值省心</view>
       </view>
     </view>

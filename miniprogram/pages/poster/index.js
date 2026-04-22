@@ -416,13 +416,13 @@ Page({
   },
 
   /** 获取推荐人注册页小程序码本地路径（按员工+客户 key 缓存，不同客户海报各自独立）*/
-  async _getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId) {
-    const cacheKey = (staffId || '') + '|' + (staffPhone || '') + '|' + (customerId || '');
+  async _getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId, staffOpenid) {
+    const cacheKey = (staffId || '') + '|' + (staffPhone || '') + '|' + (customerId || '') + '|' + (staffOpenid || '');
     if (_referrerQrCache && _referrerQrCacheKey === cacheKey) return _referrerQrCache;
     try {
       const cfRes = await wx.cloud.callFunction({
         name: 'quickstartFunctions',
-        data: { type: 'getReferrerRegisterMiniCode', staffId: staffId || '', staffPhone: staffPhone || '', customerId: customerId || '' }
+        data: { type: 'getReferrerRegisterMiniCode', staffId: staffId || '', staffPhone: staffPhone || '', customerId: customerId || '', staffOpenid: staffOpenid || '' }
       });
       const fileID = cfRes?.result?.fileID;
       if (!fileID) return '';
@@ -687,6 +687,9 @@ Page({
       const staffName   = crmUserInfo.crmName   || crmUserInfo.nickname  || '';
       const staffPhone  = crmUserInfo.phone      || '';
       const staffId     = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
+      // 小程序端 crmUserInfo._id 是 miniprogram_users._id，不是 staff._id，作为匹配 token 不可靠
+      // 另外多带 openid，CRM 端按 phone / openid 任一命中即可定位 staff
+      const staffOpenid = crmUserInfo.openid || crmUserInfo._openid || '';
       const customerId  = (this.data.customerInfo && this.data.customerInfo.id) || '';
       // 写入 staff_profiles，确保推荐人扫码注册后 getReferralDetail 能查到归属人姓名
       if ((staffId || staffPhone) && (staffName || staffPhone)) {
@@ -698,7 +701,7 @@ Page({
 
       const [avatarPath, qrPath, logoPath] = await Promise.all([
         avatarUrl ? this._downloadImage(avatarUrl) : Promise.resolve(''),
-        this._getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId),
+        this._getReferrerRegisterMiniCodePath(staffId, staffPhone, customerId, staffOpenid),
         this._getLogoPath(),
       ]);
       const posterPath = await this._renderCustomerCanvas(

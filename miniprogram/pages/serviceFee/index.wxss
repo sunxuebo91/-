@@ -112,6 +112,13 @@ page {
   margin-bottom: 8rpx;
 }
 
+.promo-note {
+  font-size: 20rpx;
+  font-weight: 400;
+  color: #8a6800;
+  margin-left: 8rpx;
+}
+
 .promo-desc {
   font-size: 24rpx;
   color: #8a6800;
