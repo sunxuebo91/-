@@ -1,0 +1,120 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">ABM 2022 新指南 · 温柔通乳 · 拒绝暴力</view>
+    <view class="hero-title">产后通乳指南</view>
+    <view class="hero-sub">科学开奶 · 循证护理 · 母乳无痛</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">4</text>
+        <text class="stat-label">个泌乳阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">30</text>
+        <text class="stat-label">项关键任务</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">2y</text>
+        <text class="stat-label">WHO 推荐喂养</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">早接触早吸吮</view>
+      <view class="legend-tag">冷敷消肿</view>
+      <view class="legend-tag">含乳深</view>
+      <view class="legend-tag">按需哺乳</view>
+      <view class="legend-tag">拒绝暴力按摩</view>
+    </view>
+    <text class="legend-text">参考 ABM 临床指南 #36《Mastitis Spectrum, 2022》、WHO/UNICEF 爱婴医院倡议（BFHI）十项措施、AAP 2022 母乳喂养政策声明、CDC 母乳储存指南、IBCLC 国际认证泌乳顾问执业标准、国家卫健委《母乳喂养促进策略指南》</text>
+  </view>
+
+  <!-- 时间轴：4 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">{{it.t}}</view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🍼 通乳哺乳必看专业提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚠️</text><text class="tip-title">拒绝"暴力通乳"</text></view>
+      <view class="tip-desc">ABM #36 (2022) 已明确：用力揉、推、拽、硬通堵奶硬块属有害操作，可能造成乳腺组织水肿与毛细血管破裂；正规催乳只做轻柔淋巴引流，操作中剧痛立即叫停</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">❄️</text><text class="tip-title">冷敷优先（颠覆传统）</text></view>
+      <view class="tip-desc">涨奶 / 堵奶 / 早期乳腺炎一律冷敷而非热敷：卷心菜叶 / 冷毛巾 / 凝胶冷敷袋 15-20 分钟；仅哺乳前可短暂温敷帮助喷乳反射</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👄</text><text class="tip-title">含乳深是 80% 问题的根源</text></view>
+      <view class="tip-desc">婴儿张大嘴 ≥ 140°，含住乳头与大部分乳晕，下唇外翻，下巴贴乳房；含乳浅 → 乳头皲裂 → 哺乳痛 → 喂养减少 → 奶量下降的恶性循环</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🩺</text><text class="tip-title">乳腺炎红色信号</text></view>
+      <view class="tip-desc">局部红肿热痛 + 高热 ≥ 38.5°C + 寒战 + 流感样症状 → 24-48h 未缓解需抗生素治疗（双氯西林 / 头孢氨苄哺乳安全）；脓肿首选超声引导穿刺抽脓</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📊</text><text class="tip-title">奶量评估看婴儿不看乳房</text></view>
+      <view class="tip-desc">小便 ≥ 6 次/天（清淡黄）/ 大便 ≥ 3-4 次/天（金黄稀糊）/ 体重曲线在 P3-P97 区间 / 喂后满足；不要凭乳房手感或吸出毫升数判断</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧊</text><text class="tip-title">CDC 母乳储存四原则</text></view>
+      <view class="tip-desc">室温（≤25°C）4h / 冷藏（≤4°C）4 天 / 冷冻（-18°C）6 月最佳；解冻冷藏室 24h 内用完；严禁微波炉加热与煮沸；先进先出原则</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💊</text><text class="tip-title">哺乳期用药安全</text></view>
+      <view class="tip-desc">查询 LactMed / Hale 评级；布洛芬、对乙酰氨基酚、青霉素 / 头孢类、舍曲林等 L1-L2 级安全；避免大剂量阿司匹林、四环素、放射造影剂、雌激素避孕药</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🥗</text><text class="tip-title">饮食水分原则</text></view>
+      <view class="tip-desc">在孕前基础 +450-500kcal/天 + 蛋白质 +25g + 水 2700-3200ml；DHA ≥ 200mg + 钙 1000mg + 维 D 600IU；避免酒精，咖啡因 ≤ 300mg/天；催奶汤循证证据有限</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🤱</text><text class="tip-title">IBCLC 国际泌乳顾问</text></view>
+      <view class="tip-desc">遇到反复堵奶 / 乳腺炎 / 含乳困难 / 奶量异常等问题，优先寻求 IBCLC 认证顾问或三甲医院乳腺科 / 妇幼保健院；拒绝"3 天通乳保证""暴力开奶"等承诺</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化原则</text></view>
+      <view class="tip-desc">本指南为通用循证科普，早产儿、双胎、剖宫产、妊娠糖尿病、乳腺手术史、HIV 感染等情况请遵产科 / 新生儿科 / 乳腺科医师个体化方案</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

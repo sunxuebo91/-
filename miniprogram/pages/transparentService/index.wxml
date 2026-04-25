@@ -1,35 +1,108 @@
 <view class="transparent-service">
-  <!-- 内容区域：一行4个正方形卡片 -->
-  <view class="content">
-    <!-- 月嫂报价 -->
-    <view class="price-card price-card-pink" bindtap="goMaternityPricing">
-      <image class="price-card-image" src="/images/icons/yuexin.svg" mode="aspectFit"></image>
-      <view class="price-card-title">月嫂报价</view>
-    </view>
 
-    <!-- 育儿报价 -->
-    <view class="price-card price-card-purple" bindtap="goChildcarePricing">
-      <image class="price-card-image" src="/images/icons/yuer.svg" mode="aspectFit"></image>
-      <view class="price-card-title">育儿报价</view>
+  <!-- 服务报价 -->
+  <view class="section">
+    <view class="section-head">
+      <text class="section-emoji">💰</text>
+      <view class="section-title">服务报价</view>
+      <text class="section-sub">月嫂 · 育儿 · 保姆 · 养老</text>
     </view>
-
-    <!-- 保姆报价 -->
-    <view class="price-card price-card-orange" bindtap="goNannyPricing">
-      <image class="price-card-image" src="/images/icons/baomu.svg" mode="aspectFit"></image>
-      <view class="price-card-title">保姆报价</view>
-    </view>
-
-    <!-- 护老报价 -->
-    <view class="price-card price-card-yellow" bindtap="goEldercarePricing">
-      <image class="price-card-image" src="/images/icons/hulao.svg" mode="aspectFit"></image>
-      <view class="price-card-title">护老报价</view>
-    </view>
-
-    <!-- 服务费报价 -->
-    <view class="price-card price-card-teal" bindtap="goServiceFee">
-      <text class="price-card-emoji">💰</text>
-      <view class="price-card-title">服务费报价</view>
+    <view class="content">
+      <view class="price-card price-card-pink" bindtap="goMaternityPricing">
+        <image class="price-card-image" src="/images/icons/yuexin.svg" mode="aspectFit"></image>
+        <view class="price-card-title">月嫂报价</view>
+      </view>
+      <view class="price-card price-card-purple" bindtap="goChildcarePricing">
+        <image class="price-card-image" src="/images/icons/yuer.svg" mode="aspectFit"></image>
+        <view class="price-card-title">育儿报价</view>
+      </view>
+      <view class="price-card price-card-orange" bindtap="goNannyPricing">
+        <image class="price-card-image" src="/images/icons/baomu.svg" mode="aspectFit"></image>
+        <view class="price-card-title">保姆报价</view>
+      </view>
+      <view class="price-card price-card-yellow" bindtap="goEldercarePricing">
+        <image class="price-card-image" src="/images/icons/hulao.svg" mode="aspectFit"></image>
+        <view class="price-card-title">护老报价</view>
+      </view>
+      <view class="price-card price-card-teal" bindtap="goServiceFee">
+        <text class="price-card-emoji">💰</text>
+        <view class="price-card-title">服务费报价</view>
+      </view>
     </view>
   </view>
+
+  <!-- 母婴护理 -->
+  <view class="section">
+    <view class="section-head">
+      <text class="section-emoji">🤱</text>
+      <view class="section-title">母婴护理</view>
+      <text class="section-sub">孕产 · 月子 · 产后</text>
+    </view>
+    <view class="content">
+      <view class="price-card price-card-indigo" bindtap="goPrenatalCare">
+        <text class="price-card-emoji">🤰</text>
+        <view class="price-card-title">备孕备产</view>
+      </view>
+      <view class="price-card price-card-blue" bindtap="goMaternityBag">
+        <text class="price-card-emoji">🎒</text>
+        <view class="price-card-title">待产包准备</view>
+      </view>
+      <view class="price-card price-card-rose" bindtap="goConfinementMeals">
+        <text class="price-card-emoji">🍲</text>
+        <view class="price-card-title">月子餐谱</view>
+      </view>
+      <view class="price-card price-card-cyan" bindtap="goPostpartumRecovery">
+        <text class="price-card-emoji">🤱</text>
+        <view class="price-card-title">产后康复</view>
+      </view>
+      <view class="price-card price-card-lavender" bindtap="goLactationCare">
+        <text class="price-card-emoji">🍼</text>
+        <view class="price-card-title">产后通乳</view>
+      </view>
+      <view class="price-card price-card-peach" bindtap="goMaternalInfantCare">
+        <text class="price-card-emoji">👩‍🍼</text>
+        <view class="price-card-title">母婴护理</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 育儿早教 -->
+  <view class="section">
+    <view class="section-head">
+      <text class="section-emoji">👶</text>
+      <view class="section-title">育儿早教</view>
+      <text class="section-sub">疫苗 · 辅食 · 启蒙</text>
+    </view>
+    <view class="content">
+      <view class="price-card price-card-green" bindtap="goBabyVaccine">
+        <text class="price-card-emoji">💉</text>
+        <view class="price-card-title">宝宝疫苗</view>
+      </view>
+      <view class="price-card price-card-lime" bindtap="goBabyFood">
+        <text class="price-card-emoji">🥣</text>
+        <view class="price-card-title">宝宝辅食</view>
+      </view>
+      <view class="price-card price-card-coral" bindtap="goBabyEducation">
+        <text class="price-card-emoji">🌱</text>
+        <view class="price-card-title">宝宝早教</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 养老护老 -->
+  <view class="section">
+    <view class="section-head">
+      <text class="section-emoji">🧓</text>
+      <view class="section-title">养老护老</view>
+      <text class="section-sub">能力分级 · 循证照护</text>
+    </view>
+    <view class="content">
+      <view class="price-card price-card-taupe" bindtap="goElderlyCare">
+        <text class="price-card-emoji">🧓</text>
+        <view class="price-card-title">老人照护</view>
+      </view>
+    </view>
+  </view>
+
 </view>
 

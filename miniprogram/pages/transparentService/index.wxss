@@ -4,21 +4,58 @@ page {
 
 .transparent-service {
   min-height: 100vh;
+  padding-bottom: 40rpx;
 }
 
-/* 内容区域：4个一行，超出换行 */
-.content {
-  padding: 24rpx 20rpx;
+/* 板块容器 */
+.section {
+  margin: 24rpx 20rpx 8rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx 16rpx 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 板块标题 */
+.section-head {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 16rpx;
+  align-items: center;
+  gap: 12rpx;
+  padding: 4rpx 12rpx 16rpx;
+  border-bottom: 1rpx dashed #ececf2;
+  margin-bottom: 16rpx;
+}
+
+.section-emoji {
+  font-size: 40rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2c2c2c;
+  letter-spacing: 1rpx;
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: auto;
+  letter-spacing: 1rpx;
+}
+
+/* 内容区域:3个一行,超出换行 */
+.content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
 }
 
 /* 报价卡片通用样式：正方形，4个一行 */
 .price-card {
-  /* 4 per row: (100% - 3×gap) / 4 = 25% - 12rpx */
-  flex: 0 0 calc(25% - 12rpx);
+  width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 20rpx;
   display: flex;
@@ -26,6 +63,7 @@ page {
   align-items: center;
   justify-content: center;
   gap: 12rpx;
+  box-sizing: border-box;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -63,14 +101,74 @@ page {
   box-shadow: 0 8rpx 20rpx rgba(32, 178, 160, 0.35);
 }
 
-.price-card-image {
-  width: 72rpx;
-  height: 72rpx;
+/* 待产包准备卡片 - 蓝色 */
+.price-card-blue {
+  background: linear-gradient(135deg, #4F9EFF 0%, #6BB6FF 100%);
+  box-shadow: 0 8rpx 20rpx rgba(79, 158, 255, 0.35);
 }
 
-/* 服务费卡片用 emoji 替代 SVG */
+/* 宝宝疫苗卡片 - 绿色 */
+.price-card-green {
+  background: linear-gradient(135deg, #3DBE8B 0%, #5FD4A0 100%);
+  box-shadow: 0 8rpx 20rpx rgba(61, 190, 139, 0.35);
+}
+
+/* 宝宝早教卡片 - 珊瑚红 */
+.price-card-coral {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF9776 100%);
+  box-shadow: 0 8rpx 20rpx rgba(255, 107, 107, 0.35);
+}
+
+/* 宝宝辅食卡片 - 嫩绿 */
+.price-card-lime {
+  background: linear-gradient(135deg, #9CCC65 0%, #C5E1A5 100%);
+  box-shadow: 0 8rpx 20rpx rgba(156, 204, 101, 0.35);
+}
+
+/* 月子餐谱卡片 - 酒红玫瑰 */
+.price-card-rose {
+  background: linear-gradient(135deg, #C44569 0%, #E08394 100%);
+  box-shadow: 0 8rpx 20rpx rgba(196, 69, 105, 0.35);
+}
+
+/* 备孕备产卡片 - 靛紫 */
+.price-card-indigo {
+  background: linear-gradient(135deg, #3F51B5 0%, #7986CB 100%);
+  box-shadow: 0 8rpx 20rpx rgba(63, 81, 181, 0.35);
+}
+
+/* 产后康复卡片 - 天空青 */
+.price-card-cyan {
+  background: linear-gradient(135deg, #26C6DA 0%, #80DEEA 100%);
+  box-shadow: 0 8rpx 20rpx rgba(38, 198, 218, 0.35);
+}
+
+/* 产后通乳卡片 - 薰衣紫 */
+.price-card-lavender {
+  background: linear-gradient(135deg, #9575CD 0%, #D1C4E9 100%);
+  box-shadow: 0 8rpx 20rpx rgba(149, 117, 205, 0.35);
+}
+
+/* 老人照护卡片 - 茶褐 */
+.price-card-taupe {
+  background: linear-gradient(135deg, #8D6E63 0%, #BCAAA4 100%);
+  box-shadow: 0 8rpx 20rpx rgba(141, 110, 99, 0.35);
+}
+
+/* 母婴护理卡片 - 桃粉 */
+.price-card-peach {
+  background: linear-gradient(135deg, #EC7C8F 0%, #F5BFC9 100%);
+  box-shadow: 0 8rpx 20rpx rgba(236, 124, 143, 0.35);
+}
+
+.price-card-image {
+  width: 88rpx;
+  height: 88rpx;
+}
+
+/* 服务费 / 待产包卡片用 emoji 替代 SVG */
 .price-card-emoji {
-  font-size: 60rpx;
+  font-size: 76rpx;
   line-height: 1;
 }
 

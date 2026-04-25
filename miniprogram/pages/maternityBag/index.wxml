@@ -1,0 +1,64 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">温馨提示 · 待产清单</view>
+    <view class="hero-title">待产包的准备</view>
+    <view class="hero-sub">提前备齐，从容迎接小生命的到来</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">3</text>
+        <text class="stat-label">大类</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">28+</text>
+        <text class="stat-label">必备项</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">★</text>
+        <text class="stat-label">建议提前 1 月</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类区块 -->
+  <view class="section" wx:for="{{sections}}" wx:key="key" wx:for-item="sec">
+    <view class="section-head" style="background: linear-gradient(135deg, {{sec.accent}} 0%, {{sec.accent}}cc 100%);">
+      <view class="section-head-left">
+        <text class="section-head-icon">{{sec.icon}}</text>
+        <view class="section-head-text">
+          <view class="section-head-title">{{sec.title}}</view>
+          <view class="section-head-sub">{{sec.subtitle}}</view>
+        </view>
+      </view>
+      <view class="section-head-count">{{sec.items.length}} 项</view>
+    </view>
+
+    <view class="section-body">
+      <view class="item-row" wx:for="{{sec.items}}" wx:key="title" wx:for-item="it">
+        <view class="item-dot" style="background: {{sec.accentSoft}}; color: {{sec.accent}};">
+          <text class="item-dot-text">✓</text>
+        </view>
+        <view class="item-main">
+          <view class="item-title">{{it.title}}</view>
+          <view class="item-desc">{{it.desc}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="bottom-note">
+    <view class="note-title">💡 贴心建议</view>
+    <view class="note-item">· 建议在 <text class="note-strong">怀孕 7 个月左右</text> 开始备齐待产包</view>
+    <view class="note-item">· 物品装入分类收纳袋，方便家人快速取用</view>
+    <view class="note-item">· 不同医院要求略有差异，入院前可与医院再次确认</view>
+    <view class="note-item">· 如有疑问，欢迎联系我们的专业月嫂为您解答</view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+</view>

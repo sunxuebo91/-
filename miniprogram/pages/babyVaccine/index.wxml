@@ -1,0 +1,99 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">免疫规划 · 0-3 岁</view>
+    <view class="hero-title">宝宝疫苗时间表</view>
+    <view class="hero-sub">守护宝宝健康，按时接种不漏一针</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">13</text>
+        <text class="stat-label">个时间点</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">11</text>
+        <text class="stat-label">种疫苗</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">36</text>
+        <text class="stat-label">月全周期</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-item">
+      <view class="legend-tag legend-tag-free">免费</view>
+      <text class="legend-text">国家免疫规划疫苗（一类）</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-tag legend-tag-paid">自费</view>
+      <text class="legend-text">非免疫规划疫苗（二类，可选）</text>
+    </view>
+  </view>
+
+  <!-- 时间轴 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{schedule}}" wx:key="age" wx:for-item="it">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{it.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== schedule.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{it.age}}</view>
+          <view class="tl-hint">{{it.hint}}</view>
+        </view>
+
+        <block wx:if="{{it.free.length}}">
+          <view class="tl-group-head">
+            <view class="tl-tag tl-tag-free">免费</view>
+            <text class="tl-group-title">国家免疫规划</text>
+          </view>
+          <view class="tl-vac" wx:for="{{it.free}}" wx:key="n" wx:for-item="v">
+            <view class="tl-vac-head">
+              <text class="tl-vac-name">{{v.n}}</text>
+              <text class="tl-vac-dose tl-vac-dose-free">{{v.d}}</text>
+            </view>
+            <view class="tl-vac-protect">{{v.p}}</view>
+          </view>
+        </block>
+
+        <block wx:if="{{it.paid.length}}">
+          <view class="tl-group-head tl-group-head-paid">
+            <view class="tl-tag tl-tag-paid">自费</view>
+            <text class="tl-group-title">可选接种</text>
+          </view>
+          <view class="tl-vac tl-vac-paid" wx:for="{{it.paid}}" wx:key="n" wx:for-item="v">
+            <view class="tl-vac-head">
+              <text class="tl-vac-name">{{v.n}}</text>
+              <text class="tl-vac-dose tl-vac-dose-paid">{{v.d}}</text>
+            </view>
+            <view class="tl-vac-protect">{{v.p}}</view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">💡 接种小贴士</view>
+    <view class="note-item">· 接种前确保宝宝身体健康，无发热、感冒等不适</view>
+    <view class="note-item">· 接种当天给宝宝穿宽松衣物，方便操作</view>
+    <view class="note-item">· 接种后在接种点观察 <text class="note-strong">30 分钟</text> 再离开</view>
+    <view class="note-item">· 24 小时内尽量不洗澡，注意接种部位清洁</view>
+    <view class="note-item">· 出现持续高热、过敏等异常请及时就医</view>
+    <view class="note-item">· 具体接种以当地预防接种门诊及儿保医生意见为准</view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+</view>

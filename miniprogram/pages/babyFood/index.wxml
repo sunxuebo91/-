@@ -1,0 +1,81 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">国家膳食指南 · 6 月-3 岁</view>
+    <view class="hero-title">宝宝辅食时间表</view>
+    <view class="hero-sub">从泥糊到家常，吃出健康好基础</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">5</text>
+        <text class="stat-label">个发展阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">7</text>
+        <text class="stat-label">大食物类别</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">30</text>
+        <text class="stat-label">月喂养期</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">谷物</view>
+      <view class="legend-tag">蛋白</view>
+      <view class="legend-tag">蔬果</view>
+      <view class="legend-tag">乳制品</view>
+      <view class="legend-tag">手指食物</view>
+      <view class="legend-tag">加餐</view>
+      <view class="legend-tag">饮水</view>
+    </view>
+    <text class="legend-text">依据《中国 7-24 月龄婴幼儿喂养指南》及《中国学龄前儿童膳食指南》</text>
+  </view>
+
+  <!-- 时间轴 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{schedule}}" wx:key="age" wx:for-item="it">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{it.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== schedule.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{it.age}}</view>
+          <view class="tl-hint">{{it.hint}}</view>
+          <view class="tl-feature">{{it.feature}}</view>
+        </view>
+
+        <view class="tl-vac" wx:for="{{it.items}}" wx:key="n" wx:for-item="v">
+          <view class="tl-vac-head">
+            <text class="tl-vac-name">{{v.n}}</text>
+            <text class="tl-vac-dose">{{v.d}}</text>
+          </view>
+          <view class="tl-vac-protect">{{v.p}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🍼 辅食安全小提醒</view>
+    <view class="note-item">· <text class="note-strong">1 岁前不加</text>盐、糖、蜂蜜、调味品，保留食材本味</view>
+    <view class="note-item">· <text class="note-strong">食物多样</text>：每天 12 种、每周 25 种以上食材</view>
+    <view class="note-item">· <text class="note-strong">单独引入</text>：每次只加一种新食材，连续观察 3-5 天</view>
+    <view class="note-item">· <text class="note-strong">警惕窒息</text>：整粒坚果、葡萄、果冻、长块肉必须切碎</view>
+    <view class="note-item">· <text class="note-strong">自主进食</text>：不强迫不追喂，让宝宝建立饥饱信号</view>
+    <view class="note-item">· <text class="note-strong">少喝果汁</text>：吃整果优于喝果汁，不喝含糖饮料</view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

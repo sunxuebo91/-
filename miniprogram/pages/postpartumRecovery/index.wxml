@@ -1,0 +1,115 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">第四孕期 · 0-6 月系统康复</view>
+    <view class="hero-title">产后康复指南</view>
+    <view class="hero-sub">身心同养 · 科学修复 · 重启生活</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">4</text>
+        <text class="stat-label">个康复阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">29</text>
+        <text class="stat-label">项关键任务</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">6</text>
+        <text class="stat-label">月修复黄金期</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">急性观察</view>
+      <view class="legend-tag">母乳建立</view>
+      <view class="legend-tag">42 天复查</view>
+      <view class="legend-tag">盆底修复</view>
+      <view class="legend-tag">心理筛查</view>
+    </view>
+    <text class="legend-text">参考 ACOG 第 736 号专家共识、WHO 产后保健建议（2022）、NICE NG194、中华医学会《产后出血指南》及《产后盆底功能障碍防治专家共识》</text>
+  </view>
+
+  <!-- 时间轴：4 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">{{it.t}}</view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🩺 产后必看安全提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚨</text><text class="tip-title">立即就医的红色信号</text></view>
+      <view class="tip-desc">大出血 / 持续头痛 + 视物模糊 / 胸痛气促 / 单侧腿肿热痛 / 发热 ≥ 38°C / 切口流脓裂开 / 自伤念头</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📅</text><text class="tip-title">42 天复查清单</text></view>
+      <view class="tip-desc">妇科 + 阴道 / 切口 + 盆底肌评估 + B 超 + 血压 + 血糖 + 血常规 + EPDS 量表 + 婴儿同步体检</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧠</text><text class="tip-title">EPDS 产后抑郁筛查</text></view>
+      <view class="tip-desc">10 题量表，≥ 10 分需评估，≥ 13 分高度怀疑；2 周以上情绪低落、兴趣丧失或自伤念头请立即就医</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🤸</text><text class="tip-title">运动渐进表</text></view>
+      <view class="tip-desc">24h 凯格尔起步 / 1 周内床上踝泵腹式呼吸 / 2-4 周散步 / 6 周复查后瑜伽 / 12 周后跑跳与核心</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🍼</text><text class="tip-title">母乳支持要点</text></view>
+      <view class="tip-desc">按需哺乳 8-12 次 / 天，正确含乳深含乳晕；堵奶温敷 + 顺向按摩；高热 > 38.5°C 警惕乳腺炎需就医</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💊</text><text class="tip-title">哺乳期用药原则</text></view>
+      <view class="tip-desc">查询 LactMed / Hale 评级；舍曲林、布洛芬、青霉素类多数安全；避免阿司匹林大剂量、四环素、放射造影剂</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💗</text><text class="tip-title">避孕安排</text></view>
+      <view class="tip-desc">产后 21 天即恢复生育力；首选含铜 IUD / 屈螺酮 / 避孕套；6 个月内避免再孕，剖宫产建议间隔 18 月以上</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🌿</text><text class="tip-title">中西医结合视角</text></view>
+      <view class="tip-desc">传统月子「不下床、不洗澡、忌风」已证伪；保持卫生、适度活动、营养均衡更利恢复，体质虚寒可遵中医辨证调理</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化原则</text></view>
+      <view class="tip-desc">本指南为通用科普，剖宫产、妊高症、产后出血、糖尿病、双胎等情况请遵产科及康复科医生个体化方案</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

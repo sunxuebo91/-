@@ -1,0 +1,121 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">国际营养学 · 26 天月子餐</view>
+    <view class="hero-title">月子餐谱</view>
+    <view class="hero-sub">分阶滋养 · 科学坐月 · 母婴同安</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">4</text>
+        <text class="stat-label">个调理阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">26</text>
+        <text class="stat-label">天每日食单</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">5</text>
+        <text class="stat-label">餐均衡搭配</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag tag-b">早餐</view>
+      <view class="legend-tag tag-l">午餐</view>
+      <view class="legend-tag tag-e">晚餐</view>
+      <view class="legend-tag tag-s">加餐</view>
+      <view class="legend-tag tag-t">月子汤</view>
+    </view>
+    <text class="legend-text">参考 WHO 哺乳期营养指南、NIH 蛋白/钙/铁推荐量及《中国孕产妇膳食指南》</text>
+  </view>
+
+  <!-- 时间轴：4 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="day-block" wx:for="{{ph.days}}" wx:key="d" wx:for-item="day">
+          <view class="day-head">
+            <view class="day-num">DAY {{day.d}}</view>
+          </view>
+          <view class="meal-line"><text class="meal-label tag-b">早</text><text class="meal-text">{{day.b}}</text></view>
+          <view class="meal-line"><text class="meal-label tag-l">午</text><text class="meal-text">{{day.l}}</text></view>
+          <view class="meal-line"><text class="meal-label tag-e">晚</text><text class="meal-text">{{day.e}}</text></view>
+          <view class="meal-line"><text class="meal-label tag-s">加</text><text class="meal-text">{{day.s}}</text></view>
+          <view class="meal-line"><text class="meal-label tag-t">汤</text><text class="meal-text">{{day.t}}</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🍲 国际营养学小提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💧</text><text class="tip-title">每日饮水 3000ml</text></view>
+      <view class="tip-desc">哺乳期需求量约为常人 1.5 倍，少量多次温饮</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🥩</text><text class="tip-title">蛋白质 71g / 天</text></view>
+      <view class="tip-desc">鱼、禽、蛋、肉、豆 + 奶制品，分配到 5-6 餐均衡摄入</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🥛</text><text class="tip-title">钙 1000mg + 维 D 600IU</text></view>
+      <view class="tip-desc">奶制品、绿叶菜、深海鱼，搭配适度日晒促进吸收</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🥬</text><text class="tip-title">铁 9mg + 叶酸 500μg</text></view>
+      <view class="tip-desc">红肉、动物肝脏每周 1-2 次，搭配维 C 蔬果促吸收</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🐟</text><text class="tip-title">DHA ≥ 200mg / 天</text></view>
+      <view class="tip-desc">深海鱼每周 2-3 次，或选用 DHA 藻油补充</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">☕</text><text class="tip-title">忌酒 · 限咖啡因 ≤ 200mg</text></view>
+      <view class="tip-desc">酒精、过量咖啡因会进入乳汁，影响婴儿睡眠</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🌿</text><text class="tip-title">观察过敏反应</text></view>
+      <view class="tip-desc">婴儿出现湿疹 / 腹泻时，回顾母亲近 24-48h 饮食</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚖️</text><text class="tip-title">循序减重</text></view>
+      <view class="tip-desc">每周减重不超过 0.5kg，避免影响泌乳质量</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🩺</text><text class="tip-title">个体化调整</text></view>
+      <view class="tip-desc">剖宫产、妊娠糖尿病、贫血等情况请遵医嘱与营养师</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

@@ -1,0 +1,133 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">WHO EENC · AAP · 双线照护 · 31 项任务</view>
+    <view class="hero-title">母婴护理指南</view>
+    <view class="hero-sub">产妇 + 新生儿 · 同步呵护 · 循证陪伴</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">4</text>
+        <text class="stat-label">个护理阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">31</text>
+        <text class="stat-label">项关键任务</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">42d</text>
+        <text class="stat-label">月子复查节点</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag chip-mom">产妇</view>
+      <view class="legend-tag chip-baby">宝宝</view>
+      <view class="legend-tag chip-both">母婴共同</view>
+    </view>
+    <view class="legend-row">
+      <view class="legend-tag">早接触早吸吮</view>
+      <view class="legend-tag">脐带 / 黄疸</view>
+      <view class="legend-tag">安全睡眠 ABC</view>
+      <view class="legend-tag">恶露 / 伤口</view>
+      <view class="legend-tag">42 天复查</view>
+    </view>
+    <text class="legend-text">参考 WHO/UNICEF 早期新生儿基本保健 EENC、AAP 2022 安全睡眠指南、AAP《新生儿 0-28 天护理》、国家卫健委《新生儿早期基本保健技术》、中华医学会《新生儿黄疸 / 脐部护理共识》、ACOG 第 736 号产后保健共识、ABM #36 母乳指南</text>
+  </view>
+
+  <!-- 时间轴:4 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block tb-{{it.tag}}" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">
+            <text class="task-chip chip-{{it.tag}}">{{it.tn}}</text>
+            <text class="task-text">{{it.t}}</text>
+          </view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">👩‍🍼 母婴护理必看专业提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚨</text><text class="tip-title">母婴红色信号一览</text></view>
+      <view class="tip-desc">产妇:发热 ≥ 38°C / 大出血 / 头痛伴视物模糊 / 胸痛气促 / 单侧腿肿 / 切口流脓 / 自伤念头;宝宝:体温异常 / 拒奶嗜睡 / 抽搐 / 黄疸进展至四肢手心 / 24h 不排胎便 / 呼吸 &gt; 60 次/分</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🌡️</text><text class="tip-title">新生儿体温监测</text></view>
+      <view class="tip-desc">正常 36.5-37.5°C(腋温);&lt; 36°C 低体温(袋鼠式复温)/ &gt; 37.5°C 关注脱水热与感染;不建议穿盖过多导致捂热综合征</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🌞</text><text class="tip-title">黄疸观察要点</text></view>
+      <view class="tip-desc">生理性 2-7 天高峰 14 天内消退;24h 内出现 / 进展快 / 黄染至手脚心 / 持续 &gt; 2w 即病理性需就医;严重高胆红素血症可致核黄疸不可逆脑损伤</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🛏️</text><text class="tip-title">安全睡眠 ABC(AAP 2022)</text></view>
+      <view class="tip-desc">A Alone 独睡 + B Back 仰卧 + C Crib 硬床;婴儿床内不放枕头、毛绒玩具、防撞条、被子;房间同居不同床到 6 月龄;预防婴儿猝死综合征 SIDS</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🫧</text><text class="tip-title">手卫生与探视控制</text></view>
+      <view class="tip-desc">接触新生儿前后流水 + 洗手液七步洗手 ≥ 20 秒;探视者控制人数与时长;发热 / 呼吸道感染 / 疱疹 / 未接种百白破或流感者不应近距离接触新生儿</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🍼</text><text class="tip-title">母乳喂养支持</text></view>
+      <view class="tip-desc">WHO 推荐纯母乳到 6 月龄、继续母乳到 2 岁;按需哺乳 8-12 次/天;含乳深 + 涨奶冷敷 + 拒绝暴力按摩(ABM #36);遇问题寻 IBCLC 国际泌乳顾问</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💧</text><text class="tip-title">产妇恶露与伤口</text></view>
+      <view class="tip-desc">恶露 3 阶段 6 周内消退;会阴 / 剖宫产切口红肿热痛流脓即感染;恶露恶臭 + 发热警惕产褥感染;大量鲜红出血需立即就医</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧠</text><text class="tip-title">EPDS 产后抑郁筛查</text></view>
+      <view class="tip-desc">爱丁堡量表 10 题,≥ 10 分需评估、≥ 13 分高度怀疑抑郁;产后 2 周持续情绪低落 / 兴趣丧失 / 睡眠紊乱 / 自伤念头必须就医,非"矫情"</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💉</text><text class="tip-title">新生儿基础疫苗</text></view>
+      <view class="tip-desc">出生 24h 内:乙肝第 1 针 + 卡介苗;满月:乙肝第 2 针;2 月龄:脊灰 IPV 第 1 针;以当地预防接种门诊与儿保医生方案为准</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📅</text><text class="tip-title">42 天母婴同步复查</text></view>
+      <view class="tip-desc">同一天就诊:产妇做妇科 + 盆底 + B 超 + 血压血糖 + EPDS;婴儿做体格测量 + 喂养评估 + DDST 发育筛查 + 髋关节超声</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化原则</text></view>
+      <view class="tip-desc">本指南为通用循证科普,早产 / 低体重儿 / 双胎 / 剖宫产 / 妊高症 / 糖尿病等情况请遵产科 / 新生儿科 / 儿保医生个体化方案</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

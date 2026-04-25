@@ -1,0 +1,126 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">GB/T 42195-2022 国标 · WHO ICOPE 框架</view>
+    <view class="hero-title">老人照护指南</view>
+    <view class="hero-sub">能力分级 · 循证照护 · 尊严陪伴</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">3</text>
+        <text class="stat-label">个能力等级</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">26</text>
+        <text class="stat-label">项关键任务</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">5</text>
+        <text class="stat-label">大功能维度</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">能力评估</view>
+      <view class="legend-tag">跌倒预防</view>
+      <view class="legend-tag">慢病管理</view>
+      <view class="legend-tag">康复训练</view>
+      <view class="legend-tag">压疮防控</view>
+      <view class="legend-tag">安宁疗护</view>
+    </view>
+    <text class="legend-text">参考国家标准 GB/T 42195-2022《老年人能力评估规范》、WHO ICOPE 整合照护框架、《中国老年人膳食指南 2022》、AGS Beers Criteria 2023、AGS/BGS 跌倒预防指南、NPUAP/EPUAP 2019 压力性损伤指南、WHO 安宁疗护原则</text>
+  </view>
+
+  <!-- 时间轴：3 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">{{it.t}}</view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🩺 老人照护必看专业提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📋</text><text class="tip-title">老年综合评估 CGA</text></view>
+      <view class="tip-desc">每年 1 次系统评估：ADL/IADL + MMSE/MoCA 认知 + GDS-15 抑郁 + MNA-SF 营养 + 跌倒史 + 视听 + 用药盘点；是老年医学个体化照护的起点</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚠️</text><text class="tip-title">急救红色信号</text></view>
+      <view class="tip-desc">突发胸痛 / 一侧肢体麻木无力 / 言语含糊（FAST 卒中识别）/ 意识改变 / 跌倒后剧痛或不能站立 / 持续高热 / 大量黑便呕血 → 立即拨打 120</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚶</text><text class="tip-title">跌倒预防核心</text></view>
+      <view class="tip-desc">每年至少 1 次 TUG 起立行走测试（≥ 12s 高危）；防滑鞋 + 居家无障碍 + 起夜光 + 助行器；停用诱发跌倒药（苯二氮䓬、抗胆碱、α 受体阻滞剂）</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💊</text><text class="tip-title">用药安全 Beers 标准</text></view>
+      <view class="tip-desc">老年人慎用 / 禁用：苯二氮䓬类、抗胆碱药（苯海拉明 / 阿米替林）、长效磺脲类、长期 NSAIDs；多重用药 ≥ 5 种每年请医师 / 临床药师"减药评估"</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🍚</text><text class="tip-title">营养与吞咽</text></view>
+      <view class="tip-desc">蛋白 1.0-1.2g/kg/天 + 钙 1000mg + 维 D 800-1000IU；BMI 22-26.9；反复呛咳 → 洼田饮水试验，按 IDDSI 标准调整食物质地（糊状 / 末状 / 软食）</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🛏️</text><text class="tip-title">压力性损伤分级</text></view>
+      <view class="tip-desc">NPUAP 2019：1 期（指压不变白红斑）/ 2 期（部分皮层缺损）/ 3 期（全层缺损）/ 4 期（全层组织缺损暴露肌腱骨）/ 不可分期 / 深部组织损伤；2h 翻身 + 气垫床</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧠</text><text class="tip-title">认知衰退识别</text></view>
+      <view class="tip-desc">10 大早期信号：近事遗忘 / 计划任务困难 / 时间地点混淆 / 视觉空间障碍 / 语言表达困难 / 物品错放 / 判断力下降 / 退出社交 / 情绪人格改变 / 处理熟悉事务困难</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💉</text><text class="tip-title">疫苗接种推荐</text></view>
+      <view class="tip-desc">流感疫苗每年 1 剂；23 价肺炎球菌疫苗（≥ 65 岁 1 剂）；带状疱疹重组疫苗（≥ 50 岁 2 剂）；新冠加强针；破伤风每 10 年加强；遵当地疾控建议</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🤝</text><text class="tip-title">长期护理保险</text></view>
+      <view class="tip-desc">国家长护险试点已覆盖 49 个城市，按《医保发〔2021〕37 号》失能等级评估，符合者可享受居家 / 机构护理服务补贴；建议家属向当地医保局或社区咨询申请</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🕊️</text><text class="tip-title">安宁疗护与家属支持</text></view>
+      <view class="tip-desc">终末期遵 WHO 安宁疗护：疼痛与症状控制（NRS 评分 / WHO 三阶梯镇痛）+ 心理精神支持 + 善终意愿；照护者建议轮替 + 喘息服务 + 必要时心理咨询</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化原则</text></view>
+      <view class="tip-desc">本指南为通用循证科普，具体用药 / 康复 / 护理方案因合并疾病、衰弱程度、文化习俗、家庭环境差异较大，请遵老年科 / 全科医师与专业护理评估</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

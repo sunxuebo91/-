@@ -1,0 +1,130 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">备孕到分娩 · 0-10 月全周期</view>
+    <view class="hero-title">备孕备产指南</view>
+    <view class="hero-sub">每周陪伴 · 科学护航 · 母胎同安</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">4</text>
+        <text class="stat-label">个关键阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">40</text>
+        <text class="stat-label">周每周指南</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">3</text>
+        <text class="stat-label">维度全覆盖</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag tag-dev">发育</view>
+      <view class="legend-tag tag-care">注意</view>
+      <view class="legend-tag tag-diet">饮食</view>
+    </view>
+    <text class="legend-text">参考《孕前和孕期保健指南（2018 修订版）》、ACOG、Mayo Clinic、WHO 产前保健建议</text>
+  </view>
+
+  <!-- 时间轴：4 阶段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <!-- 备孕期：8 项准备清单 -->
+        <block wx:if="{{ph.isPrep}}">
+          <view class="prep-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+            <view class="prep-title">{{it.t}}</view>
+            <view class="prep-desc">{{it.d}}</view>
+          </view>
+        </block>
+
+        <!-- 孕期：每周三栏 -->
+        <block wx:else>
+          <view class="week-block" wx:for="{{ph.weeks}}" wx:key="w" wx:for-item="wk">
+            <view class="week-num">第 {{wk.w}} 周</view>
+            <view class="week-line">
+              <text class="week-label tag-dev">发育</text>
+              <text class="week-text">{{wk.dev}}</text>
+            </view>
+            <view class="week-line">
+              <text class="week-label tag-care">注意</text>
+              <text class="week-text">{{wk.care}}</text>
+            </view>
+            <view class="week-line">
+              <text class="week-label tag-diet">饮食</text>
+              <text class="week-text">{{wk.diet}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🩺 重点产检与营养提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📋</text><text class="tip-title">建档时机</text></view>
+      <view class="tip-desc">孕 6-8 周首次 B 超确认宫内孕，孕 8-12 周到户籍地或居住地医院建档</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🔬</text><text class="tip-title">关键产检节点</text></view>
+      <view class="tip-desc">NT（11-13⁺⁶ 周）/ 唐筛或无创（15-20 周）/ 大排畸（20-24 周）/ 妊糖 OGTT（24-28 周）/ GBS（35-37 周）</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💊</text><text class="tip-title">营养素阶段补充</text></view>
+      <view class="tip-desc">叶酸全程 / 铁 27mg 中晚期 / 钙 1000-1200mg 中晚期 / DHA ≥ 200mg 中晚期 / 维 D 600IU 全程</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚖️</text><text class="tip-title">体重增长（IOM 标准）</text></view>
+      <view class="tip-desc">孕前 BMI 正常者全程增重 11.5-16kg，超重 7-11.5kg，偏瘦 12.5-18kg</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚫</text><text class="tip-title">全程禁忌</text></view>
+      <view class="tip-desc">禁酒、禁生食（生鱼生肉、未熟蛋、未消毒奶）、限咖啡因 ≤ 200mg、远离猫砂与新装修</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🏃</text><text class="tip-title">合理运动</text></view>
+      <view class="tip-desc">无禁忌孕妇每周 150 分钟中等强度（散步、孕妇瑜伽、游泳），避免对抗与跌倒风险</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚨</text><text class="tip-title">立即就医信号</text></view>
+      <view class="tip-desc">阴道出血、剧烈腹痛、持续头痛、视物模糊、胎动异常、破水、发热 ≥ 38.5°C</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化指导</text></view>
+      <view class="tip-desc">本指南为通用科普，具体方案请遵产科医生与营养师建议，特别是高危妊娠与基础疾病人群</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>

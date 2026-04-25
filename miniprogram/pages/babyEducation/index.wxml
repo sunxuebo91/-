@@ -1,0 +1,79 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">蒙台梭利教育 · 0-3 岁</view>
+    <view class="hero-title">宝宝早教时间表</view>
+    <view class="hero-sub">把握敏感期，做"会跟随的家长"</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">8</text>
+        <text class="stat-label">个发展阶段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">7</text>
+        <text class="stat-label">大能力领域</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">36</text>
+        <text class="stat-label">月全周期</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">感官</view>
+      <view class="legend-tag">大动作</view>
+      <view class="legend-tag">精细</view>
+      <view class="legend-tag">语言</view>
+      <view class="legend-tag">认知</view>
+      <view class="legend-tag">生活</view>
+      <view class="legend-tag">社交</view>
+    </view>
+    <text class="legend-text">蒙氏强调"跟随孩子"，按敏感期提供合适的环境与材料</text>
+  </view>
+
+  <!-- 时间轴 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{schedule}}" wx:key="age" wx:for-item="it">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{it.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== schedule.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{it.age}}</view>
+          <view class="tl-hint">{{it.hint}}</view>
+          <view class="tl-feature">{{it.feature}}</view>
+        </view>
+
+        <view class="tl-vac" wx:for="{{it.items}}" wx:key="n" wx:for-item="v">
+          <view class="tl-vac-head">
+            <text class="tl-vac-name">{{v.n}}</text>
+            <text class="tl-vac-dose">{{v.d}}</text>
+          </view>
+          <view class="tl-vac-protect">{{v.p}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">🌟 蒙氏家长小提醒</view>
+    <view class="note-item">· <text class="note-strong">观察 优先</text>：先看孩子在做什么，再决定要不要帮</view>
+    <view class="note-item">· <text class="note-strong">环境要预备</text>：低矮收纳、真实工具，让孩子自由选择</view>
+    <view class="note-item">· <text class="note-strong">允许犯错</text>：洒水、撕纸、慢半拍，都是学习的一部分</view>
+    <view class="note-item">· <text class="note-strong">每天专注 30 分钟</text>：高质量陪伴胜过全天散漫</view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+</view>
