@@ -66,8 +66,7 @@
     "pages/test-user-api/index",
     "pages/test-customer-service/index",
     "pages/test-ai-classify",
-    "pages/index/index",
-    "pages/example/index"
+    "pages/index/index"
   ],
 
   "window": {
