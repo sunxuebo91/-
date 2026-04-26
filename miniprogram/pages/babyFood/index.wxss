@@ -150,6 +150,9 @@ page {
 /* 时间轴 */
 .timeline {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
 }
 
 .tl-row {
@@ -161,12 +164,35 @@ page {
 .tl-side {
   width: 88rpx;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  align-self: stretch;
+}
+
+.tl-side::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: -26rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4rpx;
+  background: linear-gradient(to bottom, #A4D33B, #DCEDC8);
+  z-index: 0;
+}
+
+.tl-row:first-child .tl-side::before {
+  top: 50%;
+}
+
+.tl-row:last-child .tl-side::before {
+  bottom: 50%;
 }
 
 .tl-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
@@ -176,22 +202,23 @@ page {
   align-items: center;
   justify-content: center;
   box-shadow: 0 6rpx 16rpx rgba(164, 211, 59, 0.35);
-  flex-shrink: 0;
+  z-index: 2;
 }
 
 .tl-dot-text {
+  display: block;
+  width: 72rpx;
   font-size: 22rpx;
   font-weight: 800;
   color: #558B2F;
   letter-spacing: 1rpx;
+  line-height: 24rpx;
+  text-align: center;
+  word-break: break-all;
 }
 
 .tl-line {
-  flex: 1;
-  width: 4rpx;
-  background: linear-gradient(to bottom, #A4D33B, #DCEDC8);
-  margin: 8rpx 0;
-  min-height: 24rpx;
+  display: none;
 }
 
 .tl-card {
@@ -200,7 +227,6 @@ page {
   border-radius: 20rpx;
   padding: 24rpx 24rpx 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
-  margin-bottom: 24rpx;
   min-width: 0;
 }
 
