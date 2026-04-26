@@ -78,4 +78,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="宝宝辅食指南"
+    page-subtitle="6 月起 分龄添加 · 不加盐不加糖"
+    page-badge="WHO / 中国营养学会"
+    theme-color="#7CB342"
+    theme-color-light="#AED581"
+    stats="{{[{num:'6m',label:'起步月龄'},{num:'4',label:'阶段'},{num:'5',label:'类高敏'}]}}"
+    summary-lines="{{['6 月起从单一谷物 / 蔬菜泥 / 水果泥逐一添加','7-9 月：半流质 + 含铁辅食 + 蛋黄 / 红肉','10-12 月：手指食物 + 软烂家庭餐过渡','1 岁后：低盐低糖 + 跟随家庭餐 + 多样化','常见禁忌：< 1 岁蜂蜜 / 整粒坚果 / 鲜奶 / 大量盐糖']}}"
+  />
 </view>

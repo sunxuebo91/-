@@ -1,0 +1,130 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">国标 GB/T 42195 · 24h 全程 · 循证照护</view>
+    <view class="hero-title">护老员一日工作流程</view>
+    <view class="hero-sub">分级照护 · 安全为先 · 尊严陪伴</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">6</text>
+        <text class="stat-label">个时段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">31</text>
+        <text class="stat-label">项关键工作</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">3 级</text>
+        <text class="stat-label">能力分级</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">分级照护</view>
+      <view class="legend-tag">慢病管理</view>
+      <view class="legend-tag">跌倒预防</view>
+      <view class="legend-tag">压疮防护</view>
+      <view class="legend-tag">心理陪伴</view>
+    </view>
+    <text class="legend-text">参考国家标准 GB/T 42195-2022《老年人能力评估规范》、人社部《养老护理员国家职业技能标准》(2019)、GB/T 35796-2017《养老机构服务质量基本规范》、WHO ICOPE 整合照护框架、AGS Beers Criteria 2023、NPUAP/EPUAP 压疮分级 2019、WHO 老年人身体活动指南</text>
+  </view>
+
+  <!-- 时间轴：6 时段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">{{it.t}}</view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">📋 护老员工作必读专业提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📑</text><text class="tip-title">国家标准与职业规范</text></view>
+      <view class="tip-desc">人社部《养老护理员国家职业技能标准》(2019 修订)、GB/T 42195-2022《老年人能力评估规范》、GB/T 35796-2017《养老机构服务质量基本规范》、国家卫健委《医养结合机构服务指南》——服务流程以国标为基准,持证上岗,参与医养结合机构定期复训</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚠️</text><text class="tip-title">老人红色信号</text></view>
+      <view class="tip-desc">中风 FAST(口角歪斜 / 上肢无力 / 言语不清,黄金 4.5h 溶栓窗)/ 胸痛 &gt; 15 分钟硝酸甘油不缓解(疑似心梗)/ 跌倒后意识不清 / 突发剧烈头痛 / 呕血便血 / 呼吸困难紫绀 / 高热 &gt; 39℃ 不退 / 血糖 &lt; 3.9 或 &gt; 16.7mmol/L——立即拨 120 并通知家属</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">💊</text><text class="tip-title">Beers 用药警示</text></view>
+      <view class="tip-desc">AGS Beers Criteria 2023 列出老年人慎用 / 禁用药清单:苯二氮䓬类(地西泮 / 氯硝西泮)、长效磺脲(格列本脲)、抗胆碱能药物(苯海拉明)、第一代抗组胺、肌松剂等;慎重使用 PPI 长期服用;护老员只按医嘱给药,不擅自加减停换,服药后留观 30 分钟</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🍚</text><text class="tip-title">吞咽筛查与营养</text></view>
+      <view class="tip-desc">EAT-10 量表 ≥ 3 分提示吞咽风险 / 反复唾液吞咽试验 30 秒 &lt; 3 次异常 / 饮水试验呛咳即阳性;IDDSI 食物分级(0-7 级)按吞咽能力调整稠度;MNA-SF 营养筛查 &lt; 8 分营养不良,需营养师介入;老年人蛋白质 ≥ 1.0g/kg/天,警惕肌少症</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🛏️</text><text class="tip-title">NPUAP 压疮分级与翻身</text></view>
+      <view class="tip-desc">NPUAP/EPUAP 2019 压力性损伤分 1-4 期 + 不可分期 + 深部组织损伤;高风险老人(Braden 评分 ≤ 18)每 2h 翻身一次,30° 侧卧位减少骶尾压力;气垫床 + 减压枕辅助;骨突涂润肤剂、不按摩、保持皮肤清洁干燥;一期立即解除压力可逆</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚶</text><text class="tip-title">跌倒预防</text></view>
+      <view class="tip-desc">Morse 跌倒评估量表(MFS) ≥ 45 分高风险 / 起立行走计时测试(TUG) &gt; 13.5 秒高风险;适老化改造:卫浴扶手 + 防滑垫 + 坐凳、走道夜灯、地面无障碍、床高 45cm 双脚平地、助行器选配;1-1-1 慢起原则、防滑鞋、规律平衡训练(太极 / 八段锦)</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧠</text><text class="tip-title">痴呆 BPSD 与认知衰退信号</text></view>
+      <view class="tip-desc">认知衰退 10 大信号:记忆力下降影响生活 / 计划解决问题困难 / 完成熟悉任务困难 / 时间地点混淆 / 视觉空间障碍 / 语言表达困难 / 物品错放 / 判断力下降 / 社交退缩 / 情绪人格改变;BPSD(痴呆精神行为症状)首选非药物干预——怀旧 / 音乐 / 多感官 / 环境调整,不约束</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🩺</text><text class="tip-title">慢病管理 三高监测频率</text></view>
+      <view class="tip-desc">高血压:每日晨起 + 睡前测量、目标 &lt; 140/90mmHg(高龄个体化);糖尿病:空腹 + 餐后 2h 血糖、HbA1c 每 3 月、目标 7-9% 个体化;高血脂:LDL-C 目标分层;心衰:每日称体重、24h 增 &gt; 2kg 警报;护老员只协助监测记录,不替代医师调整治疗</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚭</text><text class="tip-title">必要禁忌</text></view>
+      <view class="tip-desc">不擅自停药 / 改药 / 加量 / 推荐保健品代替治疗 / 不约束患者(身体约束须医嘱书面)/ 不打骂虐待忽视精神暴力 / 不拍照传播老人隐私 / 不替代医疗操作(注射 / 鼻饲 / 吸痰 / 灌肠须培训持证)/ 不与老人金钱往来 / 不接受老人馈赠贵重物品</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化与医养结合</text></view>
+      <view class="tip-desc">老年人个体差异极大,自理 / 半自理 / 不自理(GB/T 42195 能力 0-3 级)需差异化方案;基础疾病、用药史、过敏史、吞咽功能、认知功能、心理状态全面评估后制定;长护险申请协助、定期医师随访、康复师指导、营养师配餐——形成医养结合闭环,护老员是其中一环不替代</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="护老员一日工作流程"
+    page-subtitle="分级照护 · 安全为先 · 尊严陪伴"
+    page-badge="GB/T 42195-2022"
+    theme-color="#455A64"
+    theme-color-light="#90A4AE"
+    stats="{{[{num:'6',label:'时段'},{num:'31',label:'项工作'},{num:'3',label:'级照护'}]}}"
+    summary-lines="{{['晨间：1-1-1 慢起 / 晨药 / 早餐吞咽分级','上午：2h 翻身 / PT-OT-ST 康复 / 陪诊取药','午间：30°-90° 半坐位进食 / 防误吸口腔护理','下午：晒太阳防骨松 / GDS-15 心理陪伴 / 监测','夜间：2h 翻身防压疮 / 巡视 / 安全检查清单']}}"
+  />
+</view>

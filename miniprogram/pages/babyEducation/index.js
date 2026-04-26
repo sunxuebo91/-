@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     schedule: [
       { dot: '0-3m', age: '0-3 月龄', hint: '视觉与听觉敏感期',
         feature: '从模糊到清晰，宝宝用感官开始探索世界',
@@ -70,5 +73,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '宝宝早教' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '宝宝早教指南｜0-6 岁分龄启蒙 · 五大领域并重',
+      path: '/pages/babyEducation/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '宝宝早教指南｜0-6 岁分龄启蒙 · 五大领域并重',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

@@ -61,4 +61,13 @@
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
 
+  <transparent-share-fab
+    page-title="待产包准备清单"
+    page-subtitle="入院 / 妈妈 / 宝宝 / 产后 一站清单"
+    page-badge="按需定制 · 不漏一件"
+    theme-color="#FF6B9D"
+    theme-color-light="#FF8FB3"
+    stats="{{[{num:'4',label:'大类'},{num:'40+',label:'项清单'},{num:'100%',label:'不漏带'}]}}"
+    summary-lines="{{['入院证件齐全：医保 + 准生证 + 产检本 + 身份证','妈妈用品：哺乳衣 / 卫生巾 / 一次性内裤 / 护理垫','宝宝用品：纸尿裤 / 襁褓 / 奶瓶 / 衣物 / 包被','产后必备：恶露巾 / 束腹带 / 出院衣物','按医院 / 季节 / 自身需求灵活增减']}}"
+  />
 </view>

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "小儿推拿",
+  "navigationBarBackgroundColor": "#D4863A",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#FFF7EB",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
+}

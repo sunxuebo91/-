@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "服务费报价",
   "navigationBarBackgroundColor": "#20B2A0",
-  "navigationBarTextStyle": "white"
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
 }

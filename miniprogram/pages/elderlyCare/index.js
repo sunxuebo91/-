@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: '0-1级', title: '自理期 · 健康管理', hint: '能力完好 / 轻度失能',
         feature: 'GB/T 42195-2022 国标能力 0-1 级，ADL 6 项基本独立。重点是延缓衰老、防跌倒、防跌入失能。WHO ICOPE 框架围绕"行动力 / 营养 / 认知 / 心理 / 感官"五大功能保护',
@@ -44,5 +47,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '老人照护' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '老人照护指南｜分级照护 + 慢病管理 + 安宁疗护',
+      path: '/pages/elderlyCare/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '老人照护指南｜分级照护 + 慢病管理 + 安宁疗护',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

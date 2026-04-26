@@ -63,6 +63,10 @@
         <text class="price-card-emoji">👩‍🍼</text>
         <view class="price-card-title">母婴护理</view>
       </view>
+      <view class="price-card price-card-jade" bindtap="goMaternityMatronSchedule">
+        <text class="price-card-emoji">🕰️</text>
+        <view class="price-card-title">月嫂一日工作流程</view>
+      </view>
     </view>
   </view>
 
@@ -86,6 +90,14 @@
         <text class="price-card-emoji">🌱</text>
         <view class="price-card-title">宝宝早教</view>
       </view>
+      <view class="price-card price-card-amber" bindtap="goPediatricMassage">
+        <text class="price-card-emoji">🌿</text>
+        <view class="price-card-title">小儿推拿</view>
+      </view>
+      <view class="price-card price-card-grape" bindtap="goChildcareNannySchedule">
+        <text class="price-card-emoji">🍼</text>
+        <view class="price-card-title">育儿嫂一日工作流程</view>
+      </view>
     </view>
   </view>
 
@@ -100,6 +112,10 @@
       <view class="price-card price-card-taupe" bindtap="goElderlyCare">
         <text class="price-card-emoji">🧓</text>
         <view class="price-card-title">老人照护</view>
+      </view>
+      <view class="price-card price-card-slate" bindtap="goEldercareSchedule">
+        <text class="price-card-emoji">👵</text>
+        <view class="price-card-title">护老员一日工作流程</view>
       </view>
     </view>
   </view>

@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: '0-72h', title: '第一阶段 · 黄金对接期', hint: '出生 0-72 小时 / WHO EENC',
         feature: '产妇与新生儿同时进入高危观察窗口。WHO/UNICEF EENC 强调"延迟脐带结扎 + 早接触早吸吮 + 母婴同室"是黄金 90 分钟核心动作；产妇此时面临产后出血、子痫前期等风险',
@@ -53,5 +56,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '母婴护理' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '母婴护理全程｜黄金 90 分钟 → 产褥期 6 阶段循证清单',
+      path: '/pages/maternalInfantCare/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '母婴护理全程｜黄金 90 分钟 → 产褥期 6 阶段循证清单',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

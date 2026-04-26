@@ -1,0 +1,130 @@
+<view class="page">
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-bg"></view>
+    <view class="hero-badge">国标 GB/T 31771 · 24 小时全程 · 循证操作</view>
+    <view class="hero-title">月嫂一日工作流程</view>
+    <view class="hero-sub">时段管理 · 母婴并护 · 安全为先</view>
+    <view class="hero-stats">
+      <view class="stat-item">
+        <text class="stat-num">6</text>
+        <text class="stat-label">个时段</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">33</text>
+        <text class="stat-label">项关键工作</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">24h</text>
+        <text class="stat-label">全程守护</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-row">
+      <view class="legend-tag">母婴并护</view>
+      <view class="legend-tag">时段管理</view>
+      <view class="legend-tag">循证操作</view>
+      <view class="legend-tag">日志记录</view>
+      <view class="legend-tag">安全为先</view>
+    </view>
+    <text class="legend-text">参考国家标准 GB/T 31771-2015《母婴生活护理服务规范》、人社部职业标准《家政服务员（母婴生活照护）》、中国妇幼保健协会《母婴护理（月嫂）规范》、WHO/UNICEF 爱婴医院倡议（BFHI）、AAP 婴儿安全睡眠指南、ABM 临床指南 #36（2022）</text>
+  </view>
+
+  <!-- 时间轴：6 时段 -->
+  <view class="timeline">
+    <view class="tl-row" wx:for="{{phases}}" wx:key="title" wx:for-item="ph">
+      <view class="tl-side">
+        <view class="tl-dot">
+          <text class="tl-dot-text">{{ph.dot}}</text>
+        </view>
+        <view class="tl-line" wx:if="{{index !== phases.length - 1}}"></view>
+      </view>
+
+      <view class="tl-card">
+        <view class="tl-card-head">
+          <view class="tl-age">{{ph.title}}</view>
+          <view class="tl-hint">{{ph.hint}}</view>
+          <view class="tl-feature">{{ph.feature}}</view>
+        </view>
+
+        <view class="task-block" wx:for="{{ph.items}}" wx:key="t" wx:for-item="it">
+          <view class="task-title">{{it.t}}</view>
+          <view class="task-desc">{{it.d}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部贴士 -->
+  <view class="bottom-note">
+    <view class="note-title">📋 月嫂工作必读专业提醒</view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📑</text><text class="tip-title">国家标准与职业规范</text></view>
+      <view class="tip-desc">GB/T 31771-2015《母婴生活护理服务规范》、人社部《家政服务员（母婴生活照护）国家职业标准》、中国妇幼保健协会《母婴护理规范》——所有服务流程以国标为基准,持证上岗</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">⚠️</text><text class="tip-title">新生儿红色信号</text></view>
+      <view class="tip-desc">体温 ≥ 38°C 或 ≤ 36°C / 拒奶 / 持续呕吐 / 呼吸 &gt; 60 次/分或暂停 / 口唇紫绀 / 嗜睡或激惹 / 黄染蔓延至手足心 / 抽搐 / 脐部脓性分泌——立即就医</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🤱</text><text class="tip-title">产妇红色信号</text></view>
+      <view class="tip-desc">体温 ≥ 38°C 持续 / 恶露异味或量突增 / 乳房红肿热痛伴高热 / 伤口红肿渗液裂开 / 大出血 / 持续头痛视物模糊（先兆子痫）/ 抑郁加重或自伤念头——立即就医</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🧼</text><text class="tip-title">严格手卫生</text></view>
+      <view class="tip-desc">七步洗手法（内外夹弓大立腕），接触宝宝前后必洗、换尿布前后必洗、备餐前必洗;指甲修剪平整无倒刺、不戴戒指与手链;手部破损建议戴一次性手套护理</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🛏️</text><text class="tip-title">AAP 安全睡眠 ABC 原则</text></view>
+      <view class="tip-desc">Alone（独自睡）/ Back（仰卧位）/ Crib（婴儿床）——严禁与大人同床、严禁俯卧或侧卧入睡、严禁松软床垫枕被毛绒玩具;母婴同房不同床,可降低 SIDS 风险 50%</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🍲</text><text class="tip-title">月子餐七大原则</text></view>
+      <view class="tip-desc">温补不燥 / 少盐少油 / 食材多样 / 汤水搭配 / 循序渐进 / 分餐少食 / 避忌生冷;前 3 天清淡防堵奶,3 天后逐步加量加汤;哺乳期 +450-500kcal/天,蛋白质 +25g</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">📝</text><text class="tip-title">护理日志规范记录</text></view>
+      <view class="tip-desc">每日记录:产妇体温/恶露/乳房/伤口/情绪、宝宝体温/喂养时长与量/大小便次数与性状/睡眠/异常情况;交接时与家长当面核对,异常即时口头报告并书面留痕</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🤝</text><text class="tip-title">家庭沟通与边界</text></view>
+      <view class="tip-desc">尊重家庭隐私不外传 / 不擅自喂药与保健品 / 不替代医师诊断 / 不强加个人育儿观念 / 不收受额外馈赠 / 不擅自外出离岗 / 与家庭分歧通过家政公司沟通</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">🚭</text><text class="tip-title">必要禁忌</text></view>
+      <view class="tip-desc">不喷香水化浓妆 / 不戴首饰长指甲 / 不与宝宝亲嘴 / 不对宝宝吹气喂食 / 不摇晃婴儿头部（防摇晃综合征）/ 工作期间不饮酒不吸烟 / 患感冒或感染性疾病需戴口罩或暂离</view>
+    </view>
+
+    <view class="tip">
+      <view class="tip-head"><text class="tip-icon">👩‍⚕️</text><text class="tip-title">个体化原则</text></view>
+      <view class="tip-desc">早产儿、低出生体重儿、双胎、剖宫产、妊娠期糖尿病/高血压、产后出血、乳腺手术史等情况,流程需按医师与新生儿科/产科出院医嘱调整;月嫂只做生活照护,不替代医疗</view>
+    </view>
+  </view>
+
+  <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="月嫂一日工作流程"
+    page-subtitle="6 时段 24 小时全程循证"
+    page-badge="母婴护理师国标"
+    theme-color="#00796B"
+    theme-color-light="#4DB6AC"
+    stats="{{[{num:'6',label:'时段'},{num:'30+',label:'项工作'},{num:'24',label:'小时全程'}]}}"
+    summary-lines="{{['晨间：产妇恶露 / 切口护理 / 母乳建立','上午：宝宝抚触 / 黄疸观察 / 月子餐','午间：哺乳指导 / 安全睡眠 / 拍嗝防呛','下午：脐带护理 / 体重曲线 / 心理支持','夜间：按需哺乳 / 红色信号警惕 / 5S 安抚']}}"
+  />
+</view>

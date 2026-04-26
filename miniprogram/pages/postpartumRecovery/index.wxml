@@ -112,4 +112,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="产后康复路径"
+    page-subtitle="24h → 6 个月 第四孕期循证"
+    page-badge="WHO / ACOG 共识"
+    theme-color="#0097A7"
+    theme-color-light="#4DD0E1"
+    stats="{{[{num:'6',label:'阶段'},{num:'42',label:'天复查'},{num:'6',label:'月恢复期'}]}}"
+    summary-lines="{{['0-24h 急性观察：宫缩 / 出血 / 早接触早吸吮','1 周伤口与恶露：母乳建立 / 凯格尔启动','2-6 周产褥期：腹直肌 / 心理 / 红色信号警惕','42 天系统复查：盆底功能 / 子宫复旧 / 抑郁筛查','3-6 月持续恢复：运动回归 / 性生活 / 避孕规划']}}"
+  />
 </view>

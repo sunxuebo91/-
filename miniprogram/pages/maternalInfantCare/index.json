@@ -2,5 +2,8 @@
   "navigationBarTitleText": "母婴护理",
   "navigationBarBackgroundColor": "#EC7C8F",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#FFF5F7"
+  "backgroundColor": "#FFF5F7",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
 }

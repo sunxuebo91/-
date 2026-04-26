@@ -2,5 +2,8 @@
   "navigationBarTitleText": "备孕备产",
   "navigationBarBackgroundColor": "#3F51B5",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#F4F5FB"
+  "backgroundColor": "#F4F5FB",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
 }

@@ -161,6 +161,30 @@ page {
   box-shadow: 0 8rpx 20rpx rgba(236, 124, 143, 0.35);
 }
 
+/* 小儿推拿卡片 - 琥珀橙 */
+.price-card-amber {
+  background: linear-gradient(135deg, #F57C00 0%, #FFB74D 100%);
+  box-shadow: 0 8rpx 20rpx rgba(245, 124, 0, 0.35);
+}
+
+/* 月嫂一日工作流程卡片 - 翡翠青 */
+.price-card-jade {
+  background: linear-gradient(135deg, #00897B 0%, #4DB6AC 100%);
+  box-shadow: 0 8rpx 20rpx rgba(0, 137, 123, 0.35);
+}
+
+/* 育儿嫂一日工作流程卡片 - 葡紫 */
+.price-card-grape {
+  background: linear-gradient(135deg, #7B1FA2 0%, #BA68C8 100%);
+  box-shadow: 0 8rpx 20rpx rgba(123, 31, 162, 0.35);
+}
+
+/* 护老员一日工作流程卡片 - 钢青 */
+.price-card-slate {
+  background: linear-gradient(135deg, #455A64 0%, #78909C 100%);
+  box-shadow: 0 8rpx 20rpx rgba(69, 90, 100, 0.35);
+}
+
 .price-card-image {
   width: 88rpx;
   height: 88rpx;

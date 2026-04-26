@@ -2,5 +2,8 @@
   "navigationBarTitleText": "产后康复",
   "navigationBarBackgroundColor": "#26C6DA",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#EEF9FB"
+  "backgroundColor": "#EEF9FB",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
 }

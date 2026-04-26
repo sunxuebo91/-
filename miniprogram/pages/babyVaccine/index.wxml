@@ -96,4 +96,13 @@
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
 
+  <transparent-share-fab
+    page-title="宝宝疫苗手册"
+    page-subtitle="0-6 岁国家免疫规划 + 自费推荐"
+    page-badge="按月接种 · 一针不漏"
+    theme-color="#2EA875"
+    theme-color-light="#66BB8A"
+    stats="{{[{num:'0-6',label:'岁全程'},{num:'14',label:'类疫苗'},{num:'30+',label:'剂次'}]}}"
+    summary-lines="{{['国家免疫规划：乙肝 / 卡介苗 / 脊髓灰质炎 / 百白破 等','自费推荐：13 价肺炎 / 五联 / 流感 / 水痘 / HPV','按月龄准时接种，错过及时补种','接种前后注意事项 + 不良反应识别','基于《国家免疫规划疫苗儿童免疫程序》最新版']}}"
+  />
 </view>

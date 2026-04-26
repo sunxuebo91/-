@@ -93,13 +93,5 @@
 
   <!-- 底部留白 -->
   <view class="bottom-space"></view>
-
-  <!-- 底部悬浮分享（发送给朋友） -->
-  <view class="share-fab">
-    <button class="share-fab-btn" open-type="share" hover-class="share-fab-btn-hover">
-      <image class="share-fab-icon" src="/images/icons/share.svg" mode="aspectFit"></image>
-      <text class="share-fab-text">分享</text>
-    </button>
-  </view>
 </view>
 

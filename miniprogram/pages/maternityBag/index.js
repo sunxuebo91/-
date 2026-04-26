@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     sections: [
       {
         key: 'hospital',
@@ -64,5 +67,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '待产包准备' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '待产包准备清单｜入院 / 妈妈 / 宝宝 / 产后 一站清单',
+      path: '/pages/maternityBag/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '待产包准备清单｜入院 / 妈妈 / 宝宝 / 产后 一站清单',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

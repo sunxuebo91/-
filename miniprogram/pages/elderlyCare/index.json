@@ -2,5 +2,8 @@
   "navigationBarTitleText": "老人照护",
   "navigationBarBackgroundColor": "#8D6E63",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#F5F0EC"
+  "backgroundColor": "#F5F0EC",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
 }

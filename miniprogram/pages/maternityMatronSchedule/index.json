@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "月嫂一日工作流程",
+  "navigationBarBackgroundColor": "#00897B",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#E0F2F1",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
+}

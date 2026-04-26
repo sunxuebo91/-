@@ -2,5 +2,6 @@
   "navigationBarTitleText": "保姆报价",
   "navigationBarBackgroundColor": "#FF9A56",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#FFF8F3"
+  "backgroundColor": "#FFF8F3",
+  "usingComponents": {}
 }

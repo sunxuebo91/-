@@ -118,4 +118,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="月子餐谱方案"
+    page-subtitle="4 阶段 28 天 营养循证"
+    page-badge="排净 / 健脾 / 补气血 / 综合"
+    theme-color="#C44569"
+    theme-color-light="#E08AA0"
+    stats="{{[{num:'4',label:'阶段'},{num:'28',label:'天月子'},{num:'3+1',label:'餐次'}]}}"
+    summary-lines="{{['第 1 周排净期：温和易消化 / 启动泌乳 / 修复肠胃','第 2 周健脾期：调理脾胃 + 补铁补血 + 引入红肉','第 3 周补气血：优质蛋白 + Omega-3 + 钙铁强化','第 4 周综合调理：体能恢复 + 体重管理 + 日常过渡','早午晚 + 加餐 + 汤水 一日五餐温柔节奏']}}"
+  />
 </view>

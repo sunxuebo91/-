@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: '0-72h', title: '第一阶段 · 开奶黄金期', hint: '初乳建立 / 频繁亲喂',
         feature: 'WHO 推荐分娩后 1 小时内开始母婴肌肤接触并尝试吸吮，前 72 小时是建立泌乳反射的关键窗口，重点不是"多挤奶"而是让婴儿正确含乳并按需频繁吸吮',
@@ -52,5 +55,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '产后通乳' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '产后通乳指南｜ABM 2022 循证 · 不暴力通乳 · 全周期处理',
+      path: '/pages/lactationCare/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '产后通乳指南｜ABM 2022 循证 · 不暴力通乳',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

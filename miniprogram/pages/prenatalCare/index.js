@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: '备孕', title: '备孕期 · 孕前 3-6 个月', hint: '夫妻同备 / 体质调整',
         feature: '建议夫妻双方在计划怀孕前 3-6 个月开始系统备孕，体检 + 营养 + 生活方式三位一体',
@@ -71,5 +74,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '备孕备产' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '备孕备产指南｜孕前 3-6 月到孕 40 周全程循证手册',
+      path: '/pages/prenatalCare/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '备孕备产指南｜孕前 3-6 月到孕 40 周全程循证手册',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

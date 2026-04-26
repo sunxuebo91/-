@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "护老员一日工作流程",
+  "navigationBarBackgroundColor": "#546E7A",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#ECEFF1",
+  "usingComponents": {
+    "transparent-share-fab": "/components/transparentShareFab/index"
+  }
+}

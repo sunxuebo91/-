@@ -76,4 +76,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="宝宝早教指南"
+    page-subtitle="0-6 岁分龄启蒙 · 五大领域并重"
+    page-badge="高质量陪伴胜过满档兴趣班"
+    theme-color="#E53E5E"
+    theme-color-light="#FF8B95"
+    stats="{{[{num:'0-6',label:'岁分龄'},{num:'5',label:'大领域'},{num:'30',label:'分钟/天'}]}}"
+    summary-lines="{{['五大领域：大运动 / 精细动作 / 语言 / 认知 / 社交','0-1 岁：感官刺激 + 抚触 + 亲子依恋','1-3 岁：自主探索 + 语言爆发 + 共读','3-6 岁：规则游戏 + 同伴社交 + 学前准备','远离屏幕：< 2 岁不接触，2-5 岁每日 ≤ 1 小时']}}"
+  />
 </view>

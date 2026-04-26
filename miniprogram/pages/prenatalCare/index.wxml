@@ -127,4 +127,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="备孕备产指南"
+    page-subtitle="孕前 3-6 月 → 孕 40 周 全程循证"
+    page-badge="循证手册 · 持续更新"
+    theme-color="#3F51B5"
+    theme-color-light="#7986CB"
+    stats="{{[{num:'4',label:'阶段'},{num:'40',label:'孕周'},{num:'20+',label:'关键里程'}]}}"
+    summary-lines="{{['备孕 3-6 月：体检 + 叶酸 + 戒烟戒酒 + 体重作息','孕早期 1-13 周：致畸敏感期 / NT 检查 / 建档','孕中期 14-27 周：糖筛 / 大排畸 / 胎动数','孕晚期 28-40 周：胎心监护 / 入院准备 / 分娩信号','营养 / 运动 / 心理 全程伴随建议']}}"
+  />
 </view>

@@ -36,6 +36,10 @@
     "pages/lactationCare/index",
     "pages/elderlyCare/index",
     "pages/maternalInfantCare/index",
+    "pages/pediatricMassage/index",
+    "pages/maternityMatronSchedule/index",
+    "pages/childcareNannySchedule/index",
+    "pages/eldercareSchedule/index",
 
     "pages/poster/index",
     "pages/posterCustomerList/index",

@@ -123,4 +123,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="老人照护指南"
+    page-subtitle="分级照护 · 慢病管理 · 安宁疗护"
+    page-badge="GB/T 42195-2022 · WHO 共识"
+    theme-color="#6D4C41"
+    theme-color-light="#A1887F"
+    stats="{{[{num:'3',label:'级照护'},{num:'5',label:'类慢病'},{num:'42',label:'天产褥'}]}}"
+    summary-lines="{{['三级照护：自理 / 半自理 / 不自理 分级安排','慢病管理：高血压 / 糖尿病 / 冠心病 / 脑卒中 / 骨松','跌倒防护：环境改造 + 鞋袜 + 1-1-1 慢起原则','认知与心理：怀旧疗法 + 抑郁筛查 + 社会陪伴','安宁疗护：症状控制 + 心理支持 + 善终意愿']}}"
+  />
 </view>

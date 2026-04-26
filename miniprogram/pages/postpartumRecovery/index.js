@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: '0-24h', title: '第一阶段 · 产后 24 小时', hint: '急性观察期 / 母婴同室',
         feature: '分娩后第一天是产后大出血、子痫前期、新生儿适应等高危期，重点是密切监护与早接触早吸吮',
@@ -51,5 +54,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '产后康复' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '产后康复路径｜24h → 6 个月 第四孕期循证方案',
+      path: '/pages/postpartumRecovery/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '产后康复路径｜24h → 6 个月 第四孕期循证方案',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

@@ -130,4 +130,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="母婴护理全程"
+    page-subtitle="黄金 90 分 → 产褥期 全周期"
+    page-badge="WHO EENC · AAP / ABM"
+    theme-color="#EC7C8F"
+    theme-color-light="#F4A6B3"
+    stats="{{[{num:'6',label:'阶段'},{num:'90',label:'分钟黄金期'},{num:'42',label:'天产褥'}]}}"
+    summary-lines="{{['0-72h WHO EENC 黄金对接：延迟脐带结扎 + 早接触','1 周高危观察：脐带 / 黄疸 / 安全睡眠 ABC','2-4 周护理模式建立：抚触 / Tummy Time','产妇：恶露 / 切口 / 凯格尔 / 心理筛查','红色信号清单：母婴异常即刻就医']}}"
+  />
 </view>

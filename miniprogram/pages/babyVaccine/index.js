@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     schedule: [
       { dot: '出生', age: '出生时', hint: '宝宝出生 24 小时内',
         free: [
@@ -65,5 +68,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '宝宝疫苗' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '宝宝疫苗手册｜0-6 岁国家免疫规划 + 自费推荐清单',
+      path: '/pages/babyVaccine/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '宝宝疫苗手册｜0-6 岁国家免疫规划 + 自费推荐清单',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     phases: [
       { dot: 'D1-7', title: '第一阶段 · 排净期', hint: '产后第 1 周',
         feature: '排恶露 / 启动泌乳 / 修复肠胃，以易消化温和滋养为主，避免油腻大补',
@@ -48,5 +51,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '月子餐谱' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '月子餐谱｜4 阶段 28 天 排净 / 健脾 / 补气血 / 综合调理',
+      path: '/pages/confinementMeals/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '月子餐谱｜4 阶段 28 天 营养循证方案',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });

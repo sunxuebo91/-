@@ -57,4 +57,13 @@
     </button>
   </view>
 
+  <transparent-share-fab
+    page-title="服务费报价"
+    page-subtitle="服务费透明公示 · 所有工种统一"
+    page-badge="明码标价 · 可开发票"
+    theme-color="#1FA48E"
+    theme-color-light="#5DCBB8"
+    stats="{{[{num:'1',label:'统一标准'},{num:'0',label:'隐藏费用'},{num:'100%',label:'可开发票'}]}}"
+    summary-lines="{{['所有工种统一服务费标准，明码标价','费用结构清晰：介绍费 / 管理费 / 服务费分类列示','签约前现场核算，无隐藏费用','支持开具增值税普通发票，企业可入账','三方合同保障，违约可按合同处理']}}"
+  />
 </view>

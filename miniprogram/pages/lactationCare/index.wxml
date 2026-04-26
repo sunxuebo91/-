@@ -117,4 +117,14 @@
   </view>
 
   <view class="footer-tip">· 安得褓贝 · 用心陪伴每一天 ·</view>
+
+  <transparent-share-fab
+    page-title="产后通乳指南"
+    page-subtitle="ABM 2022 循证 · 不暴力通乳"
+    page-badge="冷敷 / 反向加压 / 频繁亲喂"
+    theme-color="#7E57C2"
+    theme-color-light="#B39DDB"
+    stats="{{[{num:'72h',label:'黄金期'},{num:'6',label:'阶段'},{num:'ABM',label:'循证'}]}}"
+    summary-lines="{{['0-72h 黄金期：早接触 + 早吸吮 + 按需亲喂','3-7 天涨奶：冷敷 + 反向加压软化（拒绝热敷）','1-6 周问题处理：含乳深修复皲裂 / 堵奶规范','拒绝暴力揉推拽：减炎 + 保护组织 + 维持哺乳','婴儿摄入监测：吞咽声 / 尿便次数 / 体重曲线']}}"
+  />
 </view>

@@ -1,0 +1,21 @@
+<view class="tsf-wrap">
+  <button
+    class="tsf-btn tsf-btn-share"
+    open-type="share"
+    hover-class="tsf-btn-hover"
+  >
+    <text class="tsf-btn-icon">↗</text>
+    <text class="tsf-btn-label">分享</text>
+  </button>
+
+  <view
+    class="tsf-btn tsf-btn-poster {{generating ? 'tsf-btn-disabled' : ''}}"
+    hover-class="tsf-btn-hover"
+    bindtap="onTapPoster"
+  >
+    <text class="tsf-btn-icon">{{generating ? '…' : '🖼'}}</text>
+    <text class="tsf-btn-label">{{generating ? '生成中' : '海报'}}</text>
+  </view>
+
+  <canvas type="2d" id="tsf-poster-canvas" class="tsf-canvas"></canvas>
+</view>

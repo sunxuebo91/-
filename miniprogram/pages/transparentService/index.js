@@ -115,6 +115,34 @@ Page({
     wx.navigateTo({
       url: '/pages/maternalInfantCare/index'
     });
+  },
+
+  // 跳转到小儿推拿页面
+  goPediatricMassage() {
+    wx.navigateTo({
+      url: '/pages/pediatricMassage/index'
+    });
+  },
+
+  // 跳转到月嫂一日工作流程页面
+  goMaternityMatronSchedule() {
+    wx.navigateTo({
+      url: '/pages/maternityMatronSchedule/index'
+    });
+  },
+
+  // 跳转到育儿嫂一日工作流程页面
+  goChildcareNannySchedule() {
+    wx.navigateTo({
+      url: '/pages/childcareNannySchedule/index'
+    });
+  },
+
+  // 跳转到护老员一日工作流程页面
+  goEldercareSchedule() {
+    wx.navigateTo({
+      url: '/pages/eldercareSchedule/index'
+    });
   }
 });
 

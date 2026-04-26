@@ -1,5 +1,8 @@
+const { loadShareLogo, FALLBACK_IMAGE } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
+    shareLogo: '',
     schedule: [
       { dot: '6-7m', age: '6-7 月龄', hint: '辅食起步期',
         feature: '满 6 月龄开始添加辅食，第一口选含铁米粉，单一食材逐步引入',
@@ -53,5 +56,21 @@ Page({
 
   onLoad() {
     wx.setNavigationBarTitle({ title: '宝宝辅食' });
+    loadShareLogo(this);
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '宝宝辅食指南｜6 月起 分龄添加 · 不加盐不加糖',
+      path: '/pages/babyFood/index',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '宝宝辅食指南｜6 月起 分龄添加 · 不加盐不加糖',
+      imageUrl: this.data.shareLogo || FALLBACK_IMAGE
+    };
   }
 });
