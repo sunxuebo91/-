@@ -1,0 +1,30 @@
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"choice","question":"您今年多大了？","options":[{"text":"25 岁以下","score":0},{"text":"26-35 岁","score":7},{"text":"36-45 岁","score":10},{"text":"46 岁以上","score":6}]}
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"judge","question":"您结婚了吗？","options":[{"text":"是的","score":10},{"text":"不是","score":5}]}
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"choice","question":"您自己生过几个孩子？","options":[{"text":"没有","score":5},{"text":"1 个","score":10},{"text":"2 个","score":8},{"text":"3 个以上","score":4}]}
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"judge","question":"您家庭支持您做月嫂吗？","options":[{"text":"支持","score":10},{"text":"一般","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"judge","question":"您能长期住雇主家吗？","options":[{"text":"能","score":10},{"text":"不能","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"年龄家庭","type":"judge","question":"您带过自己的孩子吗？","options":[{"text":"带过","score":10},{"text":"没带过","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"choice","question":"您做月嫂几年了？","options":[{"text":"不到 1 年","score":0},{"text":"1-3 年","score":5},{"text":"4-6 年","score":8},{"text":"7 年以上","score":10}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"choice","question":"您一共服务过几户家庭？","options":[{"text":"5 户以下","score":3},{"text":"6-15 户","score":6},{"text":"16-30 户","score":8},{"text":"30 户以上","score":10}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"choice","question":"您每户平均做多久？","options":[{"text":"不到 1 月","score":0},{"text":"1 月左右","score":7},{"text":"2-3 月","score":10},{"text":"半年以上","score":8}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"judge","question":"您上一户做满整月了吗？","options":[{"text":"做满了","score":10},{"text":"中途换了","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"choice","question":"做月嫂前您做过啥工作？","options":[{"text":"工厂餐饮","score":4},{"text":"育婴保姆","score":8},{"text":"医院护工","score":10},{"text":"没工作过","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"工龄经历","type":"judge","question":"您带过双胞胎宝宝吗？","options":[{"text":"带过","score":10},{"text":"没带过","score":5}]}
+{"jobType":"yuexin","section":"hardware","subsection":"学历语言","type":"choice","question":"您最高学历是？","options":[{"text":"没上过学","score":0},{"text":"小学","score":3},{"text":"初中","score":7},{"text":"高中以上","score":10}]}
+{"jobType":"yuexin","section":"hardware","subsection":"学历语言","type":"judge","question":"您能说流利的普通话吗？","options":[{"text":"能","score":10},{"text":"不能","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"学历语言","type":"judge","question":"您能看懂奶粉包装上的字吗？","options":[{"text":"能看懂","score":10},{"text":"认得不多","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"学历语言","type":"judge","question":"您会用微信跟雇主沟通吗？","options":[{"text":"会用","score":10},{"text":"不太会","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您有母婴护理证吗？","options":[{"text":"有","score":10},{"text":"没有","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"choice","question":"您的月嫂证是几级？","options":[{"text":"没有证","score":0},{"text":"初级","score":5},{"text":"中级","score":8},{"text":"高级","score":10}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您有育婴师证吗？","options":[{"text":"有","score":10},{"text":"没有","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您有催乳师证吗？","options":[{"text":"有","score":10},{"text":"没有","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您有小儿推拿证吗？","options":[{"text":"有","score":10},{"text":"没有","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您有健康证吗？","options":[{"text":"有","score":10},{"text":"没有","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"choice","question":"您证书都过年检了吗？","options":[{"text":"全部过了","score":10},{"text":"大部分过","score":7},{"text":"有的过期","score":3},{"text":"都没年检","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"证书资质","type":"judge","question":"您参加过正规月嫂培训吗？","options":[{"text":"参加过","score":10},{"text":"没参加","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"judge","question":"您半年内做过体检吗？","options":[{"text":"做过","score":10},{"text":"没做","score":2}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"choice","question":"您能连续熬夜带宝宝吗？","options":[{"text":"完全可以","score":10},{"text":"累但能撑","score":7},{"text":"只能 3 天","score":4},{"text":"受不了","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"judge","question":"您有腰肩颈老毛病吗？","options":[{"text":"没有","score":10},{"text":"有点","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"judge","question":"您能轻松抱起 8 斤宝宝吗？","options":[{"text":"能","score":10},{"text":"费劲","score":3}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"judge","question":"您视力能看清小字吗？","options":[{"text":"能看清","score":10},{"text":"看不清","score":0}]}
+{"jobType":"yuexin","section":"hardware","subsection":"健康体能","type":"judge","question":"您对洗护品香味过敏吗？","options":[{"text":"不会","score":10},{"text":"会","score":0}]}

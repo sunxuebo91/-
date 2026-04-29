@@ -3,7 +3,7 @@
   <view class="top-image-container" wx:if="{{images && images.length > 0 && !loading}}">
     <swiper
       class="top-swiper"
-      style="height: {{swiperHeight + 'px'}};"
+      style="height: {{swiperHeight ? swiperHeight + 'px' : '100vw'}};"
       indicator-dots="{{false}}"
       autoplay="{{false}}"
       circular="{{true}}"
@@ -13,7 +13,7 @@
         <image
           class="top-image"
           src="{{item}}"
-          mode="aspectFill"
+          mode="aspectFit"
           bindtap="previewImage"
           bindload="onImageLoad"
           data-index="{{index}}"
@@ -28,9 +28,7 @@
   </view>
 
   <!-- 内容区域 -->
-  <view class="content-container {{images && images.length > 0 ? '' : 'content-container--no-image'}}" wx:if="{{!loading}}">
-    <view class="article-kicker">{{article.source || '育儿分享'}}</view>
-
+  <view class="content-container" wx:if="{{!loading}}">
     <!-- 标题 -->
     <view class="title">{{article.title || '文章详情'}}</view>
 
@@ -41,7 +39,7 @@
         <view class="publish-time">{{article.publishedAtText || '刚刚'}}</view>
       </view>
       <view class="view-count">
-        <text class="view-label">阅读</text>
+        <text class="view-icon">👁</text>
         <text class="view-text">{{viewCount}}</text>
       </view>
     </view>
@@ -49,33 +47,14 @@
     <!-- 正文内容 -->
     <view class="article-content">
       <!-- 摘要 -->
-      <view class="summary-card" wx:if="{{article.summary}}">
-        <view class="summary-label">导读</view>
-        <view class="summary">{{article.summary}}</view>
-      </view>
+      <view class="summary" wx:if="{{article.summary}}">{{article.summary}}</view>
 
       <!-- 正文 -->
-      <view class="content" wx:if="{{contentHtml}}">
-        <rich-text nodes="{{contentHtml}}" space="nbsp"></rich-text>
+      <view class="content" wx:if="{{contentNodes && contentNodes.length}}">
+        <rich-text nodes="{{contentNodes}}"></rich-text>
       </view>
 
-      <view class="content-empty" wx:if="{{!contentHtml}}">暂无内容</view>
-    </view>
-
-    <view class="article-disclaimer">内容仅供参考，不作为诊断、治疗或用药依据，具体请遵医嘱或及时就医。</view>
-  </view>
-
-  <view class="share-mask" wx:if="{{showSharePanel}}" catchtap="closeSharePanel"></view>
-
-  <view class="share-fab-wrap {{isShared && sharerInfo ? 'share-fab-wrap--with-contact' : ''}}" wx:if="{{!loading && article._id}}">
-    <view class="share-action-list" wx:if="{{showSharePanel}}">
-      <button class="share-action-btn share-action-btn--friend" open-type="share" bindtap="onBeforeShare">转发给好友</button>
-      <button class="share-action-btn share-action-btn--timeline" bindtap="shareToMoments">分享到朋友圈</button>
-    </view>
-
-    <view class="share-fab-main" catchtap="toggleSharePanel">
-      <text class="share-fab-icon">{{showSharePanel ? '×' : '↗'}}</text>
-      <text class="share-fab-text">{{showSharePanel ? '收起' : '转发'}}</text>
+      <view class="content-empty" wx:if="{{!contentNodes || !contentNodes.length}}">暂无内容</view>
     </view>
   </view>
 

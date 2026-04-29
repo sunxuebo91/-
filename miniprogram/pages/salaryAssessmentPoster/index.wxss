@@ -1,0 +1,94 @@
+.page {
+  min-height: 100vh;
+  background: #1a0a2e;
+  padding: 40rpx 30rpx 60rpx;
+  box-sizing: border-box;
+}
+
+/* 加载态 */
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 220rpx 0 80rpx;
+}
+.loading-spinner {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(200, 169, 110, 0.18);
+  border-top-color: #C8A96E;
+  animation: poster-spin 0.9s linear infinite;
+  margin-bottom: 36rpx;
+}
+@keyframes poster-spin {
+  to { transform: rotate(360deg); }
+}
+.loading-text {
+  font-size: 32rpx;
+  color: #FAF6EE;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+.loading-sub {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.5);
+  margin-top: 14rpx;
+}
+
+/* 海报预览 */
+.poster-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.poster-img {
+  width: 600rpx;
+  height: 1024rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 16rpx 48rpx rgba(0,0,0,0.55);
+  background: #2a1452;
+}
+.poster-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 40rpx;
+  width: 100%;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+}
+.poster-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+.poster-btn-primary {
+  background: #C8A96E;
+  color: #1a0a2e;
+}
+.poster-btn-ghost {
+  background: rgba(255,255,255,0.08);
+  color: #FAF6EE;
+  border: 1rpx solid rgba(255,255,255,0.18);
+}
+.poster-tip {
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.45);
+}
+
+/* 隐藏 Canvas */
+.poster-canvas {
+  position: fixed;
+  left: -9999rpx;
+  top: 0;
+  width: 375px;
+  height: 640px;
+}

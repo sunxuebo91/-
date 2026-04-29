@@ -190,10 +190,6 @@ function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
 }
 
 const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得褓贝定稿.jpg';
-const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
-
-// 简历查看订阅通知模板 ID（与 app.js / settings / profile 保持一致）
-const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
 
 Page({
   onHide() {
@@ -220,7 +216,6 @@ Page({
     // 分享相关
     isShared: false,
     sharerInfo: null,
-    sharerIsStaff: false, // 分享者是否为员工（控制顾问栏显示）
     displayName: '',
     maskedPhone: '',
     maskedIdNumber: '',
@@ -308,7 +303,6 @@ Page({
 
     // 检查是否通过分享进入
     // options.p 是海报二维码扫码进入时的紧凑电话参数（card-share 用 sharerPhone）
-    // options.sf = '1' 表示分享者是员工（staff flag），只有员工分享时才会携带
     if (shared === '1') {
       const resolvedPhone = sharerPhone || options.p || '';
       const resolvedSharerId = sharerId ? decodeURIComponent(sharerId) : '';
@@ -321,13 +315,11 @@ Page({
       };
       this.setData({
         isShared: true,
-        sharerInfo: sharerInfoData,
-        sharerIsStaff: options.sf === '1'  // 卡片分享：sf=1 表示员工分享
+        sharerInfo: sharerInfoData
       });
 
       // 海报二维码扫码进来：URL 里没有顾问姓名，异步拉取完整信息补全（与卡片分享保持一致）
       // 同时传入 phone 作为回退查询条件，解决 CRM userId 与云数据库 _id 不一致问题
-      // 查询成功即确认分享者是员工，设置 sharerIsStaff
       if (!sharer && (resolvedSharerId || resolvedPhone)) {
         wx.cloud.callFunction({
           name: 'userService',
@@ -343,18 +335,8 @@ Page({
                 phone: d.phone || cur.phone,
                 avatar: d.avatar || cur.avatar,
                 company: d.company || cur.company
-              },
-              sharerIsStaff: true  // 海报二维码：查到员工信息则确认是员工分享
-            });
-            // 修复竞争条件：loadDetail() 与本调用并发，若简历已加载完成则在此补发通知
-            // （若 loadDetail 尚未完成，sharerIsStaff 已为 true，loadDetail 完成后会正常触发通知）
-            if (this.data.loaded && this.data.detail) {
-              const nurseName = (this.data.detail && this.data.detail.name) || '';
-              const resumeId = this.data.id || (this.data.detail && this.data.detail._id) || '';
-              if (nurseName && resumeId) {
-                this._sendResumeViewNotify(nurseName, resumeId);
               }
-            }
+            });
           }
         }).catch(err => {
           console.warn('⚠️ 拉取顾问信息失败（不影响主流程）:', err);
@@ -1077,8 +1059,8 @@ Page({
             });
         }
 
-        // 非员工应用数据脱敏（员工无论通过何种方式进入都显示真实数据）
-        if (!this.data.isStaff) {
+        // 非员工或分享模式下应用数据脱敏
+        if (this.data.isShared || !this.data.isStaff) {
           const surname = detailWithAvatar.name ? detailWithAvatar.name.charAt(0) : '某';
           // 脱敏工作经历中的客户姓名
           if (detailWithAvatar.workExperiences) {
@@ -1117,19 +1099,6 @@ Page({
         // 加载员工评价数据
         this.loadEvaluations(resumeId);
 
-        // 员工分享的简历被查看 → 发订阅消息通知员工
-        console.log('🔔 通知条件检查:', {
-          isShared: this.data.isShared,
-          sharerIsStaff: this.data.sharerIsStaff,
-          sharerInfo: this.data.sharerInfo,
-          sharerPhone: this.data.sharerInfo && this.data.sharerInfo.phone
-        });
-        if (this.data.isShared && this.data.sharerIsStaff && this.data.sharerInfo && this.data.sharerInfo.phone) {
-          this._sendResumeViewNotify(detailWithAvatar.name || detail.name, resumeId);
-        } else {
-          console.warn('🔕 通知未触发，条件不满足（见上方条件检查日志）');
-        }
-
       } else {
         wx.showToast({ title: resp.message || "简历不存在", icon: "none" });
         this.setData({ loaded: true });
@@ -1139,42 +1108,6 @@ Page({
       wx.showToast({ title: "加载失败", icon: "none" });
       this.setData({ loaded: true });
     }
-  },
-
-  // 发送"简历被查看"通知给分享该简历的员工（fire-and-forget，不影响主流程）
-  _sendResumeViewNotify(nurseName, resumeId) {
-    // 防止竞争条件导致重复发送（海报二维码路径：getStaffPublicInfo 与 loadDetail 并发时均可能触发）
-    if (this._resumeViewNotifySent) return;
-    this._resumeViewNotifySent = true;
-
-    const sharerInfo = this.data.sharerInfo || {};
-    const sharerPhone = sharerInfo.phone || '';
-    if (!sharerPhone) return;
-
-    // 客户姓名：优先用微信昵称，其次手机号，都没有用默认值
-    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const customerName = crmUserInfo.nickname || wx.getStorageSync('userName') || '新客户';
-
-    console.log('📨 发送简历查看通知 → 员工:', sharerPhone, '阿姨:', nurseName);
-
-    wx.cloud.callFunction({
-      name: 'notificationService',
-      data: {
-        action: 'sendResumeViewNotify',
-        sharerPhone,
-        customerName,
-        nurseName,
-        resumeId
-      }
-    }).then(res => {
-      if (res && res.result && res.result.success) {
-        console.log('✅ 简历查看通知发送成功');
-      } else {
-        console.warn('⚠️ 简历查看通知发送失败:', res && res.result && res.result.errMsg);
-      }
-    }).catch(err => {
-      console.warn('⚠️ 简历查看通知调用异常:', err);
-    });
   },
 
   onTapHeroThumb(e) {
@@ -1349,67 +1282,12 @@ Page({
   },
 
   // 检查当前用户是否为员工
-  // 优先读登录时缓存的 isStaff 字段；缓存未命中时调云函数兜底
-  // 确认是员工后，主动从 staff/info 接口刷新 CRM 真实姓名和头像（无需重新登录）
-  async checkStaffRole() {
+  // 直接读登录时缓存的 isStaff 字段，无需再发云函数请求
+  checkStaffRole() {
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    let isStaff = crmUserInfo.isStaff === true;
-
-    if (!isStaff) {
-      // 缓存中没有确认的员工标识，调云函数重新查询
-      try {
-        const res = await wx.cloud.callFunction({
-          name: 'userService',
-          data: { action: 'getOrCreateMe' }
-        });
-        const cloudUser = res?.result?.data || {};
-        isStaff = cloudUser.role === 'staff' || cloudUser.isStaff === true;
-        if (isStaff) {
-          crmUserInfo.isStaff = true;
-          wx.setStorageSync('crmUserInfo', crmUserInfo);
-        }
-        console.log('👤 用户角色（云函数）:', isStaff ? '员工' : '客户');
-      } catch (e) {
-        console.warn('⚠️ 云函数检查员工角色失败，默认当客户处理:', e);
-      }
-    } else {
-      console.log('👤 用户角色（缓存）: 员工');
-    }
-
+    const isStaff = crmUserInfo.isStaff === true;
     this.setData({ isStaff });
-
-    // 确认是员工后，主动刷新 CRM 档案（姓名+头像），确保不重新登录也能用最新数据
-    if (isStaff && crmUserInfo.phone) {
-      this._refreshCrmStaffInfo(crmUserInfo.phone);
-    }
-  },
-
-  // 从 staff/info 接口拉取员工最新姓名和头像，回写 crmUserInfo 缓存
-  _refreshCrmStaffInfo(phone) {
-    wx.request({
-      url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${phone}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.success && res.data.data) {
-          const staffData = res.data.data;
-          const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-          let changed = false;
-          if (staffData.name && staffData.name !== crmUserInfo.crmName) {
-            crmUserInfo.crmName = staffData.name;
-            changed = true;
-          }
-          if (staffData.avatar && staffData.avatar !== crmUserInfo.crmAvatar) {
-            crmUserInfo.crmAvatar = staffData.avatar;
-            changed = true;
-          }
-          if (changed) {
-            wx.setStorageSync('crmUserInfo', crmUserInfo);
-            console.log('✅ CRM 员工档案已刷新:', staffData.name, staffData.avatar);
-          }
-        }
-      },
-      fail: () => {} // 静默失败，不影响页面
-    });
+    console.log('👤 用户角色（缓存）:', isStaff ? '员工' : '客户');
   },
 
 
@@ -1840,9 +1718,8 @@ Page({
     return wechat.substring(0, 2) + '****' + wechat.substring(wechat.length - 2);
   },
 
-  // 图片分享入口（同步 tap handler）：必须保持同步以调起订阅弹窗
-  // wx.requestSubscribeMessage 只能在同步 tap 上下文中调用，async 函数会丢失手势权限
-  onGeneratePoster() {
+  // 图片分享：生成含照片+信息栏+小程序码的海报
+  async onGeneratePoster() {
     const detail = this.data.detail || {};
     const photoUrl = detail.avatarSrc || detail.coverFileId || '';
 
@@ -1851,24 +1728,6 @@ Page({
       return;
     }
 
-    // ① 直接在同步 tap handler 中调用，保证手势上下文有效
-    wx.requestSubscribeMessage({
-      tmplIds: [RESUME_VIEW_TEMPLATE_ID],
-      success: (res) => {
-        console.log('📨 订阅配额申请结果:', res[RESUME_VIEW_TEMPLATE_ID]);
-      },
-      fail: (err) => {
-        console.warn('⚠️ 订阅配额申请失败（不影响海报生成）:', err);
-      }
-    });
-
-    // ② 异步执行后续海报生成逻辑（不阻塞订阅弹窗）
-    this._doGeneratePoster(detail);
-  },
-
-  // 海报生成的异步实现，由 onGeneratePoster 调用
-  async _doGeneratePoster(detail) {
-    const photoUrl = detail.avatarSrc || detail.coverFileId || '';
     // 先从后端获取 AI 推荐文案并复制到剪贴板，显示提示后再弹生成海报的 loading
     const recText = await this._fetchRecommendationText();
     if (recText) {
@@ -1884,31 +1743,30 @@ Page({
       // 优先使用 this.data.id（URL 入参，是成功加载本简历的已知正确 ID）
       const resumeQrId = this.data.id || detail._id || '';
       // 读取当前员工信息，嵌入二维码路径，让客户扫码后能看到"联系顾问"
-      // 锁定使用 CRM 端的员工姓名和头像，不读取本地覆盖值
       const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+      // userInfo 由 CRM 账号登录（auth.js）写入，含 name / avatar 等真实员工字段
+      const localUserInfo = wx.getStorageSync('userInfo') || {};
       // 统一转为字符串，避免整数类型（CRM userId 为数字）与云函数/URL 参数字符串类型不匹配
-      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
-      const staffPhone = crmUserInfo.phone || '';
-      const staffName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
-      const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '');
+      const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
+      const staffName = wx.getStorageSync('userName') || crmUserInfo.nickname || crmUserInfo.name || localUserInfo.name || localUserInfo.nickname || '';
+      const staffAvatar = wx.getStorageSync('userAvatar') || crmUserInfo.avatarUrl || crmUserInfo.avatar || localUserInfo.avatarUrl || localUserInfo.avatar || '';
 
       // 将员工信息缓存到云数据库，供用户扫码时查询顾问姓名和头像（复用分享卡片数据链路）
-      // staffId 或 staffPhone 任意一个非空即可保存，解决招生老师等无 userId 的角色扫码看不到顾问信息的问题
-      if ((staffId || staffPhone) && (staffName || staffPhone)) {
+      if (staffId && (staffName || staffPhone)) {
         wx.cloud.callFunction({
           name: 'userService',
-          data: { action: 'saveStaffProfile', staffId: staffId || staffPhone, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
+          data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
         }).catch(err => console.warn('⚠️ 缓存顾问信息失败(不影响海报生成):', err));
       }
 
-      const [photoLocalPath, qrLocalPath, logoLocalPath] = await Promise.all([
+      const [photoLocalPath, qrLocalPath] = await Promise.all([
         this._downloadImage(photoUrl),
-        this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone),
-        this._downloadImage(POSTER_LOGO_FILE_ID)
+        this._getResumeMiniCodePath(resumeQrId, staffId, staffPhone)
       ]);
 
       // 2. Canvas 绘制海报
-      const posterPath = await this._drawPosterCanvas(detail, photoLocalPath, qrLocalPath, logoLocalPath);
+      const posterPath = await this._drawPosterCanvas(detail, photoLocalPath, qrLocalPath);
 
       wx.hideLoading();
 
@@ -2007,8 +1865,8 @@ Page({
     }
   },
 
-  // 用 Canvas 2D 绘制海报并导出为临时文件路径（v2 杂志封面风格）
-  _drawPosterCanvas(detail, photoLocalPath, qrLocalPath, logoLocalPath) {
+  // 用 Canvas 2D 绘制海报并导出为临时文件路径
+  _drawPosterCanvas(detail, photoLocalPath, qrLocalPath) {
     return new Promise((resolve, reject) => {
       wx.createSelectorQuery().in(this).select('#posterCanvas')
         .fields({ node: true, size: true })
@@ -2017,56 +1875,33 @@ Page({
             const canvas = res[0].node;
             const ctx = canvas.getContext('2d');
             const dpr = wx.getSystemInfoSync().pixelRatio || 2;
-            const W = 375, H = 640;
+            const W = 375, H = 560;
             canvas.width = W * dpr;
             canvas.height = H * dpr;
             ctx.scale(dpr, dpr);
 
-            // ── 辅助函数：绘制圆角矩形路径 ──
-            const roundRectPath = (x, y, w, h, r) => {
-              ctx.beginPath();
-              ctx.moveTo(x + r, y);
-              ctx.lineTo(x + w - r, y);
-              ctx.arcTo(x + w, y, x + w, y + r, r);
-              ctx.lineTo(x + w, y + h - r);
-              ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-              ctx.lineTo(x + r, y + h);
-              ctx.arcTo(x, y + h, x, y + h - r, r);
-              ctx.lineTo(x, y + r);
-              ctx.arcTo(x, y, x + r, y, r);
-              ctx.closePath();
-            };
-
-            // ── Layer 1：深色背景兜底 ──
-            ctx.fillStyle = '#0f051e';
+            // — 白色背景 —
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, W, H);
 
-            // ── Layer 2：全出血照片（Cover 模式，不变形）──
+            // — 照片区（占上方 460px）—
             if (photoLocalPath) {
               const photoImg = canvas.createImage();
               photoImg.src = photoLocalPath;
               await new Promise(r => { photoImg.onload = r; photoImg.onerror = r; });
-              const imgW = photoImg.width, imgH = photoImg.height;
-              // Cover：取较大缩放比，确保铺满画布
-              const scale = Math.max(W / imgW, H / imgH);
-              const drawW = imgW * scale;
-              const drawH = imgH * scale;
-              // 水平居中，垂直偏上 15%（让人脸出现在画面上半）
-              const dx = (W - drawW) / 2;
-              const dy = Math.min(0, (H - drawH) * 0.15);
-              ctx.drawImage(photoImg, dx, dy, drawW, drawH);
+              ctx.drawImage(photoImg, 0, 0, W, 460);
             }
 
-            // ── Layer 3：底部渐变遮罩（透明 → 深紫近黑）──
-            const grad = ctx.createLinearGradient(0, H * 0.42, 0, H);
-            grad.addColorStop(0,    'rgba(15,5,30,0)');
-            grad.addColorStop(0.45, 'rgba(15,5,30,0.6)');
-            grad.addColorStop(0.75, 'rgba(15,5,30,0.88)');
-            grad.addColorStop(1,    'rgba(15,5,30,0.97)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, W, H);
+            // — 紫色信息栏（y: 445-510，覆盖照片底部）—
+            const PURPLE = '#8766F3';
+            ctx.fillStyle = PURPLE;
+            ctx.fillRect(0, 445, W, 65);
 
-            // ── 数据准备 ──
+            // — 浅紫页脚区（y: 510-560）—
+            ctx.fillStyle = '#f5f3ff';
+            ctx.fillRect(0, 510, W, 50);
+
+            // — 属相英文→中文映射 —
             const ZODIAC_MAP = {
               rat:'鼠', ox:'牛', tiger:'虎', rabbit:'兔', dragon:'龙',
               snake:'蛇', horse:'马', goat:'羊', sheep:'羊',
@@ -2074,151 +1909,60 @@ Page({
             };
             const zodiacRaw = (detail.zodiacText || '').replace(/^属/, '').trim();
             const zodiac = ZODIAC_MAP[zodiacRaw.toLowerCase()] || zodiacRaw;
+
+            // — 信息文字（拆两行，不加 maxWidth 避免压缩变形）—
             const surname = detail.name ? detail.name.charAt(0) : '';
-            const displayName = surname ? `${surname}阿姨` : '阿姨';
-            const subParts = [
+            // 第一行：个人信息
+            const row1Parts = [
+              surname ? `${surname}阿姨` : '',
               detail.age ? `${detail.age}岁` : '',
-              zodiac ? `属${zodiac}` : '',
+              zodiac,
               (detail.nativePlace || detail.city || '').slice(0, 4),
             ].filter(Boolean);
-            const pillTags = [
+            // 第二行：职业信息
+            const row2Parts = [
               detail.jobTypeText || '',
               detail.experienceYears ? `${detail.experienceYears}年经验` : '',
-              detail.orderStatusText || '',
+              detail.expectedSalary || '',
+              detail.orderStatusText || ''
             ].filter(Boolean);
-            const salary = detail.expectedSalary || '';
 
-            // ── 布局锚点 ──
-            // 左右两列，各两行：
-            //   Row1 y=442：左=姓名大字  右=工种/经验胶囊标签
-            //   Row2 y=484：左=年龄属相籍贯  右=月薪金色
-            // 分隔线 y=532 / 品牌区 y=551,571 / QR y=534~614 / 扫码提示 y=626
-            const Y_SEP    = 532;   // 分隔线
-            // 二维码上沿到分隔线的间距
-            const bottomZoneAll = H - Y_SEP;
-            const qrBlockHAll = 72 + 11 + 5;
-            const qrGap = (bottomZoneAll - qrBlockHAll) / 2;  // ≈10px
-            // 内容区底部到分隔线保持同样间距
-            const Y_ROW2   = Y_SEP - qrGap - 11;   // 511 (middle baseline, 22px字高)
-            const Y_ROW1   = Y_ROW2 - 42;           // 469 (行间距保持42)
-            // 品牌文字 & 二维码在分隔线与画布底部之间垂直居中
-            const bottomZone = H - Y_SEP;          // 108px
-            const brandMid = Y_SEP + bottomZone / 2; // 586
-            const Y_SLOGAN = brandMid;              // slogan 垂直居中
-            const QW = 72, QH = 72;                 // 缩小 10%
-            const qrBlockH = QH + 11 + 5;           // 二维码 + 间距 + 半行文字
-            const QX = W - QW - 16;
-            const QY = Y_SEP + (bottomZone - qrBlockH) / 2;  // 垂直居中
-
-            // ── Layer 4：信息文字区（左右两列，各两行）──
-            ctx.textBaseline = 'middle';
-
-            // ── 左列 Row1：姓名大字 ──
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 30px sans-serif';
-            const nameChars = displayName.split('');
-            let nx = 20;
-            nameChars.forEach(ch => {
-              ctx.fillText(ch, nx, Y_ROW1);
-              nx += ctx.measureText(ch).width + 3;
-            });
-
-            // ── 左列 Row2：年龄 · 属相 · 籍贯 ──
-            if (subParts.length) {
-              ctx.fillStyle = 'rgba(255,255,255,0.72)';
-              ctx.font = '14px sans-serif';
-              ctx.fillText(subParts.join('  ·  '), 20, Y_ROW2);
-            }
-
-            // ── 右列 Row1：工种/经验胶囊标签（右对齐，从右往左排） ──
-            if (pillTags.length) {
-              const pillH = 28, pillR = 14;
-              let rx = W - 20; // 从右边距开始向左排
-              [...pillTags].reverse().forEach(tag => {
-                ctx.font = '13px sans-serif';
-                const tw = ctx.measureText(tag).width;
-                const pw = tw + 22;
-                rx -= pw;
-                if (rx < 20) return; // 防止越界
-                roundRectPath(rx, Y_ROW1 - pillH / 2, pw, pillH, pillR);
-                ctx.fillStyle = 'rgba(255,255,255,0.13)';
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(255,255,255,0.40)';
-                ctx.lineWidth = 0.8;
-                ctx.stroke();
-                ctx.fillStyle = '#ffffff';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(tag, rx + 11, Y_ROW1 + 1);
-                rx -= 8; // 标签间距
-              });
-            }
-
-            // ── 右列 Row2：月薪金色（右对齐，与副标题同高）──
-            if (salary) {
-              ctx.fillStyle = '#C8A96E';
-              ctx.font = 'bold 22px sans-serif';
-              ctx.textBaseline = 'middle';
-              ctx.textAlign = 'right';
-              ctx.fillText(salary, W - 20, Y_ROW2);
-              ctx.textAlign = 'left';
-            }
-
-            // ── Layer 5：底部品牌栏 ──
-            // 细分隔线
-            ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(16, Y_SEP);
-            ctx.lineTo(W - 16, Y_SEP);
-            ctx.stroke();
-
-            // 品牌 slogan —— 在二维码左侧区域居中显示
-            const sloganText = '为爱，全力以赴！';
-            const sloganAreaLeft = 0;
-            const sloganAreaRight = QX - 8;          // 二维码左边留 8px 间距
-            const sloganCenterX = (sloganAreaLeft + sloganAreaRight) / 2;
-            ctx.fillStyle = '#C8A96E';
-            ctx.font = 'italic bold 25px "PingFang SC", "STKaiti", "KaiTi", Georgia, serif';
             ctx.textBaseline = 'middle';
-            ctx.textAlign = 'center';
-            ctx.fillText(sloganText, sloganCenterX, Y_SLOGAN);
-            ctx.textAlign = 'left';  // 恢复默认
+            ctx.font = 'bold 13px sans-serif';
+            // 第一行 y=463（信息栏上半）
+            ctx.fillText(row1Parts.join(' | '), 12, 463);
+            // 第二行 y=492（信息栏下半）
+            ctx.fillText(row2Parts.join(' | '), 12, 492);
 
-            // ── Layer 6：二维码圆角白卡（右侧，顶贴分隔线）──
-            roundRectPath(QX, QY, QW, QH, 8);
+            // — 品牌标语（页脚左侧）—
+            ctx.fillStyle = PURPLE;
+            ctx.font = '13px sans-serif';
+            ctx.fillText('安得褓贝-一切为了爱', 12, 536);
+
+            // — 小程序码区域（右下角，88×88，顶部与信息栏上沿对齐）—
+            // QX=279, QY=445（与紫色信息栏 y:445 对齐），留 8px 右边距
+            const QX = 279, QY = 445, QW = 88, QH = 88;
+            // 白色底衬（因为透明 PNG 码需要白底可读）
             ctx.fillStyle = '#ffffff';
-            ctx.fill();
+            ctx.fillRect(QX, QY, QW, QH);
 
             if (qrLocalPath) {
               const qrImg = canvas.createImage();
               qrImg.src = qrLocalPath;
               await new Promise(r => { qrImg.onload = r; qrImg.onerror = r; });
-              ctx.save();
-              roundRectPath(QX + 5, QY + 5, QW - 10, QH - 10, 4);
-              ctx.clip();
-              ctx.drawImage(qrImg, QX + 5, QY + 5, QW - 10, QH - 10);
-              ctx.restore();
+              // 透明 PNG 直接绘制在白底上，留 4px 内边距
+              ctx.drawImage(qrImg, QX + 4, QY + 4, QW - 8, QH - 8);
             }
 
-            // "扫码了解详情"（QR 正下方居中）
-            ctx.fillStyle = 'rgba(255,255,255,0.45)';
-            ctx.font = '10px sans-serif';
+            // — "扫一扫看详情"（页脚，二维码下方居中）—
+            ctx.fillStyle = PURPLE;
+            ctx.font = '12px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('扫码查看简历', QX + QW / 2, QY + QH + 11);
+            ctx.fillText('扫一扫看详情', QX + QW / 2, 548);
             ctx.textAlign = 'left';
 
-            // ── Layer 7：右上角 Logo ──
-            if (logoLocalPath) {
-              const logoImg = canvas.createImage();
-              logoImg.src = logoLocalPath;
-              await new Promise(r => { logoImg.onload = r; logoImg.onerror = r; });
-              const logoSize = 78;   // 再缩小20%（98*0.8）
-              const logoX = W - logoSize - 6;
-              const logoY = 6;
-              ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-            }
-
-            // ── 导出为 jpg ──
+            // — 导出为 jpg —
             wx.canvasToTempFilePath({
               canvas,
               fileType: 'jpg',
@@ -2246,16 +1990,18 @@ Page({
     // 获取头像图片（优先用异步生成的上半身裁剪图，否则回退原图）
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 锁定使用 CRM 端的员工姓名和头像（crmName/crmAvatar 登录时从 CRM 后端专门存储，不会被小程序本地值覆盖）
+    // 获取分享者信息（优先用员工在小程序设置的昵称/头像，其次回退到 CRM 数据）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || '';
-    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
 
-    const isStaffSharer = this.data.isStaff ? '&sf=1' : '';
-    const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}${isStaffSharer}`;
+    const sharePath = `/pages/resumeDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
     return {
       title: `${surname}阿姨的简历-${jobType}`,
@@ -2273,16 +2019,17 @@ Page({
     const jobType = detail.jobTypeText || '家政服务';
     const shareImage = this.data.croppedShareImage || detail.avatarSrc || detail.coverFileId || this.data.shareLogo || '';
 
-    // 锁定使用 CRM 端的员工姓名和头像（crmName/crmAvatar 登录时从 CRM 后端专门存储，不会被小程序本地值覆盖）
-    const crmUserInfo2 = wx.getStorageSync('crmUserInfo') || {};
-    const sharerName2 = crmUserInfo2.crmName || crmUserInfo2.name || crmUserInfo2.nickname || '安得褓贝顾问';
-    const sharerPhone2 = crmUserInfo2.phone || '';
-    const sharerAvatar2 = crmUserInfo2.crmAvatar || crmUserInfo2.avatarUrl || crmUserInfo2.avatar || '';
-    const sharerCompany2 = '安得褓贝';
-    const sharerId2 = String(crmUserInfo2._id || crmUserInfo2.id || crmUserInfo2.userId || '');
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const localName = wx.getStorageSync('userName') || '';
+    const localPhone = wx.getStorageSync('userPhone') || '';
+    const localAvatar = wx.getStorageSync('userAvatar') || '';
+    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || localPhone || '';
+    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerCompany = '安得褓贝';
+    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
 
-    const isStaffSharer2 = this.data.isStaff ? '&sf=1' : '';
-    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId2)}&sharer=${encodeURIComponent(sharerName2)}&sharerPhone=${encodeURIComponent(sharerPhone2)}&sharerCompany=${encodeURIComponent(sharerCompany2)}&sharerAvatar=${encodeURIComponent(sharerAvatar2)}${isStaffSharer2}`;
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
 
     return {
       title: `${surname}阿姨的简历-${jobType}`,
@@ -2398,23 +2145,6 @@ Page({
 
   // "分享简历"按钮 tap 处理器：先复制推荐文案，open-type=share 随后触发原生分享
   async onBeforeShare() {
-    // ① 在用户点击事件中申请订阅配额（与 open-type=share 并行，不阻塞分享面板弹出）
-    this._requestResumeViewSubscription();
-
-    // ② 同步员工手机号到 users 集合（确保 notificationService 能按手机号找到 openid）
-    // 与"图片分享"路径的 saveStaffProfile 保持一致
-    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
-    const staffPhone = crmUserInfo.phone || '';
-    const staffName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
-    const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
-    if (staffId && staffPhone) {
-      wx.cloud.callFunction({
-        name: 'userService',
-        data: { action: 'saveStaffProfile', staffId, name: staffName, phone: staffPhone, avatar: staffAvatar, company: '安得褓贝' }
-      }).catch(err => console.warn('⚠️ saveStaffProfile 失败（不影响分享）:', err));
-    }
-
     const text = await this._fetchRecommendationText();
     if (!text) return;
     wx.setClipboardData({
@@ -2422,26 +2152,6 @@ Page({
       success: () => {
         wx.showToast({ title: '推荐理由复制成功', icon: 'success', duration: 2000 });
       }
-    });
-  },
-
-  // 申请"简历被查看"订阅通知配额（在用户点击事件中调用，fire-and-forget）
-  // 每次分享前调用，确保有可用配额；已永久订阅时微信自动跳过弹窗
-  _requestResumeViewSubscription() {
-    return new Promise((resolve) => {
-      wx.requestSubscribeMessage({
-        tmplIds: [RESUME_VIEW_TEMPLATE_ID],
-        success: (res) => {
-          const status = res[RESUME_VIEW_TEMPLATE_ID];
-          console.log('📨 订阅配额申请结果:', status);
-          resolve(status === 'accept');
-        },
-        fail: (err) => {
-          // 非员工或模板配置问题时忽略，不影响分享主流程
-          console.warn('⚠️ 订阅配额申请失败（不影响分享）:', err);
-          resolve(false);
-        }
-      });
     });
   }
 });

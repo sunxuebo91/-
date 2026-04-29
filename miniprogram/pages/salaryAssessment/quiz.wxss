@@ -1,0 +1,180 @@
+.quiz-page {
+  min-height: 100vh;
+  background: #f6f6f6;
+  padding-bottom: 200rpx;
+}
+
+/* 加载态 */
+.loading-wrap {
+  padding: 200rpx 60rpx;
+  text-align: center;
+}
+.loading-spinner {
+  width: 80rpx; height: 80rpx;
+  border: 6rpx solid #e9e3ff;
+  border-top-color: #8766F3;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 32rpx;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 32rpx; font-weight: 600; color: #1a1a1a; }
+.loading-tip { font-size: 24rpx; color: #888; margin-top: 14rpx; }
+
+/* 顶部进度 */
+.top-bar {
+  background: #fff;
+  padding: 28rpx 32rpx 24rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.section-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #8766F3;
+  background: #f0ebff;
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+}
+.progress-text { font-size: 28rpx; color: #555; font-weight: 500; flex: 1; text-align: right; padding-right: 16rpx; }
+.timer {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #8766F3;
+  background: #f0ebff;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  min-width: 84rpx;
+  text-align: center;
+}
+.timer-warn { color: #fff; background: #ff9f3d; }
+.timer-danger { color: #fff; background: #ff4d4f; animation: pulse 0.6s ease-in-out infinite alternate; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+.progress-track {
+  height: 8rpx;
+  background: #efefef;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8766F3, #A694FF);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+/* 题目卡 */
+.question-card {
+  margin: 28rpx 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 36rpx 32rpx 28rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.04);
+}
+.question-num {
+  font-size: 24rpx;
+  color: #8766F3;
+  font-weight: 600;
+  margin-bottom: 14rpx;
+}
+.question-text {
+  font-size: 34rpx;
+  color: #1a1a1a;
+  font-weight: 600;
+  line-height: 1.55;
+  margin-bottom: 32rpx;
+}
+
+/* 选项 */
+.options { display: flex; flex-direction: column; gap: 18rpx; }
+.option {
+  display: flex;
+  align-items: flex-start;
+  padding: 26rpx 24rpx;
+  background: #f7f6fb;
+  border: 2rpx solid transparent;
+  border-radius: 16rpx;
+  transition: all 0.2s ease;
+}
+.option-active {
+  background: #f0ebff;
+  border-color: #8766F3;
+}
+.option-label {
+  width: 56rpx; height: 56rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  border: 2rpx solid #d8d3eb;
+  color: #8766F3;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+.option-active .option-label {
+  background: #8766F3;
+  border-color: #8766F3;
+  color: #fff;
+}
+.option-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.55;
+  padding-top: 8rpx;
+}
+.option-active .option-text { color: #1a1a1a; font-weight: 500; }
+
+/* 底部按钮 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 16rpx;
+  z-index: 100;
+}
+.ghost-btn {
+  flex: 1;
+  height: 88rpx;
+  background: #f4f4f4;
+  color: #666;
+  font-size: 30rpx;
+  border-radius: 44rpx;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ghost-btn::after { border: none; }
+.ghost-btn[disabled] { opacity: 0.5; color: #999; background: #f4f4f4; }
+.primary-btn {
+  flex: 2;
+  height: 88rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.primary-btn::after { border: none; }
+.primary-btn[disabled] { opacity: 0.6; color: #fff; background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%); }

@@ -1,0 +1,121 @@
+<view class="page">
+  <!-- 头图区域 -->
+  <view class="hero">
+    <view class="hero-title">AI 工资能力测评</view>
+    <view class="hero-subtitle">家政行业资深 HR + AI 双重把关</view>
+    <view class="hero-tags">
+      <view class="hero-tag">30 道精选题</view>
+      <view class="hero-tag">AI 即时评分</view>
+      <view class="hero-tag">薪资区间预估</view>
+    </view>
+  </view>
+
+  <!-- 流程图 -->
+  <view class="flow-card">
+    <view class="flow-step">
+      <view class="flow-num">1</view>
+      <view class="flow-text">填写基本信息</view>
+    </view>
+    <view class="flow-arrow">›</view>
+    <view class="flow-step">
+      <view class="flow-num">2</view>
+      <view class="flow-text">回答 30 道测评题</view>
+    </view>
+    <view class="flow-arrow">›</view>
+    <view class="flow-step">
+      <view class="flow-num">3</view>
+      <view class="flow-text">AI 生成专属报告</view>
+    </view>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-card">
+    <view class="form-title">基本信息（必填）</view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>姓名</view>
+      <input class="form-input" placeholder="请输入您的姓名" maxlength="20"
+             value="{{form.name}}" data-field="name" bindinput="onInput" />
+    </view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>手机号</view>
+      <block wx:if="{{form.phone}}">
+        <view class="form-input phone-readonly">{{form.phone}}</view>
+        <text class="phone-lock">🔒</text>
+      </block>
+      <button wx:else
+              class="phone-auth-btn"
+              open-type="getPhoneNumber"
+              bindgetphonenumber="onGetPhoneNumber">
+        点击授权获取
+      </button>
+    </view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>应聘工种</view>
+      <picker mode="selector" range="{{JOB_TYPES}}" range-key="label" bindchange="onJobTypeChange">
+        <view class="form-picker {{form.jobTypeLabel ? '' : 'placeholder'}}">
+          {{form.jobTypeLabel || '请选择工种'}}
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>年龄</view>
+      <input class="form-input" type="number" placeholder="如：35" maxlength="2"
+             value="{{form.age}}" data-field="age" bindinput="onInput" />
+    </view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>工作年限</view>
+      <input class="form-input" type="number" placeholder="如：5（无经验填 0）" maxlength="2"
+             value="{{form.experienceYears}}" data-field="experienceYears" bindinput="onInput" />
+    </view>
+
+    <view class="form-row">
+      <view class="form-label"><text class="required">*</text>学历</view>
+      <picker mode="selector" range="{{EDUCATIONS}}" range-key="label" bindchange="onEducationChange">
+        <view class="form-picker {{form.educationLabel ? '' : 'placeholder'}}">
+          {{form.educationLabel || '请选择学历'}}
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-row">
+      <view class="form-label">所在城市</view>
+      <input class="form-input" placeholder="选填，例如：上海" maxlength="20"
+             value="{{form.city}}" data-field="city" bindinput="onInput" />
+    </view>
+
+    <view class="form-tips">
+      点击「开始测评」即视为同意我们记录您的基本信息并生成测评报告
+    </view>
+  </view>
+
+  <!-- 底部按钮（占位，与底部固定栏配合） -->
+  <view class="footer-spacer"></view>
+
+  <!-- 底部固定栏：分享归属时显示顾问 + 开始按钮 -->
+  <view class="bottom-bar {{isShared && sharerInfo ? 'with-advisor' : ''}}">
+    <view wx:if="{{isShared && sharerInfo}}" class="advisor-mini" bindtap="onContactAdvisor">
+      <view class="advisor-mini-avatar">
+        <image wx:if="{{sharerInfo.avatar}}" src="{{sharerInfo.avatar}}" mode="aspectFill" class="advisor-avatar-img" />
+        <text wx:else>{{sharerInfo.name ? sharerInfo.name.charAt(0) : '顾'}}</text>
+      </view>
+      <view class="advisor-mini-info">
+        <view class="advisor-mini-name">{{sharerInfo.name || '安得褓贝顾问'}}</view>
+        <view class="advisor-mini-company">{{sharerInfo.company || '安得褓贝'}}</view>
+      </view>
+    </view>
+
+    <button wx:if="{{isLoggedIn}}" class="primary-btn" bindtap="onStart" loading="{{submitting}}" disabled="{{submitting}}">
+      开始测评
+    </button>
+    <button wx:else class="primary-btn" bindtap="onTapLogin">
+      登录后开始测评
+    </button>
+  </view>
+</view>

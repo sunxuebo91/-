@@ -1,0 +1,48 @@
+<view class="quiz-page">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">{{loadingText}}</view>
+  </view>
+
+  <block wx:elif="{{questions.length}}">
+    <!-- 顶部进度 -->
+    <view class="top-bar">
+      <view class="progress-info">
+        <view class="section-label">{{sectionLabel}}</view>
+        <view class="progress-text">{{currentIdx + 1}} / {{total}}</view>
+        <view class="timer {{timerWarn ? 'timer-warn' : ''}} {{timerDanger ? 'timer-danger' : ''}}">
+          ⏱ {{secondsLeft}}s
+        </view>
+      </view>
+      <view class="progress-track">
+        <view class="progress-fill" style="width: {{((currentIdx + 1) / total) * 100}}%"></view>
+      </view>
+    </view>
+
+    <!-- 题目卡 -->
+    <view class="question-card">
+      <view class="question-num">第 {{currentIdx + 1}} 题</view>
+      <view class="question-text">{{questions[currentIdx].question}}</view>
+
+      <view class="options">
+        <view wx:for="{{questions[currentIdx].options}}" wx:key="label"
+              class="option {{answers[questions[currentIdx].id] === item.label ? 'option-active' : ''}}"
+              data-qid="{{questions[currentIdx].id}}" data-label="{{item.label}}"
+              bindtap="onSelectOption">
+          <view class="option-label">{{item.label}}</view>
+          <view class="option-text">{{item.text}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="bottom-bar">
+      <button class="ghost-btn" bindtap="onPrev" disabled="{{currentIdx === 0}}">上一题</button>
+      <button wx:if="{{currentIdx < total - 1}}" class="primary-btn" bindtap="onNext">下一题</button>
+      <button wx:else class="primary-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+        提交评估
+      </button>
+    </view>
+  </block>
+</view>

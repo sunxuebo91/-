@@ -1,0 +1,147 @@
+<view class="result-page">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">报告加载中...</view>
+  </view>
+
+  <block wx:elif="{{result}}">
+    <!-- AI 报告生成中 / 失败 提示条 -->
+    <view wx:if="{{aiStatus === 'scoring'}}" class="ai-banner ai-banner-loading">
+      <view class="ai-banner-spinner"></view>
+      <view class="ai-banner-text">AI 正在为你生成详细报告，约 5~15 秒…</view>
+    </view>
+    <view wx:elif="{{aiStatus === 'failed'}}" class="ai-banner ai-banner-failed" bindtap="runAIEvaluation">
+      <view class="ai-banner-text">AI 报告生成失败，已显示参考结果。点此重试</view>
+    </view>
+
+    <!-- 评分头卡 -->
+    <view class="score-card">
+      <view class="score-job">{{jobTypeLabel}} · 工资能力评估</view>
+      <view class="score-num">
+        <text class="score-num-big">{{result.totalScore}}</text>
+        <text class="score-num-unit">分</text>
+      </view>
+      <view class="level-badge" style="background: {{levelColor.bg}}; color: {{levelColor.text}};">
+        {{result.level}}阿姨
+      </view>
+      <view class="level-desc">{{result.levelDesc}}</view>
+    </view>
+
+    <!-- 工资区间 -->
+    <view class="card salary-card">
+      <view class="card-title">
+        <view class="card-title-bar"></view>
+        <text>预估薪资区间</text>
+      </view>
+      <view class="salary-range">
+        <text class="salary-num">{{result.salaryRange.min}}</text>
+        <text class="salary-sep">~</text>
+        <text class="salary-num">{{result.salaryRange.max}}</text>
+        <text class="salary-unit">{{result.salaryRange.unit || '元/月'}}</text>
+      </view>
+      <view class="salary-tip">{{result.marketComparison}}</view>
+      <view wx:if="{{result.salaryReasoning}}" class="salary-reason">{{result.salaryReasoning}}</view>
+    </view>
+
+    <!-- 三项得分 -->
+    <view wx:if="{{sectionScores}}" class="card">
+      <view class="card-title">
+        <view class="card-title-bar"></view>
+        <text>分项得分</text>
+      </view>
+
+      <view class="score-row">
+        <view class="score-row-label">硬件条件</view>
+        <view class="score-row-bar">
+          <view class="score-row-fill" style="width: {{sectionScores.hardwareMax > 0 ? (sectionScores.hardware / sectionScores.hardwareMax) * 100 : 0}}%"></view>
+        </view>
+        <view class="score-row-num">{{sectionScores.hardware}}/{{sectionScores.hardwareMax}}</view>
+      </view>
+
+      <view class="score-row">
+        <view class="score-row-label">技能条件</view>
+        <view class="score-row-bar">
+          <view class="score-row-fill" style="width: {{sectionScores.skillMax > 0 ? (sectionScores.skill / sectionScores.skillMax) * 100 : 0}}%"></view>
+        </view>
+        <view class="score-row-num">{{sectionScores.skill}}/{{sectionScores.skillMax}}</view>
+      </view>
+
+      <view class="score-row">
+        <view class="score-row-label">心理素质</view>
+        <view class="score-row-bar">
+          <view class="score-row-fill" style="width: {{sectionScores.personalityMax > 0 ? (sectionScores.personality / sectionScores.personalityMax) * 100 : 0}}%"></view>
+        </view>
+        <view class="score-row-num">{{sectionScores.personality}}/{{sectionScores.personalityMax}}</view>
+      </view>
+    </view>
+
+    <!-- 优势 -->
+    <view wx:if="{{result.strengths && result.strengths.length}}" class="card">
+      <view class="card-title">
+        <view class="card-title-bar"></view>
+        <text>你的优势</text>
+      </view>
+      <view wx:for="{{result.strengths}}" wx:key="*this" class="list-item list-item-good">
+        <view class="list-dot list-dot-good">✓</view>
+        <view class="list-text">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 待提升 -->
+    <view wx:if="{{result.improvements && result.improvements.length}}" class="card">
+      <view class="card-title">
+        <view class="card-title-bar"></view>
+        <text>待提升项</text>
+      </view>
+      <view wx:for="{{result.improvements}}" wx:key="*this" class="list-item list-item-improve">
+        <view class="list-dot list-dot-improve">!</view>
+        <view class="list-text">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- AI 建议 -->
+    <view wx:if="{{result.advice}}" class="card advice-card">
+      <view class="card-title">
+        <view class="card-title-bar"></view>
+        <text>AI 老师建议</text>
+      </view>
+      <view class="advice-text">{{result.advice}}</view>
+    </view>
+
+    <!-- 分享引导卡：生成专属海报 -->
+    <view class="share-card">
+      <view class="share-card-header">
+        <view class="share-card-emoji">🎁</view>
+        <view class="share-card-title">你身边的姐妹也想知道</view>
+      </view>
+      <view class="share-card-desc">
+        把测评海报分享出去，让朋友扫码也来测一测，AI 给她们专属薪资建议
+      </view>
+      <button class="share-card-btn" bindtap="onGoPoster">✨ 生成专属海报</button>
+      <view class="share-card-tip">海报二维码扫码即可直达本测评</view>
+    </view>
+
+    <!-- 重测按钮 -->
+    <view class="action-row">
+      <button class="ghost-btn" bindtap="onRetry">重新测评</button>
+    </view>
+
+    <view class="footer-spacer"></view>
+
+    <!-- 底部联系顾问栏（与文章详情页同款样式） -->
+    <view wx:if="{{isShared && sharerInfo}}" class="bottom-contact">
+      <view class="advisor-mini">
+        <view class="advisor-mini-avatar">
+          <image wx:if="{{sharerInfo.avatar}}" src="{{sharerInfo.avatar}}" mode="aspectFill" class="advisor-avatar-img" />
+          <text wx:else>{{sharerInfo.name ? sharerInfo.name.charAt(0) : '顾'}}</text>
+        </view>
+        <view class="advisor-mini-info">
+          <view class="advisor-mini-name">{{sharerInfo.name || '安得褓贝顾问'}}</view>
+          <view class="advisor-mini-company">{{sharerInfo.company || '安得褓贝'}}</view>
+        </view>
+      </view>
+      <button class="contact-btn" bindtap="onContactAdvisor">联系顾问</button>
+    </view>
+  </block>
+</view>

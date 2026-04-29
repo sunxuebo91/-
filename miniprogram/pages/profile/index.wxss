@@ -253,13 +253,16 @@ page {
 .service-grid {
   display: flex;
   flex-direction: row;
-  gap: 40rpx;
+  flex-wrap: wrap;
   padding-top: 24rpx;
 }
 .service-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 0 0 25%;
+  width: 25%;
+  margin-bottom: 24rpx;
   gap: 14rpx;
 }
 .service-icon-wrap {
@@ -274,6 +277,7 @@ page {
 .service-icon-diary   { background: #FFF0E8; }
 .service-icon-referral{ background: #E8F9EE; }
 .service-icon-poster  { background: #EDE8FF; }
+.service-icon-salary  { background: #E8F5FF; }
 .service-icon-img {
   width: 60rpx;
   height: 60rpx;

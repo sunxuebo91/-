@@ -1,0 +1,9 @@
+{
+  "name": "salaryAssessment",
+  "version": "1.0.0",
+  "description": "工资测评云函数：AI 出题 + AI 评分 + 简历归属",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

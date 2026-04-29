@@ -118,6 +118,42 @@ const getHomeMiniCode = async () => {
   return { success: true, fileID: upload.fileID };
 };
 
+// 生成工资测评小程序码（海报二维码 → 直达 /pages/salaryAssessment/index）
+// 携带 sharerId / sharerPhone / sharerOpenid，与 sharerUtils.parseSharerFromOptions 字段一致
+// 路径上限 128 字符，超出则按优先级降级（保留 shared=1 + sharerId）
+const getSalaryAssessmentMiniCode = async (event) => {
+  const staffId     = (event.staffId     || '').toString();
+  const staffPhone  = (event.staffPhone  || '').toString();
+  const staffOpenid = (event.staffOpenid || '').toString();
+
+  const basePath = 'pages/salaryAssessment/index';
+  const idPart    = staffId     ? `&sharerId=${encodeURIComponent(staffId)}`         : '';
+  const phonePart = staffPhone  ? `&sharerPhone=${encodeURIComponent(staffPhone)}`   : '';
+  const oidPart   = staffOpenid ? `&sharerOpenid=${encodeURIComponent(staffOpenid)}` : '';
+
+  const full      = `${basePath}?shared=1${idPart}${phonePart}${oidPart}`;
+  const noOpenid  = `${basePath}?shared=1${idPart}${phonePart}`;
+  const idOnly    = `${basePath}?shared=1${idPart}`;
+  const minShared = `${basePath}?shared=1`;
+
+  let path = minShared;
+  if      (full.length      <= 128) path = full;
+  else if (noOpenid.length  <= 128) path = noOpenid;
+  else if (idOnly.length    <= 128) path = idOnly;
+
+  const resp = await cloud.openapi.wxacode.get({
+    path,
+    width: 200,
+    is_hyaline: true,
+  });
+
+  // 每位员工独立缓存一份，扫码方看到正确顾问归属
+  const staffKey  = (staffPhone.replace(/\D/g, '') || staffOpenid.slice(0, 16) || staffId || 'default');
+  const cloudPath = `salary-assessment-qrcodes/sa-${staffKey}.png`;
+  const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
+  return { success: true, fileID: upload.fileID };
+};
+
 // 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）
 // 发布正式版后扫码即可跳转到推荐人注册页
 // 身份 token：phone + openid（CRM 端任一命中即可定位 staff），不再写入 staffId
@@ -308,5 +344,7 @@ exports.main = async (event, context) => {
       return await getHomeMiniCode();
     case "getReferrerRegisterMiniCode":
       return await getReferrerRegisterMiniCode(event);
+    case "getSalaryAssessmentMiniCode":
+      return await getSalaryAssessmentMiniCode(event);
   }
 };
