@@ -1,12 +1,9 @@
-const userService = require('../../services/userService.js');
-
 Page({
   data: {
     contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政育儿服务合同20260121.docx'
   },
 
   onLoad() {
-    if (!userService.requireLogin()) return;
     // 页面加载
   },
 

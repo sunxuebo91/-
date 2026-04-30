@@ -10,9 +10,6 @@ Page({
   },
 
   onShow() {
-    // 登录保护
-    if (!userService.requireLogin()) return;
-
     // 更新自定义 tabBar 选中状态（我的现在是索引2）
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({

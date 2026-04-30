@@ -107,7 +107,6 @@ Page({
   _autoTimer: null,
 
   async onLoad(options) {
-    if (!userService.requireLogin()) return;
     const id = options?.id ? decodeURIComponent(options.id) : '';
     const contractId = options?.contractId ? decodeURIComponent(options.contractId) : '';
     const serviceDate = options?.serviceDate ? decodeURIComponent(options.serviceDate) : ymdToday();
