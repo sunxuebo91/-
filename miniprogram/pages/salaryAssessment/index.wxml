@@ -40,24 +40,19 @@
 
     <view class="form-row">
       <view class="form-label"><text class="required">*</text>手机号</view>
-      <block wx:if="{{form.phone}}">
-        <view class="form-input phone-readonly">{{form.phone}}</view>
-        <text class="phone-lock">🔒</text>
-      </block>
-      <button wx:else
-              class="phone-auth-btn"
+      <input class="form-input phone-input" type="number" placeholder="请输入手机号" maxlength="11"
+             value="{{form.phone}}" data-field="phone" bindinput="onInput" />
+      <button class="phone-auth-btn-mini" size="mini"
               open-type="getPhoneNumber"
-              bindgetphonenumber="onGetPhoneNumber">
-        点击授权获取
-      </button>
+              bindgetphonenumber="onGetPhoneNumber">微信授权</button>
     </view>
 
     <view class="form-row">
       <view class="form-label"><text class="required">*</text>应聘工种</view>
       <picker mode="selector" range="{{JOB_TYPES}}" range-key="label" bindchange="onJobTypeChange">
         <view class="form-picker {{form.jobTypeLabel ? '' : 'placeholder'}}">
-          {{form.jobTypeLabel || '请选择工种'}}
-          <text class="picker-arrow">›</text>
+          <text class="form-picker-text">{{form.jobTypeLabel || '请选择工种'}}</text>
+          <view class="picker-arrow"></view>
         </view>
       </picker>
     </view>
@@ -78,8 +73,8 @@
       <view class="form-label"><text class="required">*</text>学历</view>
       <picker mode="selector" range="{{EDUCATIONS}}" range-key="label" bindchange="onEducationChange">
         <view class="form-picker {{form.educationLabel ? '' : 'placeholder'}}">
-          {{form.educationLabel || '请选择学历'}}
-          <text class="picker-arrow">›</text>
+          <text class="form-picker-text">{{form.educationLabel || '请选择学历'}}</text>
+          <view class="picker-arrow"></view>
         </view>
       </picker>
     </view>
@@ -118,4 +113,13 @@
       登录后开始测评
     </button>
   </view>
+
+  <!-- 员工专属：右下角悬浮分享按钮（仅员工身份可见） -->
+  <view wx:if="{{isStaff}}" class="staff-fab" bindtap="onStaffShare">
+    <view class="staff-fab-icon">📣</view>
+    <view class="staff-fab-label">分享</view>
+  </view>
+
+  <!-- 离屏 canvas：用于生成转发分享缩略图（不可见） -->
+  <canvas type="2d" id="assessment-share-canvas" class="assessment-share-canvas"></canvas>
 </view>

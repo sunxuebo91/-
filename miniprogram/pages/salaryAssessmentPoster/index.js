@@ -75,7 +75,7 @@ Page({
       ]);
       const posterPath = await this._renderCanvas(qrPath, logoPath);
       this.setData({ posterPath, generating: false });
-      // 生成后自动唤起分享菜单
+      // 生成后自动唤起原生分享菜单（含发送给朋友/朋友圈/保存图片）
       wx.showShareImageMenu({ path: posterPath, fail: () => {} });
     } catch (err) {
       console.error('[salaryAssessmentPoster] 生成失败:', err);
@@ -88,16 +88,6 @@ Page({
     const path = this.data.posterPath;
     if (!path) return;
     wx.showShareImageMenu({ path, fail: () => {} });
-  },
-
-  onSaveAlbum() {
-    const path = this.data.posterPath;
-    if (!path) return;
-    wx.saveImageToPhotosAlbum({
-      filePath: path,
-      success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
-      fail:    () => wx.showToast({ title: '请长按图片保存', icon: 'none' }),
-    });
   },
 
   // ── 资源获取 ─────────────────────────────────────────────────
@@ -126,7 +116,10 @@ Page({
         },
       });
       const fileID = cfRes?.result?.fileID;
-      if (!fileID) return '';
+      if (!fileID) {
+        console.warn('[salaryAssessmentPoster] 云函数返回缺少 fileID，可能未部署 getSalaryAssessmentMiniCode：', cfRes);
+        return '';
+      }
       const tempRes = await wx.cloud.getTempFileURL({ fileList: [fileID] });
       const tempUrl = tempRes?.fileList?.[0]?.tempFileURL || '';
       if (!tempUrl) return '';
@@ -134,8 +127,7 @@ Page({
       _qrPathCacheKey = key;
       return _qrPathCache;
     } catch (err) {
-      console.warn('[salaryAssessmentPoster] 获取小程序码失败:', err);
-      wx.showToast({ title: '二维码生成失败，请先发布正式版', icon: 'none', duration: 2500 });
+      console.warn('[salaryAssessmentPoster] 获取小程序码失败（请确认云函数 quickstartFunctions 已重新上传，且小程序已发布正式版）:', err);
       return '';
     }
   },
@@ -205,9 +197,12 @@ Page({
           ctx.fillText('SALARY  REPORT', 18, 42);
 
           // ── L4 主标题：姓名 + 工种 ──
-          const heroName = cut(sum.name || '我', 6) + ` · ${sum.jobTypeLabel || ''}`;
+          const isGeneric = !!sum._generic;
+          const heroName = isGeneric
+            ? '测一测 · 你能拿多少'
+            : (cut(sum.name || '我', 6) + ` · ${sum.jobTypeLabel || ''}`);
           ctx.fillStyle = '#FAF6EE';
-          ctx.font = 'bold 30px "PingFang SC", sans-serif';
+          ctx.font = `bold ${isGeneric ? 28 : 30}px "PingFang SC", sans-serif`;
           ctx.textAlign = 'left'; ctx.textBaseline = 'top';
           ctx.fillText(heroName, 18, 78);
 
@@ -215,28 +210,84 @@ Page({
           ctx.font = '14px "PingFang SC", sans-serif';
           ctx.fillText('AI 智能工资测评 · 安得褓贝出品', 18, 116);
 
-          // ── L5 评分 + 等级胶囊 ──
-          const scoreY = 158;
-          ctx.fillStyle = style.accent;
-          ctx.font = 'bold 96px Georgia, "PingFang SC", serif';
-          ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-          const scoreText = String(sum.totalScore || 0);
-          ctx.fillText(scoreText, 18, scoreY);
-          const scoreW = ctx.measureText(scoreText).width;
-          ctx.fillStyle = 'rgba(255,255,255,0.7)';
-          ctx.font = '18px "PingFang SC", sans-serif';
-          ctx.fillText('分', 18 + scoreW + 6, scoreY + 60);
+          // 通用邀测海报：跳过评分/薪资卡/分项胶囊，改为大字号 CTA
+          if (isGeneric) {
+            // "30" 用 Georgia 衬线，"题" 用 PingFang 字号略小，并用同一条 alphabetic 基线对齐
+            const numBaseline = 224;
+            ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = style.accent;
+            ctx.font = 'bold 64px Georgia, serif';
+            ctx.fillText('30', 18, numBaseline);
+            const numW = ctx.measureText('30').width;
+            ctx.fillStyle = '#FAF6EE';
+            ctx.font = 'bold 44px "PingFang SC", sans-serif';
+            ctx.fillText('题', 18 + numW + 14, numBaseline);
 
-          // 等级胶囊
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#FAF6EE';
+            ctx.font = 'bold 30px "PingFang SC", sans-serif';
+            ctx.fillText('5 分钟', 18, 248);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = '15px "PingFang SC", sans-serif';
+            ctx.fillText('AI 一键给出薪资区间 + 等级评估', 18, 290);
+
+            // 价值点列表
+            const bullets = ['月嫂 · 育儿嫂 · 保姆 · 护老/陪护', '基于行业薪资数据库匹配', '免费 · 无需下载 App'];
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.font = '14px "PingFang SC", sans-serif';
+            bullets.forEach((b, i) => {
+              ctx.fillStyle = style.accent;
+              ctx.fillText('•', 18, 332 + i * 28);
+              ctx.fillStyle = 'rgba(255,255,255,0.85)';
+              ctx.fillText(b, 34, 332 + i * 28);
+            });
+
+            // 引导金句（同结果版位置）
+            ctx.fillStyle = '#FAF6EE';
+            ctx.font = 'bold 22px "PingFang SC", sans-serif';
+            ctx.fillText('扫码立即开始', 18, 458);
+            ctx.fillStyle = style.accent;
+            ctx.fillText('测出你的真实身价', 18, 490);
+          } else {
+          // ── L5 评分 + 等级胶囊 ──
+          // 顶部一行：左侧"AI 综合得分"小标签 + 右侧等级胶囊（杂志页眉式对齐）
+          const headerY = 156;
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.font = '12px "PingFang SC", sans-serif';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText('AI 综合得分', 18, headerY);
+
+          // 等级胶囊（右对齐到 W-18）
           const levelText = `${sum.level || '中级'}阿姨`;
-          ctx.font = 'bold 16px "PingFang SC", sans-serif';
+          ctx.font = 'bold 14px "PingFang SC", sans-serif';
           const levelTW = ctx.measureText(levelText).width;
-          const pillX = 18 + scoreW + 38, pillY = scoreY + 22, pillH = 36, pillW = levelTW + 28;
+          const pillH = 28, pillW = levelTW + 24;
+          const pillX = W - 18 - pillW;
+          const pillY = headerY - pillH / 2;
           rrp(pillX, pillY, pillW, pillH, pillH/2);
           ctx.fillStyle = style.accent; ctx.fill();
           ctx.fillStyle = '#1a0a2e';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText(levelText, pillX + pillW/2, pillY + pillH/2);
+          ctx.fillText(levelText, pillX + pillW/2, headerY);
+
+          // 大分数 + 分母（整体水平居中，Georgia 衬线，alphabetic 基线方便对齐）
+          const scoreBaseline = 244;
+          const scoreText = String(sum.totalScore || 0);
+          const denomStr = ' / 100';
+          ctx.font = 'bold 80px Georgia, serif';
+          const scoreW = ctx.measureText(scoreText).width;
+          ctx.font = '24px Georgia, serif';
+          const denomW = ctx.measureText(denomStr).width;
+          const blockX = (W - scoreW - denomW) / 2;
+
+          ctx.fillStyle = style.accent;
+          ctx.font = 'bold 80px Georgia, serif';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+          ctx.fillText(scoreText, blockX, scoreBaseline);
+
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.font = '24px Georgia, serif';
+          ctx.fillText(denomStr, blockX + scoreW, scoreBaseline);
 
           // ── L6 薪资区间卡（毛玻璃）──
           const cardX = 18, cardY = 290, cardW = W - 36, cardH = 124;
@@ -249,19 +300,30 @@ Page({
           ctx.textAlign = 'left'; ctx.textBaseline = 'top';
           ctx.fillText('AI 预估薪资区间', cardX + 18, cardY + 16);
 
-          // 大金色薪资数字（先测量再切换字号，避免单位错位到中间）
-          const salaryFontSize = 36;
+          // 大金色薪资数字（按可用宽度自适应字号，避免溢出卡片）
           const unitFontSize   = 14;
+          const unitStr        = sum.salaryUnit || '元/月';
+          ctx.font = `${unitFontSize}px "PingFang SC", sans-serif`;
+          const unitW          = ctx.measureText(unitStr).width;
+          const salaryStr      = `¥${sum.salaryMin || '—'} ~ ¥${sum.salaryMax || '—'}`;
+          const innerLeft      = cardX + 18;
+          const innerRight     = cardX + cardW - 18;
+          const maxSalaryW     = innerRight - innerLeft - unitW - 10;
+          let salaryFontSize   = 36;
           ctx.font = `bold ${salaryFontSize}px Georgia, "PingFang SC", serif`;
+          let salaryStrW = ctx.measureText(salaryStr).width;
+          if (salaryStrW > maxSalaryW) {
+            salaryFontSize = Math.max(26, Math.floor(salaryFontSize * maxSalaryW / salaryStrW));
+            ctx.font = `bold ${salaryFontSize}px Georgia, "PingFang SC", serif`;
+            salaryStrW = ctx.measureText(salaryStr).width;
+          }
           ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-          const salaryStr = `¥${sum.salaryMin || '—'} ~ ¥${sum.salaryMax || '—'}`;
-          const salaryStrW = ctx.measureText(salaryStr).width;
           ctx.fillStyle = style.accent;
-          ctx.fillText(salaryStr, cardX + 18, cardY + 40);
+          ctx.fillText(salaryStr, innerLeft, cardY + 40);
 
           ctx.font = `${unitFontSize}px "PingFang SC", sans-serif`;
           ctx.fillStyle = 'rgba(255,255,255,0.7)';
-          ctx.fillText(sum.salaryUnit || '元/月', cardX + 18 + salaryStrW + 8, cardY + 40 + salaryFontSize - unitFontSize - 4);
+          ctx.fillText(unitStr, innerLeft + salaryStrW + 8, cardY + 40 + salaryFontSize - unitFontSize - 4);
 
           ctx.fillStyle = 'rgba(255,255,255,0.55)';
           ctx.font = '12px "PingFang SC", sans-serif';
@@ -298,9 +360,10 @@ Page({
           ctx.fillText('你身边的姐妹', cardX, 482);
           ctx.fillStyle = style.accent;
           ctx.fillText('能拿多少？', cardX, 514);
+          } // end !isGeneric
 
           // ── L9 底部分隔线 + 顾问 + QR ──
-          const Y_SEP = 558;
+          const Y_SEP = 552;
           ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 0.6;
           ctx.beginPath(); ctx.moveTo(16, Y_SEP); ctx.lineTo(W-16, Y_SEP); ctx.stroke();
 
@@ -324,11 +387,18 @@ Page({
             await new Promise(r => { qr.onload = r; qr.onerror = r; });
             ctx.save(); rrp(QX+5, QY+5, QW-10, QH-10, 4); ctx.clip();
             ctx.drawImage(qr, QX+5, QY+5, QW-10, QH-10); ctx.restore();
+          } else {
+            // 二维码缺失时绘制占位文字（避免空白白块看起来像 bug）
+            ctx.fillStyle = '#999';
+            ctx.font = '10px "PingFang SC", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('小程序码', QX + QW/2, QY + QH/2 - 8);
+            ctx.fillText('上线后可见', QX + QW/2, QY + QH/2 + 8);
           }
           ctx.fillStyle = 'rgba(255,255,255,0.6)';
           ctx.font = '10px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('扫码我也测', QX + QW/2, QY + QH + 10);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.fillText('扫码我也测', QX + QW/2, QY + QH + 6);
 
           // ── L10 右上 Logo ──
           if (logoLocalPath) {

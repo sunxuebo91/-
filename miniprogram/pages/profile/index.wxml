@@ -45,13 +45,13 @@
         <text class="service-label">宝贝日记</text>
       </view>
 
-      <!-- 推荐有礼：推荐官（referrer / 推荐官）或员工兼职推荐官（isReferrer）可见；员工/管理员审核与管理入口暂不开放 -->
+      <!-- 我推荐的：推荐官、员工、管理员均可见（员工本来就是推荐核心角色） -->
       <view class="service-item" bindtap="goReferral"
-        wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.isReferrer}}">
+        wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.role === 'staff' || me.role === 'admin' || me.isReferrer || me.isStaff}}">
         <view class="service-icon-wrap service-icon-referral">
           <image class="service-icon-img" src="/images/icons/referral.svg" mode="aspectFit"/>
         </view>
-        <text class="service-label">{{referralLabel}}</text>
+        <text class="service-label">我推荐的</text>
       </view>
 
       <!-- 推荐海报：仅员工（招生老师、派单老师）和管理员可见；兼容同时身为推荐官的员工（role='referrer' 但 isStaff=true） -->

@@ -1,4 +1,5 @@
 const sharerUtils = require('../../utils/sharerUtils.js');
+const assessmentShareImage = require('../../utils/assessmentShareImage.js');
 
 const JOB_TYPE_LABELS = {
   yuexin: '月嫂',
@@ -27,6 +28,7 @@ Page({
     sharerInfo: null,
     isShared: false,
     aiStatus: 'completed',  // 'scoring' | 'completed' | 'failed'
+    showPosterModal: false, // AI 报告完成后弹窗引导分享（每份测评仅弹一次）
   },
 
   onLoad(options) {
@@ -72,6 +74,34 @@ Page({
       levelColor: LEVEL_COLORS[level] || LEVEL_COLORS['中级'],
       aiStatus,
     });
+    this._maybeShowPosterModal();
+  },
+
+  // AI 报告就绪后弹出分享引导（同一份测评仅弹一次）
+  _maybeShowPosterModal() {
+    if (this.data.aiStatus !== 'completed') return;
+    if (!this.data.result || this.data.result._fallback) return;
+    const aid = this.data.assessmentId;
+    if (!aid) return;
+    const storageKey = `posterPromptShown_${aid}`;
+    let alreadyShown = false;
+    try { alreadyShown = !!wx.getStorageSync(storageKey); } catch (e) {}
+    if (alreadyShown) return;
+    try { wx.setStorageSync(storageKey, true); } catch (e) {}
+    setTimeout(() => {
+      if (this.data && !this.data.showPosterModal) {
+        this.setData({ showPosterModal: true });
+      }
+    }, 900);
+  },
+
+  onClosePosterModal() {
+    this.setData({ showPosterModal: false });
+  },
+
+  onModalGoPoster() {
+    this.setData({ showPosterModal: false });
+    this.onGoPoster();
   },
 
   async loadFromCloud(assessmentId) {
@@ -191,7 +221,13 @@ Page({
     try {
       wx.setStorageSync('pendingAssessmentPoster', { summary, savedAt: Date.now() });
     } catch (e) {}
-    wx.navigateTo({ url: '/pages/salaryAssessmentPoster/index' });
+
+    // 朋友圈文案（阿姨自述口吻），预先复制到剪贴板，发圈时长按粘贴即可
+    const score = result.totalScore || 0;
+    const level = result.level || '中级';
+    const moment = `刚做完 AI 工资测评，我拿了 ${score} 分（${level}阿姨），姐妹们也来测一测～`;
+    const go = () => wx.navigateTo({ url: '/pages/salaryAssessmentPoster/index' });
+    wx.setClipboardData({ data: moment, success: go, fail: go });
   },
 
   onRetry() {
@@ -214,14 +250,14 @@ Page({
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       path: `/pages/salaryAssessment/index?${query}`,
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
   onShareTimeline() {
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       query: sharerUtils.buildShareQuery(),
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
 });

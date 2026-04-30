@@ -4,6 +4,39 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
+// CRM 后端基址（与 referralService.crmPost 同款配置）
+const CRM_BASE = 'https://crm.andejiazheng.com/api';
+
+/** 向 CRM 发 POST 请求，返回 { statusCode, raw, json } */
+function crmPost(path, body) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const url = new URL(CRM_BASE + path);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'X-Client-Type': 'miniprogram',
+      },
+    };
+    const req = https.request(options, (res) => {
+      let raw = '';
+      res.on('data', chunk => raw += chunk);
+      res.on('end', () => {
+        let json = null;
+        try { json = JSON.parse(raw); } catch (e) { /* 非 JSON（如 404 HTML），保留 raw */ }
+        resolve({ statusCode: res.statusCode, raw, json });
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
 // 工种映射（与简历端保持一致）
 const JOB_TYPE_LABELS = {
   yuexin: '月嫂',
@@ -461,6 +494,7 @@ async function startAssessment(openid, ev) {
     city: b.city || '',
     sourceStaffId: String(sourceStaff.id || ''),
     sourceStaffPhone: String(sourceStaff.phone || ''),
+    sourceStaffOpenid: String(sourceStaff.openid || ''),
     sourceStaffName: String(sourceStaff.name || ''),
     sourceStaffAvatar: String(sourceStaff.avatar || ''),
     sourceStaffCompany: String(sourceStaff.company || ''),
@@ -671,6 +705,13 @@ async function runAIEvaluation(openid, ev) {
     },
   });
 
+  // CRM 成绩同步（fire-and-forget，失败仅打日志，不影响结果页 UI）
+  try {
+    await submitAssessmentResultToCrm({ ...record, _id: assessmentId }, scores, aiResult);
+  } catch (e) {
+    console.error('[runAIEvaluation] CRM 成绩同步失败(忽略):', e && e.message);
+  }
+
   return {
     assessmentId,
     sectionScores: record.sectionScores || null,
@@ -696,6 +737,105 @@ async function getResult(openid, ev) {
     result: record.result,
     aiStatus: record.aiStatus || (record.status === 'completed' ? 'completed' : 'scoring'),
   };
+}
+
+// ── action: submitResumeToCrm —— 把测评登记同步到 CRM 简历库 ──
+// 由小程序 onStart 在登记成功后 fire-and-forget 调用，失败不阻塞答题
+// 走云函数 https.request 直发 CRM，不再依赖小程序 wx.request 的"合法域名"白名单
+async function submitResumeToCrm(openid, ev) {
+  const payload = {
+    openid:            ev.openid            || openid || '',
+    name:              ev.name              || '',
+    phone:             ev.phone             || '',
+    jobType:           ev.jobType           || '',
+    age:               ev.age               || 0,
+    experienceYears:   ev.experienceYears   || 0,
+    education:         ev.education         || '',
+    city:              ev.city              || '',
+    source:            ev.source            || '小程序测评',
+    // 与 referralService 对齐：来源员工三件套，CRM 端按 openid → phone → staffId 任一命中即可定位归属
+    sourceStaffId:     ev.sourceStaffId     || '',
+    sourcePhone:       ev.sourceStaffPhone  || '',
+    sourceOpenid:      ev.sourceStaffOpenid || '',
+    assessmentId:      ev.assessmentId      || '',
+  };
+  console.log('[submitResumeToCrm] → POST /resumes/miniprogram/from-assessment', payload);
+
+  let resp;
+  try {
+    resp = await crmPost('/resumes/miniprogram/from-assessment', payload);
+  } catch (e) {
+    console.error('[submitResumeToCrm] CRM 网络异常:', e && e.message);
+    throw new Error('CRM 网络异常: ' + (e && e.message));
+  }
+
+  console.log('[submitResumeToCrm] ← status=', resp.statusCode, 'json=', resp.json, 'raw=', resp.raw && resp.raw.slice(0, 300));
+
+  if (resp.statusCode < 200 || resp.statusCode >= 300) {
+    throw new Error(`CRM 返回 ${resp.statusCode}: ${(resp.raw || '').slice(0, 200)}`);
+  }
+  if (resp.json && resp.json.success === false) {
+    throw new Error(`CRM 业务失败: ${resp.json.message || JSON.stringify(resp.json)}`);
+  }
+  return { statusCode: resp.statusCode, body: resp.json || resp.raw };
+}
+
+// ── 把测评成绩同步到 CRM 简历库（runAIEvaluation 出稿后 fire-and-forget 调用）──
+// 与 submitResumeToCrm 走同一通道，按 assessmentId 幂等回写到对应简历
+// 来源员工三件套字段命名与 referralService 对齐：sourceStaffId / sourcePhone / sourceOpenid
+async function submitAssessmentResultToCrm(record, scores, aiResult) {
+  const payload = {
+    assessmentId: String(record._id || ''),
+    openid:       record.openid || '',
+    phone:        record.phone  || '',
+    jobType:      record.jobType,
+
+    totalScore:   Number(aiResult.totalScore) || scores.percent || 0,
+    level:        aiResult.level     || '',
+    levelDesc:    aiResult.levelDesc || '',
+
+    sectionScores: {
+      hardware:            scores.hardware,
+      hardwareMax:         scores.hardwareMax,
+      hardwareWeighted:    scores.hardwareWeighted,
+      skill:               scores.skill,
+      skillMax:            scores.skillMax,
+      skillWeighted:       scores.skillWeighted,
+      personality:         scores.personality,
+      personalityMax:      scores.personalityMax,
+      personalityWeighted: scores.personalityWeighted,
+      percent:             scores.percent,
+    },
+
+    salaryRange:      aiResult.salaryRange      || { min: 0, max: 0, unit: '' },
+    salaryReasoning:  aiResult.salaryReasoning  || '',
+    marketComparison: aiResult.marketComparison || '',
+    strengths:        aiResult.strengths        || [],
+    improvements:     aiResult.improvements     || [],
+    advice:           aiResult.advice           || '',
+
+    aiStatus:    aiResult._fallback ? 'failed' : 'completed',
+    isFallback:  !!aiResult._fallback,
+    completedAt: new Date().toISOString(),
+
+    // 与 referralService 对齐：来源员工三件套，CRM 端按 openid → phone → staffId 任一命中即可定位归属
+    sourceStaffId: record.sourceStaffId     || '',
+    sourcePhone:   record.sourceStaffPhone  || '',
+    sourceOpenid:  record.sourceStaffOpenid || '',
+  };
+  console.log('[submitAssessmentResultToCrm] → POST /resumes/miniprogram/assessment-result',
+    { assessmentId: payload.assessmentId, level: payload.level, totalScore: payload.totalScore, isFallback: payload.isFallback });
+
+  const resp = await crmPost('/resumes/miniprogram/assessment-result', payload);
+  console.log('[submitAssessmentResultToCrm] ← status=', resp.statusCode, 'json=', resp.json, 'raw=', resp.raw && resp.raw.slice(0, 300));
+
+  if (resp.statusCode < 200 || resp.statusCode >= 300) {
+    throw new Error(`CRM 返回 ${resp.statusCode}: ${(resp.raw || '').slice(0, 200)}`);
+  }
+  if (resp.json && resp.json.success === false) {
+    throw new Error(`CRM 业务失败: ${resp.json.message || JSON.stringify(resp.json)}`);
+  }
+  return { statusCode: resp.statusCode, body: resp.json || resp.raw };
 }
 
 // ── 入口 ───────────────────────────────────────────────────
@@ -726,6 +866,10 @@ exports.main = async (event, context) => {
       }
       case 'getBankStats': {
         const data = await getBankStatsAction();
+        return { success: true, data };
+      }
+      case 'submitResumeToCrm': {
+        const data = await submitResumeToCrm(openid, event);
         return { success: true, data };
       }
       default:

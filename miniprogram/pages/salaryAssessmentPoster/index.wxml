@@ -6,14 +6,10 @@
     <view class="loading-sub">为你的姐妹定制专属薪资测评海报</view>
   </view>
 
-  <!-- 海报预览（满屏展示）+ 操作区 -->
+  <!-- 海报预览（点击图片可再次唤起原生分享菜单） -->
   <view class="poster-preview" wx:if="{{posterPath}}">
     <image class="poster-img" src="{{posterPath}}" mode="aspectFit" bindtap="onShowShare"></image>
-    <view class="poster-actions">
-      <view class="poster-btn poster-btn-primary" bindtap="onShowShare">分享给好友</view>
-      <view class="poster-btn poster-btn-ghost" bindtap="onSaveAlbum">保存到相册</view>
-    </view>
-    <view class="poster-tip">扫码即可直达本测评，让她也来测一测</view>
+    <view class="poster-tip">点击海报可再次唤起分享菜单</view>
   </view>
 
   <!-- 隐藏 Canvas（合成用） -->

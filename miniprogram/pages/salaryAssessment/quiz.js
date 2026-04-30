@@ -1,4 +1,5 @@
 const sharerUtils = require('../../utils/sharerUtils.js');
+const assessmentShareImage = require('../../utils/assessmentShareImage.js');
 
 const SECTION_LABELS = {
   hardware: '硬件条件',
@@ -249,14 +250,14 @@ Page({
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       path: `/pages/salaryAssessment/index?${query}`,
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
   onShareTimeline() {
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       query: sharerUtils.buildShareQuery(),
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
 });

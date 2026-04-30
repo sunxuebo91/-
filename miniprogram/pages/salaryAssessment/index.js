@@ -1,27 +1,26 @@
 const userService = require('../../services/userService.js');
 const sharerUtils = require('../../utils/sharerUtils.js');
+const assessmentShareImage = require('../../utils/assessmentShareImage.js');
 
-const CRM_BASE = 'https://crm.andejiazheng.com/api';
-
-// 直连 CRM 创建简历（不走云函数中转），失败不阻塞答题流程
+// 走云函数中转把简历同步到 CRM（绕开小程序 request 合法域名限制）
+// fire-and-forget：失败仅打日志，不阻塞答题流程
 function submitResumeToCrm(payload) {
-  return new Promise((resolve) => {
-    const token = wx.getStorageSync('access_token') || wx.getStorageSync('token') || '';
-    wx.request({
-      url: `${CRM_BASE}/resumes/miniprogram/from-assessment`,
-      method: 'POST',
-      data: payload,
-      header: {
-        'Content-Type': 'application/json',
-        'X-Client-Type': 'miniprogram',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      success: (res) => resolve(res && res.data),
-      fail: (err) => {
-        console.warn('[salaryAssessment] CRM 简历创建失败(不阻塞):', err);
-        resolve(null);
-      },
-    });
+  console.log('[salaryAssessment][CRM] callFunction submitResumeToCrm payload=', payload);
+  return wx.cloud.callFunction({
+    name: 'salaryAssessment',
+    data: { action: 'submitResumeToCrm', ...payload },
+    timeout: 15000,
+  }).then(res => {
+    const r = res && res.result;
+    if (r && r.success) {
+      console.log('[salaryAssessment][CRM] ✅ 简历同步成功:', r.data);
+    } else {
+      console.error('[salaryAssessment][CRM] ❌ 简历同步失败:', r && r.errMsg);
+    }
+    return r;
+  }).catch(err => {
+    console.error('[salaryAssessment][CRM] ❌ 云函数调用异常:', err);
+    return null;
   });
 }
 
@@ -59,6 +58,7 @@ Page({
     EDUCATIONS,
     submitting: false,
     isLoggedIn: false,
+    isStaff: false,
   },
 
   onLoad(options) {
@@ -77,10 +77,57 @@ Page({
     }
 
     this.checkLogin();
+    this.checkStaffRole();
   },
 
   onShow() {
     if (!this.data.isLoggedIn) this.checkLogin();
+    if (!this.data.isStaff) this.checkStaffRole();
+  },
+
+  onReady() {
+    // 生成分享缩略图（fire-and-forget，失败回退到品牌兜底图）
+    assessmentShareImage.prepareShareImage(this).catch(() => {});
+  },
+
+  // 员工身份识别：先读缓存，未命中再走云函数兜底
+  async checkStaffRole() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    let isStaff = crmUserInfo.isStaff === true;
+    if (!isStaff) {
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'userService',
+          data: { action: 'getOrCreateMe' },
+        });
+        const cloudUser = res?.result?.data || {};
+        isStaff = cloudUser.role === 'staff' || cloudUser.isStaff === true;
+        if (isStaff) {
+          crmUserInfo.isStaff = true;
+          wx.setStorageSync('crmUserInfo', crmUserInfo);
+        }
+      } catch (e) {
+        console.warn('[salaryAssessment] 检查员工角色失败(忽略):', e);
+      }
+    }
+    if (isStaff !== this.data.isStaff) this.setData({ isStaff });
+  },
+
+  // 员工分享入口：把"通用邀测海报"塞进 storage 后跳到海报生成页
+  // 同时把朋友圈文案预先复制到剪贴板，员工长按粘贴即可
+  onStaffShare() {
+    const summary = {
+      _generic: true,
+      jobTypeLabel: '家政从业者',
+      tagline: '测一测你能拿多少',
+    };
+    try {
+      wx.setStorageSync('pendingAssessmentPoster', { summary, savedAt: Date.now() });
+    } catch (e) {}
+
+    const moment = '测一测你能拿多少薪资？AI 30题5分钟出报告，免费！家政从业者必看';
+    const go = () => wx.navigateTo({ url: '/pages/salaryAssessmentPoster/index' });
+    wx.setClipboardData({ data: moment, success: go, fail: go });
   },
 
   checkLogin() {
@@ -275,14 +322,14 @@ Page({
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       path: `/pages/salaryAssessment/index?${query}`,
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
   onShareTimeline() {
     return {
       title: '测一测：你能拿多少工资？AI 智能评估你的家政薪资水平',
       query: sharerUtils.buildShareQuery(),
-      imageUrl: '/images/default-goods-image.png',
+      imageUrl: assessmentShareImage.getShareImage(),
     };
   },
 });

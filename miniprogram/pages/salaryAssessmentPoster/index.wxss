@@ -50,36 +50,8 @@
   box-shadow: 0 16rpx 48rpx rgba(0,0,0,0.55);
   background: #2a1452;
 }
-.poster-actions {
-  display: flex;
-  gap: 24rpx;
-  margin-top: 40rpx;
-  width: 100%;
-  padding: 0 20rpx;
-  box-sizing: border-box;
-}
-.poster-btn {
-  flex: 1;
-  height: 88rpx;
-  border-radius: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  font-weight: 700;
-  letter-spacing: 2rpx;
-}
-.poster-btn-primary {
-  background: #C8A96E;
-  color: #1a0a2e;
-}
-.poster-btn-ghost {
-  background: rgba(255,255,255,0.08);
-  color: #FAF6EE;
-  border: 1rpx solid rgba(255,255,255,0.18);
-}
 .poster-tip {
-  margin-top: 24rpx;
+  margin-top: 32rpx;
   font-size: 24rpx;
   color: rgba(255,255,255,0.45);
 }

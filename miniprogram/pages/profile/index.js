@@ -52,6 +52,11 @@ Page({
       mergedMe.avatarUrl = cloudMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
       // phone: 云端有值则用云端，否则用本地存储
       mergedMe.phone = cloudMe.phone || crmUserInfo.phone || '';
+      // 员工/推荐官身份：cloud users.role 或 crmUserInfo 缓存任一命中即生效（用于"我推荐的"等入口可见性）
+      mergedMe.isStaff = cloudMe.role === 'staff' || cloudMe.role === 'admin'
+        || cloudMe.isStaff === true || crmUserInfo.isStaff === true;
+      mergedMe.isReferrer = cloudMe.role === 'referrer' || cloudMe.role === '推荐官'
+        || cloudMe.isReferrer === true || crmUserInfo.isReferrer === true;
 
       this.setData({
         me: mergedMe,
@@ -142,6 +147,16 @@ Page({
 
   goSalaryAssessment() {
     wx.navigateTo({ url: "/pages/salaryAssessment/index" });
+  },
+
+  goReferral() {
+    wx.navigateTo({ url: "/pages/myReferrals/index" });
+  },
+
+  goPoster() {
+    // 推荐海报：员工先在客户列表里挑一个客户，再跳 /pages/poster/index?customerId=xxx
+    // 由该页 _getReferrerRegisterMiniCodePath 生成带 staffId/staffPhone/staffOpenid 归属的二维码
+    wx.navigateTo({ url: "/pages/posterCustomerList/index" });
   },
 
 

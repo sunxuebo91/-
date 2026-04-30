@@ -143,5 +143,22 @@
       </view>
       <button class="contact-btn" bindtap="onContactAdvisor">联系顾问</button>
     </view>
+
+    <!-- AI 报告就绪后引导分享海报弹窗 -->
+    <view wx:if="{{showPosterModal}}" class="poster-modal-mask" catchtap="onClosePosterModal">
+      <view class="poster-modal" catchtap="">
+        <view class="poster-modal-close" catchtap="onClosePosterModal">×</view>
+        <view class="poster-modal-emoji">🎁</view>
+        <view class="poster-modal-title">你的专属报告已生成</view>
+        <view class="poster-modal-sub">把测评海报发给身边姐妹，让朋友扫码也来测一测</view>
+        <view class="poster-modal-highlight">
+          <text class="poster-modal-score">{{result.totalScore}}</text>
+          <text class="poster-modal-score-unit">分</text>
+          <text class="poster-modal-level">{{result.level}}阿姨</text>
+        </view>
+        <button class="poster-modal-btn" catchtap="onModalGoPoster">✨ 生成专属海报</button>
+        <view class="poster-modal-skip" catchtap="onClosePosterModal">稍后再说</view>
+      </view>
+    </view>
   </block>
 </view>

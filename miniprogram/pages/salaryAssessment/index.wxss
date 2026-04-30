@@ -4,6 +4,16 @@
   padding-bottom: 200rpx;
 }
 
+/* 离屏 canvas：用于动态生成分享缩略图（绝对定位到视口外，不影响布局） */
+.assessment-share-canvas {
+  position: fixed;
+  left: -9999rpx;
+  top: -9999rpx;
+  width: 500px;
+  height: 400px;
+  pointer-events: none;
+}
+
 /* 头图 */
 .hero {
   background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
@@ -19,6 +29,33 @@
   background: rgba(255,255,255,0.22);
   border-radius: 24rpx;
   font-size: 22rpx;
+}
+
+/* 员工专属右下角悬浮分享按钮（仅员工可见） */
+.staff-fab {
+  position: fixed;
+  right: 28rpx;
+  bottom: calc(160rpx + env(safe-area-inset-bottom));
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 56rpx;
+  background: linear-gradient(135deg, #1a0a2e 0%, #3b1d6e 55%, #8766F3 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #FAF6EE;
+  box-shadow: 0 8rpx 24rpx rgba(60, 30, 110, 0.42), 0 2rpx 8rpx rgba(0, 0, 0, 0.18);
+  z-index: 99;
+  border: 2rpx solid rgba(200, 169, 110, 0.4);
+}
+.staff-fab-icon { font-size: 38rpx; line-height: 1; }
+.staff-fab-label {
+  font-size: 20rpx;
+  margin-top: 4rpx;
+  letter-spacing: 1rpx;
+  color: #C8A96E;
+  font-weight: 600;
 }
 
 /* 流程卡 */
@@ -76,25 +113,23 @@
   margin-right: 6rpx;
   font-weight: 600;
 }
-.phone-readonly { color: #1a1a1a; }
-.phone-lock { color: #bbb; font-size: 24rpx; margin-left: 8rpx; }
-.phone-auth-btn {
-  flex: 1;
-  height: 64rpx;
-  line-height: 64rpx;
-  font-size: 26rpx;
-  color: #fff;
-  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
-  border-radius: 32rpx;
-  border: none;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.phone-input { flex: 1; min-width: 0; }
+.phone-auth-btn-mini {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 160rpx;
+  height: 48rpx !important;
+  line-height: 46rpx !important;
+  padding: 0 18rpx !important;
+  font-size: 20rpx !important;
+  color: #8766F3 !important;
+  background: rgba(135, 102, 243, 0.08) !important;
+  border: 1rpx solid rgba(135, 102, 243, 0.32) !important;
+  border-radius: 24rpx !important;
+  margin: 0 0 0 12rpx !important;
 }
-.phone-auth-btn::after { border: none; }
+.phone-auth-btn-mini::after { border: none !important; }
 .form-input {
   flex: 1;
   font-size: 28rpx;
@@ -108,8 +143,17 @@
   justify-content: space-between;
   align-items: center;
 }
-.form-picker.placeholder { color: #aaa; }
-.picker-arrow { color: #ccc; font-size: 32rpx; transform: rotate(90deg); }
+.form-picker.placeholder .form-picker-text { color: #aaa; }
+.form-picker-text { flex: 1; }
+.picker-arrow {
+  width: 0;
+  height: 0;
+  margin-left: 12rpx;
+  border-left: 8rpx solid transparent;
+  border-right: 8rpx solid transparent;
+  border-top: 10rpx solid #bbb;
+  flex-shrink: 0;
+}
 
 .form-tips {
   margin-top: 24rpx;
