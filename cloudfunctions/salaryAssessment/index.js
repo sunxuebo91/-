@@ -199,7 +199,7 @@ async function callDoubaoAI(prompt, maxTokens = 1200, temperature = 0.5) {
     max_tokens: maxTokens,
     temperature,
     thinking: { type: 'disabled' },
-  }, 30000);
+  }, 25000);
   console.log(`[callDoubaoAI] ←  ${Date.now() - t0}ms, usage=${JSON.stringify(resp && resp.usage)}`);
 
   const choice = ((resp && resp.choices) || [])[0];
@@ -678,17 +678,16 @@ async function runAIEvaluation(openid, ev) {
 
   let aiResult = null;
   let lastErr = '';
-  for (let attempt = 0; attempt < 2 && !aiResult; attempt++) {
-    try {
-      const text = await callDoubaoAI(buildEvaluatePrompt(jobType, basicInfo, scores.qa, scores), 1200, 0.5);
-      aiResult = extractJson(text);
-      if (!aiResult || typeof aiResult.totalScore !== 'number' || !aiResult.salaryRange) {
-        aiResult = null;
-        lastErr = 'AI 返回结构异常';
-      }
-    } catch (e) {
-      lastErr = (e && e.message) || String(e);
+  try {
+    const text = await callDoubaoAI(buildEvaluatePrompt(jobType, basicInfo, scores.qa, scores), 1200, 0.5);
+    aiResult = extractJson(text);
+    if (!aiResult || typeof aiResult.totalScore !== 'number' || !aiResult.salaryRange) {
+      aiResult = null;
+      lastErr = 'AI 返回结构异常';
     }
+  } catch (e) {
+    lastErr = (e && e.message) || String(e);
+    console.error('[runAIEvaluation] AI 调用失败:', lastErr);
   }
 
   if (!aiResult) {
