@@ -109,6 +109,39 @@
       <view class="advice-text">{{result.advice}}</view>
     </view>
 
+    <!-- 答题回顾（仅 v2 升级后的技能题；点击展开） -->
+    <view wx:if="{{reviewItems.length}}" class="card review-card">
+      <view class="card-title review-title" bindtap="onToggleReview">
+        <view class="card-title-bar"></view>
+        <text>答题回顾</text>
+        <text class="review-count">{{reviewItems.length}} 道技能题</text>
+        <text class="review-toggle">{{reviewExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{reviewExpanded}}" class="review-list">
+        <view wx:for="{{reviewItems}}" wx:key="id" class="review-item">
+          <view class="review-q-head">
+            <text class="review-q-tag {{item.isCorrect ? 'tag-right' : 'tag-wrong'}}">{{item.isCorrect ? '答对' : '答错'}}</text>
+            <text wx:if="{{item.subsection}}" class="review-q-sub">{{item.subsection}}</text>
+          </view>
+          <view class="review-q-text">{{index + 1}}. {{item.question}}</view>
+          <view class="review-opts">
+            <view wx:for="{{item.options}}" wx:for-item="opt" wx:key="label"
+              class="review-opt {{opt.isCorrect ? 'opt-correct' : ''}} {{opt.isSelected && !opt.isCorrect ? 'opt-wrong' : ''}}">
+              <text class="review-opt-label">{{opt.label}}</text>
+              <text class="review-opt-text">{{opt.text}}</text>
+              <text wx:if="{{opt.isCorrect}}" class="review-opt-mark">✓ 正确</text>
+              <text wx:elif="{{opt.isSelected}}" class="review-opt-mark mark-wrong">你的选择</text>
+            </view>
+          </view>
+          <view class="review-explain">
+            <text class="review-explain-label">解析</text>
+            <text class="review-explain-text">{{item.explanation}}</text>
+          </view>
+          <view wx:if="{{item.source}}" class="review-source">出处：{{item.source}}</view>
+        </view>
+      </view>
+    </view>
+
     <!-- 分享引导卡：生成专属海报 -->
     <view class="share-card">
       <view class="share-card-header">

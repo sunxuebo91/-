@@ -209,6 +209,7 @@ Page({
         sectionScores: result.data.sectionScores,
         result: result.data.result,
         aiStatus: result.data.aiStatus || 'scoring',
+        reviewItems: result.data.reviewItems || [],
         completedAt: Date.now(),
       });
 

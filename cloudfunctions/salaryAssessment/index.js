@@ -57,6 +57,19 @@ const TOTAL_QUESTIONS = SECTION_SPEC.reduce((s, x) => s + x.count, 0);
 // 每个模块内部题题等权（0~10 分），模块得分按下方权重折算到 100 分
 const SECTION_WEIGHTS = { hardware: 20, skill: 60, personality: 20 };
 
+// 等级阈值（v2 题库校准后；fallback 与 prompt 共用同一组）
+// 校准依据：v2 干扰项严格 {0,3,4,7}（平均蒙猜≈3.5），v1 干扰项任意 0-10（平均≈5），
+// 同水平阿姨在 v2 下普遍比 v1 低 8-12 分；阈值统一下调 ~7 分对齐"v1 中级线"。
+const LEVEL_THRESHOLDS = { 钻石: 88, 金牌: 78, 高级: 67, 中级: 50 };
+function pickLevel(percent) {
+  const p = Number(percent) || 0;
+  if (p >= LEVEL_THRESHOLDS.钻石) return '钻石';
+  if (p >= LEVEL_THRESHOLDS.金牌) return '金牌';
+  if (p >= LEVEL_THRESHOLDS.高级) return '高级';
+  if (p >= LEVEL_THRESHOLDS.中级) return '中级';
+  return '初级';
+}
+
 // ── 薪资矩阵（北京基准；其他城市按系数折算）────────────────
 // 数字与小程序报价页（maternityPricing/childcarePricing/nannyPricing/eldercarePricing）一一对齐
 // 月嫂按"元/26天单"，其他工种按"元/月"
@@ -227,7 +240,10 @@ function buildEvaluatePrompt(jobType, basicInfo, qa, sectionScores) {
       const flag = correct ? '✓' : '✗';
       const sameAsBest = it.selectedText === it.bestText;
       const bestLine = sameAsBest ? '' : `\n   满分答案：${it.bestText}（${it.maxScore}分）`;
-      return `${i + 1}. ${flag} ${it.question}\n   阿姨选：${it.selectedText}（得${it.score}/${it.maxScore}）${bestLine}`;
+      // v2 技能题携带权威依据 + 出处，喂给 AI 让点评有理有据；v1 题无此字段则跳过
+      const expLine = it.explanation ? `\n   依据：${it.explanation}` : '';
+      const srcLine = it.source ? `\n   出处：${it.source}` : '';
+      return `${i + 1}. ${flag} ${it.question}\n   阿姨选：${it.selectedText}（得${it.score}/${it.maxScore}）${bestLine}${expLine}${srcLine}`;
     });
     return `\n【${SECTION_LABEL[sec]}】\n${lines.join('\n')}`;
   };
@@ -255,16 +271,20 @@ function buildEvaluatePrompt(jobType, basicInfo, qa, sectionScores) {
 ${matrixLine}
 
 基于以上完整答题情况和行情参考，做综合评价：
-- strengths 要从答对的题里抽提她真正掌握的能力点（不是泛泛而谈）
-- improvements 要点名她答错的具体知识点/场景，越具体越好
-- advice 针对最严重的 1~2 个短板给可执行的提升路径
-- salaryRange 必须落在上面行情区间附近：先按 level 取该档区间作为基准，再根据她具体答题的强项/短板在 ±15% 内浮动；不得超出"初级下限 ~ 钻石上限"。单位用「${unit}」
-- salaryReasoning 一句话讲清楚为什么是这个数（例如"虽属初级但新生儿急救题答对，建议谈到初级偏上"）
+- strengths 从答对的题里抽提**具体能力点**（"能正确识别会阴擦洗顺序"），勿泛泛
+- improvements 必须**引用错题的「依据」原文**，让阿姨明白为什么错（"会阴擦洗应单次单棉球前→后，否则把肛门菌带到尿道"），越具体越好
+- advice 针对最严重的 1-2 个短板给可执行的提升路径，可引用「出处」做权威背书
+- salaryRange 取值规则：先按 level 取该档区间作为基准，**综合分位于该档下半段→取该档下半区，位于上沿→取该档上半区**；不得超出"初级下限 ~ 钻石上限"，单位用「${unit}」
+- salaryReasoning 一句话讲清楚为什么是这个数（例如"虽属中级但产妇护理 9/10 题全对，建议谈到中级上限"）
 
 【严格输出 JSON，不要 markdown、不要 <think>、不要任何额外文字】
 {"totalScore":${sectionScores.percent},"level":"初级|中级|高级|金牌|钻石","levelDesc":"一句话","strengths":["优势1","优势2","优势3"],"improvements":["待提升1","待提升2","待提升3"],"salaryRange":{"min":0,"max":0,"unit":"${unit}"},"salaryReasoning":"一句话","marketComparison":"一句话讲与该城市该工种平均水平的差距","advice":"以'我'的口吻给 1~2 条具体建议，200 字内"}
 
-规则：level 五选一（80+ 至少高级，90+ 才给金牌/钻石）；salaryRange 整百元、必须在行情参考范围内；strengths/improvements 各 3 条贴答题、不套话。`;
+【关键规则】
+1. level 阈值（与系统对齐，必须严格按综合分 ${sectionScores.percent} 落档）：<${LEVEL_THRESHOLDS.中级} 初级 / ${LEVEL_THRESHOLDS.中级}-${LEVEL_THRESHOLDS.高级 - 1} 中级 / ${LEVEL_THRESHOLDS.高级}-${LEVEL_THRESHOLDS.金牌 - 1} 高级 / ${LEVEL_THRESHOLDS.金牌}-${LEVEL_THRESHOLDS.钻石 - 1} 金牌 / ≥${LEVEL_THRESHOLDS.钻石} 钻石
+2. **levelDesc 与 salaryReasoning 的水平描述必须一致**：要么都说"达到X级"，要么都说"接近X级"，不准一句"未达"另一句"接近"
+3. salaryRange 整百元、必须在行情参考范围内；strengths/improvements 各 3 条贴答题、不套话
+4. 答错题点评必须含具体依据（v2 题已附「依据」原文，直接引用即可）`;
 }
 
 // ── 工具：洗牌（Fisher-Yates）─────────────────────────────
@@ -426,6 +446,7 @@ async function getQuestions(jobType, assessmentId) {
   }
 
   // ⑤ 选项打乱 + 分配 ABCD + 题目 id
+  // v2 技能题透传 subsection / difficulty / explanation / source 用于结果页"答题回顾"
   let idx = 0;
   const compose = (items) => items.map(it => {
     idx += 1;
@@ -434,13 +455,18 @@ async function getQuestions(jobType, assessmentId) {
       text: o.text,
       score: Number(o.score) || 0,
     }));
-    return {
+    const q = {
       id: `q${idx}`,
       type: it.type || (opts.length === 2 ? 'judge' : 'choice'),
       section: it.section,
       question: it.question,
       options: opts,
     };
+    if (it.subsection) q.subsection = it.subsection;
+    if (it.difficulty) q.difficulty = it.difficulty;
+    if (it.explanation) q.explanation = it.explanation;
+    if (it.source) q.source = it.source;
+    return q;
   });
   const questions = [
     ...compose(hwArr),
@@ -544,12 +570,16 @@ function computeSectionScores(questions, answers) {
     qa.push({
       id: q.id,
       section: q.section,
+      subsection: q.subsection || '',
+      difficulty: q.difficulty || '',
       question: q.question,
       selectedLabel: a.label,
       selectedText: opt ? opt.text : '',
       bestText: bestOpt ? bestOpt.text : '',
       score,
       maxScore,
+      explanation: q.explanation || '',
+      source: q.source || '',
     });
   });
   // 各模块完成率（0~1）
@@ -579,19 +609,47 @@ function computeSectionScores(questions, answers) {
   };
 }
 
-// ── 规则兜底：按工种 + 城市矩阵给等级、薪资、套话评语 ─────────
+// ── 规则兜底：按工种 + 城市矩阵给等级、薪资、按 qa 抽提具体反馈 ──
+// scores.qa 含 v2 字段（subsection/difficulty/explanation）时，优先抽错题/对题给具体反馈；
+// 仅 v1 题或无 qa 时降级为通用模板（保持向后兼容）。
 function buildFallbackResult(scores, reason, jobType, city) {
   const p = scores.percent;
-  const level = p >= 90 ? '钻石' : p >= 80 ? '金牌' : p >= 70 ? '高级' : p >= 55 ? '中级' : '初级';
+  const level = pickLevel(p);
   const range = getSalaryRange(jobType, level, city);
+
+  // 从 qa 抽提具体反馈（最多各 3 条；优先 v2 题；按 subsection 去重避免同类堆积）
+  const qa = Array.isArray(scores.qa) ? scores.qa : [];
+  const skillQA = qa.filter((it) => it.section === 'skill');
+  const correctV2 = skillQA.filter((it) => it.score === it.maxScore && it.explanation);
+  const wrongV2 = skillQA.filter((it) => it.score < it.maxScore && it.explanation);
+  const pickByVarSub = (arr, n) => {
+    const seen = new Set();
+    const picked = [];
+    for (const it of arr) {
+      const key = it.subsection || it.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      picked.push(it);
+      if (picked.length >= n) break;
+    }
+    return picked;
+  };
+  const strengths = pickByVarSub(correctV2, 3).map((it) => `${it.subsection || ''}：${it.question.replace(/[？?]$/, '')}（已掌握）`);
+  const improvements = pickByVarSub(wrongV2, 3).map((it) => {
+    const tip = it.explanation.length > 50 ? it.explanation.slice(0, 50) + '…' : it.explanation;
+    return `${it.subsection || ''}：${tip}`;
+  });
+  const fallbackStrengths = strengths.length ? strengths : ['答题完整、态度认真'];
+  const fallbackImprovements = improvements.length ? improvements : ['建议进一步补充证书和实战经验'];
+
   return {
     totalScore: p,
     level,
     levelDesc: `综合表现达到${level}阿姨水平`,
-    strengths: ['答题完整、态度认真'],
-    improvements: ['建议进一步补充证书和实战经验'],
+    strengths: fallbackStrengths,
+    improvements: fallbackImprovements,
     salaryRange: range,
-    salaryReasoning: 'AI 报告生成中，先按行情档位给出参考。',
+    salaryReasoning: `按综合得分 ${p} 落入${level}档，参考${getCityTierLabel(getCityCoef(city))}城市行情区间。`,
     marketComparison: '与该城市该工种平均水平相当',
     advice: 'AI 报告生成中，已先按答题得分给出参考结果，稍后会自动刷新。',
     _fallback: true,
@@ -643,7 +701,10 @@ async function evaluateAssessment(openid, ev) {
     },
   });
 
-  return { assessmentId, sectionScores, result: fallback, aiStatus: 'scoring' };
+  return {
+    assessmentId, sectionScores, result: fallback, aiStatus: 'scoring',
+    reviewItems: buildReviewItems(questions, answers),
+  };
 }
 
 // ── action: runAIEvaluation —— 真·AI 评估，由结果页独立触发 ──
@@ -719,6 +780,42 @@ async function runAIEvaluation(openid, ev) {
   };
 }
 
+// 从 pickedQuestions + answers 构建"答题回顾"数据
+// 只保留有 explanation 的题（即 v2 升级后的技能题），v1 题静默跳过
+function buildReviewItems(pickedQuestions, answers) {
+  if (!Array.isArray(pickedQuestions) || !Array.isArray(answers)) return [];
+  const ansMap = Object.create(null);
+  answers.forEach((a) => { if (a && a.id) ansMap[a.id] = a.label; });
+  const items = [];
+  pickedQuestions.forEach((q) => {
+    if (!q || !q.explanation) return;
+    const userLabel = ansMap[q.id] || '';
+    let correctLabel = '';
+    const opts = (q.options || []).map((o) => {
+      if (Number(o.score) === 10) correctLabel = o.label;
+      return { label: o.label, text: o.text, score: Number(o.score) || 0 };
+    });
+    opts.forEach((o) => {
+      o.isCorrect = o.label === correctLabel;
+      o.isSelected = o.label === userLabel;
+    });
+    items.push({
+      id: q.id,
+      section: q.section || 'skill',
+      subsection: q.subsection || '',
+      difficulty: q.difficulty || '',
+      question: q.question || '',
+      options: opts,
+      userLabel,
+      correctLabel,
+      isCorrect: !!userLabel && userLabel === correctLabel,
+      explanation: q.explanation || '',
+      source: q.source || '',
+    });
+  });
+  return items;
+}
+
 // ── action: getResult —— 拉取测评结果（容忍 scoring 中状态）─
 async function getResult(openid, ev) {
   const { assessmentId } = ev || {};
@@ -735,6 +832,7 @@ async function getResult(openid, ev) {
     sectionScores: record.sectionScores || null,
     result: record.result,
     aiStatus: record.aiStatus || (record.status === 'completed' ? 'completed' : 'scoring'),
+    reviewItems: buildReviewItems(record.pickedQuestions, record.answers),
   };
 }
 

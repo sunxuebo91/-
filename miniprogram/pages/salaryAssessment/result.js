@@ -29,6 +29,8 @@ Page({
     isShared: false,
     aiStatus: 'completed',  // 'scoring' | 'completed' | 'failed'
     showPosterModal: false, // AI 报告完成后弹窗引导分享（每份测评仅弹一次）
+    reviewItems: [],        // 答题回顾数据（仅 v2 升级后的技能题）
+    reviewExpanded: false,  // 答题回顾卡是否展开
   },
 
   onLoad(options) {
@@ -65,7 +67,7 @@ Page({
     const result = data.result || {};
     const level = result.level || '中级';
     const aiStatus = data.aiStatus || (result._fallback ? 'scoring' : 'completed');
-    this.setData({
+    const patch = {
       loading: false,
       jobType,
       jobTypeLabel: JOB_TYPE_LABELS[jobType] || jobType,
@@ -73,8 +75,17 @@ Page({
       result,
       levelColor: LEVEL_COLORS[level] || LEVEL_COLORS['中级'],
       aiStatus,
-    });
+    };
+    // 答题回顾仅在传入新数据时覆盖；后台 runAIEvaluation 不返回 reviewItems，避免抹掉
+    if (Array.isArray(data.reviewItems) && data.reviewItems.length) {
+      patch.reviewItems = data.reviewItems;
+    }
+    this.setData(patch);
     this._maybeShowPosterModal();
+  },
+
+  onToggleReview() {
+    this.setData({ reviewExpanded: !this.data.reviewExpanded });
   },
 
   // AI 报告就绪后弹出分享引导（同一份测评仅弹一次）

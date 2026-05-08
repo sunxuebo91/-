@@ -166,6 +166,75 @@
   padding: 8rpx 4rpx;
 }
 
+/* 答题回顾卡 */
+.review-card { padding-bottom: 16rpx; }
+.review-title { margin-bottom: 0; padding: 8rpx 0; }
+.review-count {
+  font-size: 24rpx; color: #888; font-weight: 400;
+  margin-left: 16rpx;
+}
+.review-toggle {
+  margin-left: auto; font-size: 26rpx; color: #8766F3; font-weight: 500;
+}
+.review-list { padding-top: 24rpx; }
+.review-item {
+  padding: 24rpx 0; border-top: 1rpx solid #efeaff;
+}
+.review-item:first-child { border-top: none; padding-top: 8rpx; }
+.review-q-head {
+  display: flex; align-items: center; gap: 12rpx; margin-bottom: 12rpx;
+}
+.review-q-tag {
+  display: inline-block; padding: 4rpx 14rpx; border-radius: 8rpx;
+  font-size: 22rpx; font-weight: 600;
+}
+.tag-right { background: #d1e7dd; color: #198754; }
+.tag-wrong { background: #fde2e2; color: #dc3545; }
+.review-q-sub {
+  font-size: 22rpx; color: #8766F3;
+  background: #f3e9ff; padding: 4rpx 12rpx; border-radius: 8rpx;
+}
+.review-q-text {
+  font-size: 28rpx; color: #1a1a1a; font-weight: 600;
+  line-height: 1.6; margin-bottom: 16rpx;
+}
+.review-opts { margin-bottom: 16rpx; }
+.review-opt {
+  display: flex; align-items: center; gap: 12rpx;
+  padding: 14rpx 18rpx; margin-bottom: 8rpx;
+  background: #f8f6ff; border-radius: 12rpx;
+  font-size: 26rpx; color: #444;
+}
+.review-opt.opt-correct {
+  background: #e6f4ec; color: #14532d;
+}
+.review-opt.opt-wrong {
+  background: #fde2e2; color: #7f1d1d;
+}
+.review-opt-label {
+  font-weight: 700; flex-shrink: 0;
+}
+.review-opt-text { flex: 1; line-height: 1.5; }
+.review-opt-mark {
+  font-size: 22rpx; flex-shrink: 0; color: #198754; font-weight: 600;
+}
+.review-opt-mark.mark-wrong { color: #dc3545; }
+.review-explain {
+  background: #faf8ff; border-left: 6rpx solid #8766F3;
+  padding: 14rpx 18rpx; border-radius: 0 12rpx 12rpx 0;
+  margin-top: 8rpx;
+}
+.review-explain-label {
+  font-size: 22rpx; color: #8766F3; font-weight: 700;
+  margin-right: 12rpx;
+}
+.review-explain-text {
+  font-size: 26rpx; color: #333; line-height: 1.7;
+}
+.review-source {
+  font-size: 22rpx; color: #999; margin-top: 10rpx; line-height: 1.5;
+}
+
 /* 分享引导卡 */
 .share-card {
   margin: 24rpx;
