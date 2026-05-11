@@ -20,6 +20,16 @@ App({
       });
     }
 
+    // 一次性清空工资测评推荐人绑定（已执行可删除整段）
+    try {
+      const FLAG = 'salary_sharer_reset_v1';
+      if (!wx.getStorageSync(FLAG)) {
+        wx.removeStorageSync('salary_assessment_sharer');
+        wx.setStorageSync(FLAG, 1);
+        console.log('🔄 已清空工资测评推荐人绑定');
+      }
+    } catch (e) {}
+
     // 检查小程序新版本（有新版本则提示用户立即重启更新）
     this.checkForUpdates();
 
