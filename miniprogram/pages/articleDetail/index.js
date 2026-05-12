@@ -31,144 +31,150 @@ function decodeHtmlEntities(str) {
   return s;
 }
 
-function toRichTextNodes(rawContent, options = {}) {
-  const skipImages = !!options.skipImages;
+function normalizeComparableText(text) {
+  return decodeHtmlEntities(text || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '')
+    .replace(/[【】\[\]（）()“”"'‘’：:、，,。！？!?—\-·•]/g, '')
+    .toLowerCase()
+    .trim();
+}
 
-  // rich-text 支持 nodes 数组；为兼容低基础库，这里尽量转成 nodes
+// 段落/标题公共样式
+// 注意：标题不设 margin-top，靠上一段落的 margin-bottom 产生间距
+// 这样第一个元素不会在 rich-text 顶部产生大空白
+const P_STYLE = 'margin:0 0 17px 0;line-height:1.9;color:#312d28;font-size:15px;word-break:break-word;letter-spacing:0.02em;';
+const H1_STYLE = 'font-size:21px;font-weight:700;color:#181613;margin:0 0 16px 0;line-height:1.45;word-break:break-word;letter-spacing:0.015em;';
+const H2_STYLE = 'font-size:18px;font-weight:700;color:#201c18;margin:0 0 14px 0;line-height:1.5;word-break:break-word;letter-spacing:0.01em;padding-left:10px;border-left:3px solid #dcc7ab;';
+const H3_STYLE = 'font-size:16px;font-weight:700;color:#4a4035;margin:0 0 12px 0;line-height:1.55;word-break:break-word;letter-spacing:0.01em;';
+const H46_STYLE = 'font-size:15px;font-weight:700;color:#564a3d;margin:0 0 10px 0;line-height:1.55;word-break:break-word;';
+const LI_STYLE = 'margin:0 0 12px;padding-left:18px;line-height:1.86;color:#35312c;font-size:15px;word-break:break-word;letter-spacing:0.01em;';
+const BLOCK_TAG_NAME_PATTERN = '(?:h[1-6]|p|div|section|article|header|footer|main|figure|figcaption|blockquote|ul|ol|li|table)';
+const BLOCK_CLOSING_TAG_PATTERN = '(?:h[1-6]|p|div|section|article|header|footer|main|figure|figcaption|blockquote|ul|ol|li|table)';
+
+function toRichTextHtml(rawContent, options = {}) {
+  const skipImages = !!options.skipImages;
+  const pageTitle = options.pageTitle || '';
+
   let html = decodeHtmlEntities(rawContent);
   html = String(html || '').trim();
-  if (!html) return [];
+  if (!html) return '';
 
   // 去掉 script/style
   html = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '');
 
-  // 将常见容器标签当成段落
-  html = html
-    .replace(/<(\/)?(div|section|article|header|footer|main|figure|figcaption|blockquote)[^>]*>/gi, (m, slash) => (slash ? '</p>' : '<p>'));
-
-  // 先把除 p/br/img 以外的标签剥离（保留文本）
-  html = html.replace(/<(?!\/?(?:p|br|img)\b)[^>]+>/gi, '');
-
   // 统一换行
   html = html.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // 如果完全没有标签，按纯文本处理：按空行分段
-  const hasTag = /<(p|br|img)\b/i.test(html);
-  if (!hasTag) {
+  // 某些接口会返回：<p><h1>...</h1><p>...</p><h3>...</h3> 这种“外层 p 包裹整块块级 HTML”的结构
+  // 先拆掉这层壳，避免 rich-text 解析出嵌套 p / 开头大空白
+  html = html.replace(new RegExp(`<p(?:\\s[^>]*)?>\\s*(?=<${BLOCK_TAG_NAME_PATTERN}\\b)`, 'gi'), '');
+  html = html.replace(new RegExp(`(<\\/${BLOCK_CLOSING_TAG_PATTERN}>\\s*)<\\/p>`, 'gi'), '$1');
+
+  // 纯文本模式（无任何 HTML 标签）
+  if (!/<[a-zA-Z]/.test(html)) {
     const paragraphs = html.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-    return paragraphs.map(t => {
-      const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
-      const children = [];
-      lines.forEach((line, idx) => {
-        if (line) children.push({ type: 'text', text: line });
-        if (idx < lines.length - 1) children.push({ name: 'br' });
-      });
-
-      return {
-        name: 'p',
-        attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' },
-        children
-      };
-    });
+    if (!paragraphs.length) return '';
+    return paragraphs.map(para => {
+      const lines = para.split('\n').map(s => s.trim()).filter(Boolean);
+      return `<p style="${P_STYLE}">${lines.join('<br>')}</p>`;
+    }).join('');
   }
 
-  const nodes = [];
-  let currentP = null;
-  let currentChildren = null;
+  // ── HTML 模式 ──────────────────────────────────────────
 
-  const pushText = (text) => {
-    const t = String(text || '');
-    if (!t) return;
-    // rich-text 的 text 节点会保留换行但显示不稳定，这里转成空格/换行由 <br> 控制
-    const cleaned = t.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ');
-    if (!cleaned.trim()) return;
+  // 1. 标题标签 → 带样式的 p
+  html = html.replace(/<h1[^>]*>/gi, `<p style="${H1_STYLE}">`);
+  html = html.replace(/<h2[^>]*>/gi, `<p style="${H2_STYLE}">`);
+  html = html.replace(/<h3[^>]*>/gi, `<p style="${H3_STYLE}">`);
+  html = html.replace(/<h[4-6][^>]*>/gi, `<p style="${H46_STYLE}">`);
+  html = html.replace(/<\/h[1-6]>/gi, '</p>');
 
-    if (!currentP) {
-      currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-      currentChildren = currentP.children;
-      nodes.push(currentP);
-    }
-    currentChildren.push({ type: 'text', text: cleaned });
-  };
+  // 2. strong/b → span 加粗
+  html = html.replace(/<(?:strong|b)\b([^>]*)>/gi, '<span style="font-weight:700;color:#1b1815;">');
+  html = html.replace(/<\/(?:strong|b)\s*>/gi, '</span>');
 
-  const parseImgAttrs = (attrStr) => {
-    const attrs = {};
-    String(attrStr || '').replace(/([a-zA-Z0-9_-]+)\s*=\s*(['\"])(.*?)\2/g, (_, k, _q, v) => {
-      attrs[k] = v;
-      return '';
-    });
-    return attrs;
-  };
+  // 3. em/i → 普通 span（母婴内容更适合稳一点的正文，不用斜体）
+  html = html.replace(/<(?:em|i)\b([^>]*)>/gi, '<span style="font-style:normal;color:#4f4a43;">');
+  html = html.replace(/<\/(?:em|i)\s*>/gi, '</span>');
 
-  const tagRe = /<(\/)?(p|br|img)\b([^>]*)>/gi;
-  let lastIndex = 0;
-  let match;
+  // 4. li → 带 bullet 的 p
+  html = html.replace(/<li\b[^>]*>/gi, `<p style="${LI_STYLE}">• `);
+  html = html.replace(/<\/li\s*>/gi, '</p>');
+  html = html.replace(/<\/?(?:ul|ol)\b[^>]*>/gi, '');
 
-  while ((match = tagRe.exec(html)) !== null) {
-    const [full, closing, tagNameRaw, attrPart] = match;
-    const tagName = String(tagNameRaw || '').toLowerCase();
-    const index = match.index;
+  // 5. a 标签 → span（防止小程序内跳链接）
+  html = html.replace(/<a\b[^>]*>/gi, '<span style="color:#8c7253;text-decoration:none;">');
+  html = html.replace(/<\/a\s*>/gi, '</span>');
 
-    // text before tag
-    if (index > lastIndex) {
-      pushText(html.slice(lastIndex, index));
-    }
+  // 6. 容器块级标签只去壳，不强转成 p，避免制造嵌套段落
+  html = html.replace(/<\/?(?:div|section|article|header|footer|main|figure|figcaption|blockquote)[^>]*>/gi, '');
 
-    if (tagName === 'p') {
-      if (!closing) {
-        currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-        currentChildren = currentP.children;
-        nodes.push(currentP);
-      } else {
-        currentP = null;
-        currentChildren = null;
-      }
-    } else if (tagName === 'br') {
-      if (!currentP) {
-        currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-        currentChildren = currentP.children;
-        nodes.push(currentP);
-      }
-      currentChildren.push({ name: 'br' });
-    } else if (tagName === 'img' && !closing) {
-      if (skipImages) {
-        // 跳过正文内图片：只保留顶部封面图
-      } else {
-        const attrs = parseImgAttrs(attrPart);
-        const src = attrs.src || attrs['data-src'] || attrs['data-original'] || '';
-        if (src) {
-          if (!currentP) {
-            currentP = { name: 'p', attrs: { style: 'margin:0 0 12px 0;line-height:1.8;' }, children: [] };
-            currentChildren = currentP.children;
-            nodes.push(currentP);
-          }
-          currentChildren.push({
-            name: 'img',
-            attrs: {
-              src,
-              style: 'max-width:100%;height:auto;display:block;margin:12px 0;border-radius:12px;'
-            }
-          });
-        }
-      }
-    }
+  // 7. 表格标签 → 去掉（保留文字）
+  html = html.replace(/<\/?(table|thead|tbody|tfoot|tr|td|th|col|colgroup)[^>]*>/gi, ' ');
 
-    lastIndex = index + full.length;
-  }
-
-  // trailing text
-  if (lastIndex < html.length) {
-    pushText(html.slice(lastIndex));
-  }
-
-  // 最后兜底清理：去掉空段落
-  return nodes.filter(n => {
-    if (n?.name !== 'p') return true;
-    const ch = Array.isArray(n.children) ? n.children : [];
-    return ch.some(c => c?.name === 'img' || c?.name === 'br' || (c?.type === 'text' && String(c.text || '').trim()));
+  // 8. 给没有自定义 style 的 <p> 补上默认样式
+  html = html.replace(/<p(?:\s[^>]*)?>/gi, (m) => {
+    if (/style=/i.test(m)) return m;
+    return `<p style="${P_STYLE}">`;
   });
+
+  // 9. 图片处理
+  if (skipImages) {
+    html = html.replace(/<img[^>]*\/?>/gi, '');
+  } else {
+    html = html.replace(/<img([^>]*)(?:\/)?>/gi, (m, attrs) => {
+      const srcMatch = attrs.match(/src=["']([^"']+)["']/i)
+                    || attrs.match(/data-src=["']([^"']+)["']/i)
+                    || attrs.match(/data-original=["']([^"']+)["']/i);
+      if (!srcMatch) return '';
+      let src = srcMatch[1];
+      if (/^http:\/\//i.test(src)) src = src.replace(/^http:\/\//i, 'https://');
+      return `<img src="${src}" style="max-width:100%;height:auto;display:block;margin:22px 0;border-radius:16px;border:1px solid #f0e7dc;">`;
+    });
+
+    // 图片单独成段时，去掉外层空 p 壳，避免残留无意义段落标签
+    html = html.replace(/<p[^>]*>\s*(<img\b[^>]*>)\s*<\/p>/gi, '$1');
+  }
+
+  // 10. 剔除其余不识别标签（保留 p / br / img / span）
+  html = html.replace(/<(?!\/?(?:p|br|img|span)\b)[^>]+>/gi, '');
+
+  // 11. 标签之外残留的 \n → <br>（修复换行丢失的核心问题）
+  html = html.replace(/\n/g, '<br>');
+
+  // 12. 合并过多连续 <br>
+  html = html.replace(/(<br\s*\/?>[\s\u00A0]*){3,}/gi, '<br><br>');
+
+  // 13. 删除空段落：不靠猜格式，而是看 <p> 里有没有可见文字
+  html = html.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (match, inner) => {
+    // 把所有标签去掉，剩余内容去掉所有空白类字符
+    const visible = inner.replace(/<[^>]*>/g, '').replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, '');
+    if (!visible) return ''; // 没有可见文字 → 整个 <p> 删掉
+    return match;
+  });
+
+  // 13.1 如果正文第一个段落和页面标题重复，去掉它，避免“标题出现两次”
+  const normalizedTitle = normalizeComparableText(pageTitle);
+  if (normalizedTitle) {
+    html = html.replace(/^\s*<p[^>]*>([\s\S]*?)<\/p>/i, (match, inner) => {
+      const visible = inner.replace(/<[^>]*>/g, '');
+      return normalizeComparableText(visible) === normalizedTitle ? '' : match;
+    });
+  }
+
+  // 14. 去掉开头残留的裸 <br>
+  html = html.replace(/^([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+/gi, '').trim();
+
+  // 15. 去掉结尾残留的裸 <br>
+  html = html.replace(/([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+$/gi, '').trim();
+
+  // 16. 再清一轮开头的空白（可能上面删完空 p 后又暴露出来了）
+  html = html.replace(/^([\s\u00A0]*<br\s*\/?>[\s\u00A0]*)+/gi, '').trim();
+
+  return html;
 }
 
 function safeToDate(v) {
@@ -200,6 +206,14 @@ function formatDateTime(v) {
   const d = safeToDate(v);
   if (!d) return '';
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+function normalizeSummaryText(rawSummary) {
+  return decodeHtmlEntities(rawSummary || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/^[\s【\[]*导读[】\]]?[：:\-\s]*/i, '')
+    .replace(/[\s\u00A0\u200B\n\r\t]+/g, ' ')
+    .trim();
 }
 
 function pickContent(raw) {
@@ -248,19 +262,27 @@ Page({
     id: '',
     loading: true,
     article: {},
-    contentNodes: [],
+    contentHtml: '',
     viewCount: 0,
     shareLogo: '',
     images: [],  // 小红书风格：多图数组
     currentImageIndex: 0,  // 当前图片索引
     swiperHeight: 0,  // 动态计算的轮播图高度
     isShared: false,
-    sharerInfo: null
+    sharerInfo: null,
+    showSharePanel: false
   },
 
   async onLoad(options) {
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
+
     const id = options?.id ? decodeURIComponent(options.id) : '';
-    this.setData({ id });
+    // 用屏幕宽度 * 0.65 设置默认高度，避免图片加载前 swiper 高度为 0
+    const { windowWidth } = wx.getSystemInfoSync();
+    this.setData({ id, swiperHeight: Math.round(windowWidth * 0.65) });
 
     if (!id) {
       wx.showToast({ title: '文章ID缺失', icon: 'none' });
@@ -352,7 +374,7 @@ Page({
         title: raw?.title || '文章详情',
         author: raw?.author || '安得褓贝',
         source: raw?.source || '',
-        summary: raw?.summary || '',
+        summary: normalizeSummaryText(raw?.summary),
         coverImage,
         publishedAtText: raw?.publishedAt ? formatDateTime(raw.publishedAt) : (raw?.createdAt ? formatDateTime(raw.createdAt) : '')
       };
@@ -360,7 +382,10 @@ Page({
       const content = pickContent(raw);
       // 只有当有独立封面图字段时才过滤正文图片，避免重复
       // 如果封面图是从HTML提取的，则保留正文中的所有图片
-      const contentNodes = toRichTextNodes(content, { skipImages: hasExplicitCover });
+      const contentHtml = toRichTextHtml(content, { skipImages: hasExplicitCover, pageTitle: article.title });
+
+      console.log('📝 summary:', JSON.stringify(article.summary));
+      console.log('📝 contentHtml 前200字符:', contentHtml.substring(0, 200));
 
       // 小红书风格：提取多图
       const images = this.extractImages(raw);
@@ -368,7 +393,7 @@ Page({
 
       this.setData({
         article,
-        contentNodes,
+        contentHtml,
         images,
         currentImageIndex: 0
       });
@@ -409,18 +434,19 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息
+    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || '';
+    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
     const sharePath = `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+
+    if (this.data.showSharePanel) {
+      this.setData({ showSharePanel: false });
+    }
 
     return {
       title,
@@ -437,24 +463,54 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息
+    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    const localName = wx.getStorageSync('userName') || '';
-    const localPhone = wx.getStorageSync('userPhone') || '';
-    const localAvatar = wx.getStorageSync('userAvatar') || '';
-    const sharerName = localName || crmUserInfo.nickname || crmUserInfo.name || '安得褓贝顾问';
-    const sharerPhone = crmUserInfo.phone || localPhone || '';
-    const sharerAvatar = localAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+    const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
+    const sharerPhone = crmUserInfo.phone || '';
+    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
-    const sharerId = crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '';
+    const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
     const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+
+    if (this.data.showSharePanel) {
+      this.setData({ showSharePanel: false });
+    }
 
     return {
       title,
       query: shareQuery,
       imageUrl
     };
+  },
+
+  toggleSharePanel() {
+    this.setData({ showSharePanel: !this.data.showSharePanel });
+  },
+
+  closeSharePanel() {
+    if (!this.data.showSharePanel) return;
+    this.setData({ showSharePanel: false });
+  },
+
+  onBeforeShare() {
+    if (this.data.showSharePanel) {
+      this.setData({ showSharePanel: false });
+    }
+  },
+
+  shareToMoments() {
+    const article = this.data.article || {};
+    const title = article.title || '安得褓贝 · 文章';
+    this.closeSharePanel();
+
+    wx.showModal({
+      title: '分享到朋友圈',
+      content: `即将分享“${title}”到朋友圈\n\n请点击右上角“...”按钮，选择“分享到朋友圈”`,
+      showCancel: true,
+      cancelText: '取消',
+      confirmText: '知道了'
+    });
   },
 
   // 小红书风格：提取多图
