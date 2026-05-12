@@ -306,8 +306,9 @@ Page({
         sharerInfo: sharerInfoData
       });
 
-      // 如果缺少顾问姓名，异步拉取完整信息补全
-      if (!sharer && (resolvedSharerId || sharerPhone)) {
+      // 无论 sharer 姓名是否齐全，只要有 sharerId 或 sharerPhone，
+      // 都异步从 staff_profiles 拉权威信息覆盖/补全（头像 URL 在分享 path 里易被微信截断，必须回查）
+      if (resolvedSharerId || sharerPhone) {
         wx.cloud.callFunction({
           name: 'userService',
           data: { action: 'getStaffPublicInfo', userId: resolvedSharerId, phone: sharerPhone ? decodeURIComponent(sharerPhone) : '' }
@@ -434,15 +435,15 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
+    // 获取分享者信息（优先使用 CRM 端真实姓名，对齐简历分享逻辑）
+    // 头像不放进 path：长 URL 会被微信截断；接收端会调 getStaffPublicInfo 兜底拉取
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
     const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
     const sharerPhone = crmUserInfo.phone || '';
-    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
     const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
-    const sharePath = `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+    const sharePath = `/pages/articleDetail/index?id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}`;
 
     if (this.data.showSharePanel) {
       this.setData({ showSharePanel: false });
@@ -463,15 +464,15 @@ Page({
     // 优先使用文章封面图，没有封面图时才使用默认Logo
     const imageUrl = article.coverImage || this.data.shareLogo || '/images/default-goods-image.png';
 
-    // 获取分享者信息（优先使用 CRM 端真实姓名和头像，对齐简历分享逻辑）
+    // 获取分享者信息（优先使用 CRM 端真实姓名，对齐简历分享逻辑）
+    // 头像不放进 query：长 URL 会被微信截断；接收端会调 getStaffPublicInfo 兜底拉取
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
     const sharerName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '安得褓贝顾问';
     const sharerPhone = crmUserInfo.phone || '';
-    const sharerAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
     const sharerCompany = '安得褓贝';
     const sharerId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || '');
 
-    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}&sharerAvatar=${encodeURIComponent(sharerAvatar)}`;
+    const shareQuery = `id=${encodeURIComponent(String(id))}&shared=1&sharerId=${encodeURIComponent(sharerId)}&sharer=${encodeURIComponent(sharerName)}&sharerPhone=${encodeURIComponent(sharerPhone)}&sharerCompany=${encodeURIComponent(sharerCompany)}`;
 
     if (this.data.showSharePanel) {
       this.setData({ showSharePanel: false });
