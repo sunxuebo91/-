@@ -19,7 +19,8 @@ const JOB_TYPE_MAP = {
   'zhujia-baomu': '住家保姆',
   'yangchong': '养宠',
   'xiaoshi': '小时工',
-  'zhujia-hulao': '住家护老'
+  'zhujia-hulao': '住家护老',
+  'hugong': '护工'
 };
 
 const WORK_EXPERIENCE_ICON_MAP = {
@@ -37,7 +38,9 @@ const WORK_EXPERIENCE_ICON_MAP = {
   '白班保姆': '/images/icons/baomu.svg',
   'zhujia-hulao': '/images/icons/hulao.svg',
   '护老': '/images/icons/hulao.svg',
-  '住家护老': '/images/icons/hulao.svg'
+  '住家护老': '/images/icons/hulao.svg',
+  'hugong': '/images/icons/hulao.svg',
+  '护工': '/images/icons/hulao.svg'
 };
 
 const EDUCATION_MAP = {

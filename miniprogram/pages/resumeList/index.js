@@ -279,6 +279,7 @@ Page({
 
 
   onReachBottom() {
+    console.log('📋 onReachBottom 触发, hasMore:', this.data.hasMore, 'loading:', this.data.loading, 'page:', this.data.page);
     this.loadMore();
   },
 
@@ -356,7 +357,17 @@ Page({
 
   async reload() {
     this.setData({ page: 1, resumes: [], hasMore: true });
-    await this.loadMore();
+    // 后端在分页后做二次过滤会导致单页返回数 < pageSize，单次拉取首屏可能只有几条
+    // 初次加载/切换筛选时连续追加多页，确保即使滚动触发失效也有足够内容；带安全上限防死循环
+    const MIN_INITIAL = this.data.pageSize * 4; // 约 40 条首屏
+    const MAX_AUTO_FETCHES = 8;
+    let fetched = 0;
+    while (fetched < MAX_AUTO_FETCHES) {
+      await this.loadMore();
+      fetched++;
+      if (!this.data.hasMore) break;
+      if (this.data.resumes.length >= MIN_INITIAL) break;
+    }
   },
 
   async loadMore() {
@@ -716,10 +727,9 @@ Page({
 
         console.log('📋 共获取', formattedList.length, '条简历');
 
-        // hasMore：大类并行流用 hasMoreFromAPI，单流用 rawListLength
-        const hasMore = isCategoryFilter
-          ? hasMoreFromAPI
-          : rawListLength >= effectivePageSize;
+        // hasMore：统一使用 hasMoreFromAPI（已综合 total/totalPages 与条数兜底）
+        // 后端可能在分页后再做一次过滤导致单页返回数 < pageSize，此时仅看条数会误判为"无更多"
+        const hasMore = hasMoreFromAPI;
 
         this.setData({
           resumes: this.data.resumes.concat(formattedList),
