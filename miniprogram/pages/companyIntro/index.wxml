@@ -1,0 +1,147 @@
+<view class="page">
+  <view class="company-card">
+    <!-- 装饰光斑 -->
+    <view class="company-card__deco company-card__deco--tl"></view>
+    <view class="company-card__deco company-card__deco--br"></view>
+
+    <!-- 品牌头部 -->
+    <view class="company-hero">
+      <view class="company-hero__logo">
+        <image wx:if="{{shareLogo}}" class="company-hero__logo-img" src="{{shareLogo}}" mode="aspectFill"></image>
+        <text wx:else class="company-hero__logo-text">安</text>
+        <view class="company-hero__logo-ring"></view>
+      </view>
+      <view class="company-hero__brand">
+        <view class="company-hero__name">安得褓贝</view>
+        <view class="company-hero__en">ANDE · BAOBEI</view>
+      </view>
+      <view class="company-hero__badge">
+        <text class="company-hero__badge-dot">●</text>
+        <text class="company-hero__badge-text">高端母婴照护品牌</text>
+      </view>
+    </view>
+
+    <!-- Slogan -->
+    <view class="company-slogan">
+      <text class="company-slogan__mark">“</text>
+      <text class="company-slogan__text">安心托付 · 专业守护</text>
+      <text class="company-slogan__mark company-slogan__mark--right">”</text>
+    </view>
+
+    <!-- 简介正文 -->
+    <view class="company-paragraph">
+      <text>秉承 </text>
+      <text class="company-paragraph__hl">“安心托付，专业守护”</text>
+      <text> 的服务理念，聚焦母婴照护与高端家政领域，为每一个家庭打造典雅舒适的品质生活。</text>
+    </view>
+    <view class="company-paragraph">
+      <text>核心团队来自天鹅到家、好孕妈妈、58 到家等行业一线平台，深耕家政多年，带领资深团队倾力服务。</text>
+    </view>
+    <view class="company-paragraph">
+      <text>已为数万名客户提供高端月嫂、高级育婴师、高级家政师、专业厨娘、收纳整理、成长陪伴师等服务。</text>
+      <text class="company-paragraph__hl">信赖源于品质，舒心源于专业。</text>
+    </view>
+
+    <!-- 核心数据 -->
+    <view class="company-stats-row">
+      <view class="company-stat-card">
+        <view class="company-stat-card__icon">👥</view>
+        <view class="company-stat-card__num">1W+</view>
+        <view class="company-stat-card__label">服务客户</view>
+      </view>
+      <view class="company-stat-card">
+        <view class="company-stat-card__icon">⭐</view>
+        <view class="company-stat-card__num">95%</view>
+        <view class="company-stat-card__label">体检通过率</view>
+      </view>
+      <view class="company-stat-card">
+        <view class="company-stat-card__icon">🛡️</view>
+        <view class="company-stat-card__num">93%</view>
+        <view class="company-stat-card__label">背景调查</view>
+      </view>
+    </view>
+
+    <!-- 服务范畴 -->
+    <view class="company-divider">
+      <view class="company-divider__line"></view>
+      <text class="company-divider__text">服务范畴</text>
+      <view class="company-divider__line"></view>
+    </view>
+    <view class="company-tags">
+      <view class="company-tag">高端月嫂</view>
+      <view class="company-tag">高级育婴师</view>
+      <view class="company-tag">高级家政师</view>
+      <view class="company-tag">专业厨娘</view>
+      <view class="company-tag">收纳整理</view>
+      <view class="company-tag">成长陪伴师</view>
+    </view>
+
+    <!-- 核心团队来自 -->
+    <view class="company-divider">
+      <view class="company-divider__line"></view>
+      <text class="company-divider__text">核心团队来自</text>
+      <view class="company-divider__line"></view>
+    </view>
+    <view class="company-partners">
+      <view class="company-partner">天鹅到家</view>
+      <view class="company-partner">好孕妈妈</view>
+      <view class="company-partner">58 到家</view>
+    </view>
+
+    <!-- 服务保障 -->
+    <view class="company-divider">
+      <view class="company-divider__line"></view>
+      <text class="company-divider__text">服务保障</text>
+      <view class="company-divider__line"></view>
+    </view>
+    <view class="company-guarantees">
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--blue">🔍</view>
+        <view class="company-guarantee__title">专业背景调查</view>
+        <view class="company-guarantee__desc">入职前严格核查身份、从业经历与信用记录</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--yellow">⚡</view>
+        <view class="company-guarantee__title">24 小时极速响应</view>
+        <view class="company-guarantee__desc">全天候客服在线，紧急需求快速安排</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--cyan">🔄</view>
+        <view class="company-guarantee__title">不限次换人</view>
+        <view class="company-guarantee__desc">服务期间内不满意可随时免费更换，无需理由</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--purple">🛡️</view>
+        <view class="company-guarantee__title">百万职业保险</view>
+        <view class="company-guarantee__desc">家政人员均投保百万级职业险，用人无忧</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--green">🎓</view>
+        <view class="company-guarantee__title">定期回炉培训</view>
+        <view class="company-guarantee__desc">持续技能提升，确保服务水准与时俱进</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--red">🏛️</view>
+        <view class="company-guarantee__title">国家授权机构</view>
+        <view class="company-guarantee__desc">国家开放大学授权培训机构，专业有保障</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--mint">💰</view>
+        <view class="company-guarantee__title">无忧退</view>
+        <view class="company-guarantee__desc">3 天内无条件退款，服务不满意分毫不留</view>
+      </view>
+      <view class="company-guarantee">
+        <view class="company-guarantee__icon company-guarantee__icon--dark">📱</view>
+        <view class="company-guarantee__title">保姆在线选</view>
+        <view class="company-guarantee__desc">线上浏览阿姨档案，便捷高效自主挑选</view>
+      </view>
+    </view>
+
+    <!-- 底部签名 -->
+    <view class="company-footer">
+      <view class="company-footer__line"></view>
+      <text class="company-footer__text">ANDE · BAOBEI  |  品质托付 · 用心守护</text>
+      <view class="company-footer__line"></view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,370 @@
+page {
+  background: #F7F5FF;
+}
+
+.page {
+  padding: 24rpx 20rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+/* ========== 公司介绍 ========== */
+.company-card {
+  position: relative;
+  width: 100%;
+  padding: 40rpx 32rpx 36rpx;
+  border-radius: 28rpx;
+  background:
+    linear-gradient(160deg, #FFFFFF 0%, #FAF7FF 50%, #F3EEFF 100%);
+  box-shadow:
+    0 8rpx 36rpx rgba(135, 102, 243, 0.14),
+    0 2rpx 10rpx rgba(135, 102, 243, 0.06);
+  border: 1rpx solid rgba(135, 102, 243, 0.14);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 装饰光斑 */
+.company-card__deco {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40rpx);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.company-card__deco--tl {
+  top: -80rpx;
+  left: -80rpx;
+  width: 260rpx;
+  height: 260rpx;
+  background: radial-gradient(circle, #B49AFB 0%, transparent 70%);
+}
+.company-card__deco--br {
+  bottom: -100rpx;
+  right: -100rpx;
+  width: 300rpx;
+  height: 300rpx;
+  background: radial-gradient(circle, #C9B5FF 0%, transparent 70%);
+  opacity: 0.4;
+}
+
+/* 品牌头部 */
+.company-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+.company-hero__logo {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #6F4DEB 50%, #B49AFB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow:
+    0 8rpx 20rpx rgba(135, 102, 243, 0.4),
+    inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3);
+}
+.company-hero__logo-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 24rpx;
+}
+.company-hero__logo-text {
+  font-size: 52rpx;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.15);
+  letter-spacing: -2rpx;
+}
+.company-hero__logo-ring {
+  position: absolute;
+  inset: -8rpx;
+  border-radius: 28rpx;
+  border: 2rpx solid rgba(135, 102, 243, 0.25);
+  pointer-events: none;
+}
+.company-hero__brand {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.company-hero__name {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1A1530;
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+}
+.company-hero__en {
+  font-size: 20rpx;
+  color: #8766F3;
+  letter-spacing: 4rpx;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.company-hero__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 100rpx;
+  background: linear-gradient(135deg, rgba(135, 102, 243, 0.12), rgba(180, 154, 251, 0.12));
+  border: 1rpx solid rgba(135, 102, 243, 0.2);
+}
+.company-hero__badge-dot {
+  font-size: 22rpx;
+  line-height: 1;
+  color: #8766F3;
+}
+.company-hero__badge-text {
+  font-size: 22rpx;
+  line-height: 1;
+  color: #6F4DEB;
+  font-weight: 600;
+}
+
+/* Slogan */
+.company-slogan {
+  position: relative;
+  margin: 0 auto 28rpx;
+  padding: 16rpx 40rpx;
+  text-align: center;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.company-slogan__mark {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: rgba(135, 102, 243, 0.25);
+  line-height: 1;
+  vertical-align: middle;
+  font-family: Georgia, serif;
+}
+
+.company-slogan__mark--right {
+  margin-left: 8rpx;
+}
+.company-slogan__text {
+  display: inline-block;
+  margin: 0 12rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #6F4DEB;
+  letter-spacing: 6rpx;
+  vertical-align: middle;
+}
+
+/* 正文段落 */
+.company-paragraph {
+  position: relative;
+  font-size: 26rpx;
+  color: #4A4860;
+  line-height: 1.8;
+  margin-bottom: 16rpx;
+  text-align: justify;
+}
+.company-paragraph__hl {
+  color: #6F4DEB;
+  font-weight: 700;
+}
+
+/* 核心数据卡片组 */
+.company-stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin: 28rpx 0 8rpx;
+}
+.company-stat-card {
+  flex: 1;
+  position: relative;
+  padding: 24rpx 12rpx 20rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(160deg, #FFFFFF 0%, #F6F1FF 100%);
+  border: 1rpx solid rgba(135, 102, 243, 0.18);
+  box-shadow: 0 6rpx 18rpx rgba(135, 102, 243, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+.company-stat-card__icon {
+  font-size: 36rpx;
+  line-height: 1;
+  margin-bottom: 4rpx;
+}
+.company-stat-card__num {
+  font-size: 44rpx;
+  font-weight: 800;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #8766F3 0%, #B49AFB 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 1rpx;
+}
+.company-stat-card__label {
+  font-size: 22rpx;
+  color: #7A7690;
+  font-weight: 500;
+}
+
+/* 分隔标题 */
+.company-divider {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 32rpx 0 20rpx;
+}
+.company-divider__line {
+  flex: 1;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(135, 102, 243, 0.3), transparent);
+}
+.company-divider__text {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #6F4DEB;
+  letter-spacing: 3rpx;
+  padding: 0 4rpx;
+}
+
+/* 服务范畴 - 标签 */
+.company-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  justify-content: center;
+}
+.company-tag {
+  padding: 12rpx 22rpx;
+  border-radius: 100rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #6F4DEB;
+  background: rgba(135, 102, 243, 0.08);
+  border: 1rpx solid rgba(135, 102, 243, 0.22);
+}
+
+/* 核心团队来自 - 品牌 pill */
+.company-partners {
+  display: flex;
+  gap: 16rpx;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.company-partner {
+  padding: 14rpx 28rpx;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #8766F3 0%, #6F4DEB 100%);
+  box-shadow: 0 6rpx 16rpx rgba(135, 102, 243, 0.3);
+  letter-spacing: 2rpx;
+}
+
+/* 服务保障 - 2x2 网格 */
+.company-guarantees {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+.company-guarantee {
+  padding: 22rpx 18rpx;
+  border-radius: 18rpx;
+  background: #fff;
+  border: 1rpx solid rgba(135, 102, 243, 0.14);
+  box-shadow: 0 4rpx 14rpx rgba(135, 102, 243, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6rpx;
+}
+.company-guarantee__icon {
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, rgba(135, 102, 243, 0.14), rgba(180, 154, 251, 0.14));
+  font-size: 34rpx;
+  margin-bottom: 10rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.company-guarantee__icon--blue {
+  background: linear-gradient(135deg, #DDE9FF 0%, #BFD5FF 100%);
+  box-shadow: 0 4rpx 10rpx rgba(74, 144, 226, 0.18);
+}
+.company-guarantee__icon--yellow {
+  background: linear-gradient(135deg, #FFF1C2 0%, #FFE08A 100%);
+  box-shadow: 0 4rpx 10rpx rgba(250, 173, 20, 0.22);
+}
+.company-guarantee__icon--cyan {
+  background: linear-gradient(135deg, #CFF4F3 0%, #A8E7E5 100%);
+  box-shadow: 0 4rpx 10rpx rgba(19, 194, 194, 0.2);
+}
+.company-guarantee__icon--purple {
+  background: linear-gradient(135deg, #E7DEFF 0%, #C9B5FF 100%);
+  box-shadow: 0 4rpx 10rpx rgba(135, 102, 243, 0.22);
+}
+.company-guarantee__icon--green {
+  background: linear-gradient(135deg, #DAF3CC 0%, #B7E29A 100%);
+  box-shadow: 0 4rpx 10rpx rgba(82, 196, 26, 0.2);
+}
+.company-guarantee__icon--red {
+  background: linear-gradient(135deg, #FFD9D9 0%, #FFB3B3 100%);
+  box-shadow: 0 4rpx 10rpx rgba(245, 34, 45, 0.18);
+}
+.company-guarantee__icon--mint {
+  background: linear-gradient(135deg, #C9F1DC 0%, #9FE2BD 100%);
+  box-shadow: 0 4rpx 10rpx rgba(19, 194, 130, 0.2);
+}
+.company-guarantee__icon--dark {
+  background: linear-gradient(135deg, #E0DEF5 0%, #BFBBE0 100%);
+  box-shadow: 0 4rpx 10rpx rgba(26, 21, 48, 0.2);
+}
+.company-guarantee__title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1A1530;
+  line-height: 1.3;
+}
+.company-guarantee__desc {
+  font-size: 22rpx;
+  color: #7A7690;
+  line-height: 1.5;
+}
+
+/* 底部签名 */
+.company-footer {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 32rpx;
+}
+.company-footer__line {
+  flex: 1;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, rgba(135, 102, 243, 0.25), transparent);
+}
+.company-footer__text {
+  font-size: 20rpx;
+  color: rgba(111, 77, 235, 0.55);
+  letter-spacing: 3rpx;
+  font-weight: 600;
+}
+

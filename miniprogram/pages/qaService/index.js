@@ -40,6 +40,13 @@ Page({
     });
   },
 
+  // 跳转到公司介绍页面
+  goCompanyIntro() {
+    wx.navigateTo({
+      url: '/pages/companyIntro/index'
+    });
+  },
+
 
 
   // 预览合同文档（保留，供详情页使用）

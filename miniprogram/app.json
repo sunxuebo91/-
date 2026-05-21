@@ -48,6 +48,7 @@
     "pages/poster/index",
     "pages/posterCustomerList/index",
     "pages/qaService/index",
+    "pages/companyIntro/index",
     "pages/houseRules/index",
     "pages/contractPreview/index",
     "pages/hourlyContractPreview/index",

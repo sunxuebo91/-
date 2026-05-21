@@ -17,7 +17,13 @@
       <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
     </view>
 
-
+    <view class="price-card price-card-blue" bindtap="goCompanyIntro">
+      <view class="price-card-content">
+        <view class="price-card-title">关于安得褓贝</view>
+        <view class="price-card-subtitle">了解品牌故事与服务保障</view>
+      </view>
+      <image class="price-card-image" src="/images/icons/baobei-share.svg" mode="aspectFit"></image>
+    </view>
 
   </view>
 </view>
