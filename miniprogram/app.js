@@ -130,8 +130,13 @@ App({
 
       console.log('📡 CRM 登录接口响应:', apiRes);
 
-      if (apiRes.data && apiRes.data.success) {
-        const userData = apiRes.data.data || {};
+      // 新契约：按 statusCode + body.code 分支，不再用裸 message 匹配
+      const statusCode = apiRes.statusCode;
+      const body = apiRes.data || {};
+      const errCode = body.code || '';
+
+      if (statusCode === 200 && body.success) {
+        const userData = body.data || {};
         this.globalData.userInfo = userData;
 
         // 合并保存：不能整体覆盖，否则会清掉之前授权/设置时存入的
@@ -187,8 +192,19 @@ App({
             data: { action: 'updateMe', data: { phone: merged.phone } }
           }).catch(err => console.warn('⚠️ 同步手机号到云数据库失败（不影响使用）:', err));
         }
+      } else if (statusCode === 404 && errCode === 'USER_NOT_REGISTERED') {
+        // 当前 openid 在 CRM 尚未建号；等用户主动点手机号授权登录时再调 register
+        console.log('ℹ️ 该 openid 尚未在 CRM 注册，等待用户手机号授权登录');
+      } else if (statusCode === 409) {
+        // 唯一索引冲突类错误：按 code 分流，不解析 message
+        const dupTip = {
+          DUPLICATE_PHONE:    '手机号已绑定其他微信账号',
+          DUPLICATE_USERNAME: '该用户名已被占用',
+          DUPLICATE_OPENID:   '该微信账号已绑定其他记录',
+        }[errCode];
+        console.warn('⚠️ CRM 登录冲突: code=', errCode, 'tip=', dupTip || body.message || '');
       } else {
-        console.warn('⚠️ CRM 登录接口返回失败:', apiRes.data?.message);
+        console.warn('⚠️ CRM 登录接口异常: statusCode=', statusCode, 'code=', errCode, 'msg=', body.message);
       }
     } catch (err) {
       console.error('❌ 自动登录失败:', err);

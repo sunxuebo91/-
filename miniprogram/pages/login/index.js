@@ -99,6 +99,9 @@ Page({
         console.log("✅ OpenID:", openid);
 
         // 3. 调用 CRM 后端注册接口，同步用户信息
+        // crmConflict: CRM 返回 409 时置 true；用于阻止后续"登录成功"提示与跳转，
+        // 避免用户在账号冲突场景下看到误导性的"登录成功"
+        let crmConflict = false;
         try {
 
           // 调用 CRM 后端注册接口
@@ -125,10 +128,15 @@ Page({
 
           console.log('📡 CRM 注册接口响应:', crmRes);
 
-          if (crmRes.data && crmRes.data.success) {
+          // 新契约：按 statusCode + body.code 分支，不解析裸 message
+          const crmStatus = crmRes.statusCode;
+          const crmBody = crmRes.data || {};
+          const crmErrCode = crmBody.code || '';
+
+          if (crmStatus === 200 && crmBody.success) {
             console.log('✅ 用户信息已同步到 CRM 后端');
 
-            const crmData = crmRes.data.data || {};
+            const crmData = crmBody.data || {};
 
             // 保存 CRM Token（注册/登录接口返回的 JWT，供 authenticatedRequest 使用）
             const crmToken = crmRes.data.access_token || crmRes.data.token
@@ -151,12 +159,16 @@ Page({
                     fail: reject,
                   });
                 });
-                const loginToken = loginRes.data?.access_token || loginRes.data?.token
-                  || loginRes.data?.data?.access_token || loginRes.data?.data?.token;
-                if (loginToken) {
+                const loginStatus = loginRes.statusCode;
+                const loginBody = loginRes.data || {};
+                const loginToken = loginBody.access_token || loginBody.token
+                  || loginBody.data?.access_token || loginBody.data?.token;
+                if (loginStatus === 200 && loginToken) {
                   wx.setStorageSync('access_token', loginToken);
                   wx.setStorageSync('token', loginToken);
                   console.log('✅ CRM Token（miniprogram-login）已保存');
+                } else {
+                  console.warn('⚠️ miniprogram-login 异常: statusCode=', loginStatus, 'code=', loginBody.code || '');
                 }
               } catch (tokenErr) {
                 console.warn('⚠️ 获取 CRM Token 失败（不影响主流程）:', tokenErr);
@@ -208,24 +220,37 @@ Page({
             wx.setStorageSync('crmUserInfo', userInfo);
 
             console.log('✅ 用户信息已保存到本地存储');
+          } else if (crmStatus === 409) {
+            // 唯一索引冲突：手机号 / 用户名 / openid 已被占用
+            // 设置 crmConflict 以阻止下方的"登录成功"覆盖此提示并阻止跳转
+            crmConflict = true;
+            const tip = {
+              DUPLICATE_PHONE:    '该手机号已绑定其他微信，请联系客服处理',
+              DUPLICATE_USERNAME: '该用户名已被占用',
+              DUPLICATE_OPENID:   '该微信账号已绑定其他记录',
+            }[crmErrCode] || crmBody.message || '账号冲突，请联系客服';
+            wx.showToast({ title: tip, icon: 'none', duration: 2500 });
+            console.warn('⚠️ CRM 注册冲突: code=', crmErrCode);
           } else {
-            console.warn('⚠️ CRM 注册接口返回失败:', crmRes.data?.message);
+            console.warn('⚠️ CRM 注册接口异常: statusCode=', crmStatus, 'code=', crmErrCode, 'msg=', crmBody.message);
           }
         } catch (crmErr) {
           console.error('❌ 调用 CRM 注册接口失败:', crmErr);
           // CRM 接口失败不影响登录流程
         }
 
-        // 4. 登录成功提示
-        wx.showToast({ title: "登录成功" });
-        setTimeout(() => {
-          const pages = getCurrentPages();
-          if (pages.length > 1) {
-            wx.navigateBack();
-          } else {
-            wx.switchTab({ url: '/pages/home/index' });
-          }
-        }, 1500);
+        // 4. 登录成功提示与跳转：CRM 账号冲突（409）时跳过，留在登录页让用户处理
+        if (!crmConflict) {
+          wx.showToast({ title: "登录成功" });
+          setTimeout(() => {
+            const pages = getCurrentPages();
+            if (pages.length > 1) {
+              wx.navigateBack();
+            } else {
+              wx.switchTab({ url: '/pages/home/index' });
+            }
+          }, 1500);
+        }
       } else {
         wx.showToast({ title: "登录失败", icon: "none" });
       }

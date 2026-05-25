@@ -89,12 +89,37 @@ page {
   flex: 1;
 }
 
+.avatar-wrap {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+  flex-shrink: 0;
+}
+
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 60rpx;
   background: #fff;
   border: 4rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.staff-badge {
+  position: absolute;
+  left: 50%;
+  bottom: -18rpx;
+  transform: translateX(-50%);
+  padding: 4rpx 14rpx;
+  background: linear-gradient(135deg, #FFB547 0%, #FF8A3D 100%);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 16rpx;
+  border: 2rpx solid #fff;
+  box-shadow: 0 2rpx 6rpx rgba(255, 138, 61, 0.4);
+  white-space: nowrap;
+  letter-spacing: 1rpx;
 }
 
 .user-info {

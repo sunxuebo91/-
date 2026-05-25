@@ -1,7 +1,10 @@
 ﻿<view class="page">
   <view class="header-card">
     <view class="header-content" bindtap="goLogin">
-      <image class="avatar" src="{{me.avatar || me.avatarUrl || '/images/icons/avatar.png'}}"></image>
+      <view class="avatar-wrap">
+        <image class="avatar" src="{{me.avatar || me.avatarUrl || '/images/icons/avatar.png'}}"></image>
+        <view class="staff-badge" wx:if="{{me.isStaff}}">员工</view>
+      </view>
       <view class="user-info">
         <view class="nickname">{{me.nickname || me.phone || '立即登录'}}</view>
       </view>

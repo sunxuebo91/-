@@ -2,6 +2,7 @@ const resumeService = require('../../services/resume.js');
 const employeeEvaluationService = require('../../services/employeeEvaluation.js');
 const userService = require('../../services/userService.js');
 const { publicRequest } = require('../../utils/request.js');
+const { ensureStaffIdentity } = require('../../utils/staffIdentity.js');
 
 // 简历详情页视频缓存（用于提升手机端二次打开速度；非 Wi-Fi 不强制预下载）
 const VIDEO_CACHE_KEY = 'resumeDetailVideoCache_v1';
@@ -67,6 +68,7 @@ const MATERNITY_LEVEL_MAP = {
 const ORDER_STATUS_MAP = {
   'available': '可接单',
   'accepting': '可接单',
+  'on-service': '可接单',
   'busy': '忙碌中',
   'working': '忙碌中',
   'unavailable': '暂不接单'
@@ -1352,32 +1354,12 @@ Page({
   },
 
   // 检查当前用户是否为员工
-  // 优先读登录时缓存的 isStaff 字段；缓存未命中时调云函数兜底
+  // 走统一的 ensureStaffIdentity：缓存命中直接返回；否则用 phone 调 CRM /staff/info 兜底
   // 确认是员工后，主动从 staff/info 接口刷新 CRM 真实姓名和头像（无需重新登录）
   async checkStaffRole() {
+    const isStaff = await ensureStaffIdentity();
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
-    let isStaff = crmUserInfo.isStaff === true;
-
-    if (!isStaff) {
-      // 缓存未命中（登录前调过本方法或缓存被清），用云函数兜底确认
-      try {
-        const res = await wx.cloud.callFunction({
-          name: 'userService',
-          data: { action: 'getOrCreateMe' }
-        });
-        const cloudUser = (res && res.result && res.result.data) || {};
-        isStaff = cloudUser.role === 'staff' || cloudUser.isStaff === true;
-        if (isStaff) {
-          crmUserInfo.isStaff = true;
-          wx.setStorageSync('crmUserInfo', crmUserInfo);
-        }
-        console.log('👤 用户角色（云函数兜底）:', isStaff ? '员工' : '客户');
-      } catch (e) {
-        console.warn('⚠️ 云函数判断员工身份失败，按客户处理:', e);
-      }
-    } else {
-      console.log('👤 用户角色（缓存）: 员工');
-    }
+    console.log('👤 用户角色（ensureStaffIdentity）:', isStaff ? '员工' : '客户');
 
     this.setData({ isStaff });
 
