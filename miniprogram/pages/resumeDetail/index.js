@@ -21,7 +21,8 @@ const JOB_TYPE_MAP = {
   'yangchong': '养宠',
   'xiaoshi': '小时工',
   'zhujia-hulao': '住家护老',
-  'hugong': '护工'
+  'hugong': '护工',
+  'qita': '其他'
 };
 
 const WORK_EXPERIENCE_ICON_MAP = {
