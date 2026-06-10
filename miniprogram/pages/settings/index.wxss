@@ -57,7 +57,7 @@
   flex-shrink: 0;
 }
 
-.edit-btn {
+.avatar-btn {
   background: transparent;
   border: none;
   padding: 0;
@@ -67,14 +67,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 16rpx;
   text-align: left;
-  /* 强制靠左对齐 */
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
 
-.edit-btn::after {
+.avatar-btn::after {
   border: none;
+}
+
+.avatar-btn-hover {
+  opacity: 0.7;
 }
 
 

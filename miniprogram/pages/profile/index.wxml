@@ -72,6 +72,13 @@
         </view>
         <text class="service-label">工资测评</text>
       </view>
+
+      <view class="service-item" bindtap="goCourse">
+        <view class="service-icon-wrap service-icon-course">
+          <image class="service-icon-img" src="/images/icons/document.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">我的网课</text>
+      </view>
     </view>
   </view>
 

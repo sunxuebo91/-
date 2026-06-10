@@ -1,0 +1,62 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="state-wrap">
+    <view class="state-text">加载中...</view>
+  </view>
+
+  <!-- 未在小程序登录 -->
+  <view wx:elif="{{status === 'need_wechat_login'}}" class="state-wrap">
+    <view class="state-icon">🔐</view>
+    <view class="state-text">请先登录小程序</view>
+    <view class="state-sub">登录后自动识别你的网课权限</view>
+    <view class="primary-btn" bindtap="goWechatLogin">去登录</view>
+  </view>
+
+  <!-- 未开通网课 -->
+  <view wx:elif="{{status === 'not_enrolled'}}" class="state-wrap">
+    <view class="state-icon">📚</view>
+    <view class="state-text">{{notEnrolledMsg || '暂未开通网课'}}</view>
+    <view class="state-sub">如需开通请联系顾问老师</view>
+    <view class="ghost-btn" bindtap="contactService">联系客服</view>
+  </view>
+
+  <!-- 加载失败 -->
+  <view wx:elif="{{status === 'error'}}" class="state-wrap">
+    <view class="state-icon">⚠️</view>
+    <view class="state-text">{{errorMsg}}</view>
+    <view class="ghost-btn" bindtap="onRetry">重试</view>
+  </view>
+
+  <!-- 课程为空 -->
+  <view wx:elif="{{status === 'empty'}}" class="state-wrap">
+    <view class="state-icon">📚</view>
+    <view class="state-text">暂无课程</view>
+    <view class="state-sub">课程开通后将在这里显示</view>
+  </view>
+
+  <!-- 课程列表 -->
+  <view wx:else class="list">
+    <view class="course-card" wx:for="{{courses}}" wx:key="id"
+          hover-class="course-card--hover" hover-stay-time="80"
+          bindtap="goDetail" data-id="{{item.id}}">
+      <view class="cover-wrap">
+        <image class="course-cover" src="{{item.cover || '/images/default-goods-image.png'}}" mode="aspectFit"/>
+      </view>
+      <view class="course-meta">
+        <view class="course-title">{{item.title}}</view>
+        <view class="sub-row">
+          <text class="course-sub" wx:if="{{item.chapterCount}}">共 {{item.chapterCount}} 节</text>
+          <text class="status-dot status-{{item.statusTone}}">{{item.statusLabel}}</text>
+        </view>
+        <view class="progress-row">
+          <view class="progress-track">
+            <view class="progress-fill progress-fill--{{item.statusTone}}" style="width: {{item.progressPercent}}%"></view>
+          </view>
+          <view class="progress-meta">
+            <text class="progress-text">{{item.progressText}}</text>
+            <text class="progress-percent" wx:if="{{item.progressPercent > 0}}">{{item.progressPercent}}%</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

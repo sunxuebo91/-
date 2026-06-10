@@ -33,20 +33,40 @@ Page({
       console.log('📦 云函数返回的用户信息:', cloudMe);
 
       // 2. 从本地存储获取 CRM 用户信息
-      const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+      let crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
       console.log('📦 本地存储的 CRM 用户信息:', crmUserInfo);
+      console.log('🪪 crmName / crmAvatar:', crmUserInfo.crmName, '/', crmUserInfo.crmAvatar);
+
+      // 2.5 兜底：手机号存在但 crmName 缺失时，主动拉一次员工档案（非员工返回失败也无害）
+      if (crmUserInfo.phone && !crmUserInfo.crmName) {
+        const fetched = await this._fetchStaffInfo(crmUserInfo.phone);
+        if (fetched && (fetched.name || fetched.avatar)) {
+          crmUserInfo = {
+            ...crmUserInfo,
+            crmName: fetched.name || crmUserInfo.crmName || '',
+            crmAvatar: fetched.avatar || crmUserInfo.crmAvatar || '',
+            isStaff: true,
+          };
+          wx.setStorageSync('crmUserInfo', crmUserInfo);
+          console.log('🪪 补拉员工档案完成:', crmUserInfo.crmName, crmUserInfo.crmAvatar);
+        }
+      }
 
       // 3. 合并数据：云函数数据优先，但本地存储的 nickname 作为补充
-      // 注意：云端可能没有 nickname 字段，此时应使用本地存储的值
       const mergedMe = {
         ...this.data.me,
         ...cloudMe, // 云函数数据优先（phone、role、_openid 等）
       };
 
-      // nickname: 云端有值则用云端，否则用本地存储
-      mergedMe.nickname = cloudMe.nickname || crmUserInfo.nickname || '';
-      // avatar: 云端有值则用云端，否则用本地存储
-      mergedMe.avatarUrl = cloudMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      // nickname: CRM 管理员维护的真实姓名（crmName）优先，其次云端，再次本地
+      mergedMe.nickname = crmUserInfo.crmName || cloudMe.nickname || crmUserInfo.nickname || '';
+      // avatar: CRM 管理员维护的真实头像（crmAvatar）优先，其次云端，再次本地
+      mergedMe.avatarUrl = crmUserInfo.crmAvatar
+        || cloudMe.avatarUrl || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+      mergedMe.avatar = mergedMe.avatarUrl; // wxml 同时用 me.avatar / me.avatarUrl
+      // 透传 crmName / crmAvatar，方便其它模块（分享卡片/海报）直接读取
+      if (crmUserInfo.crmName) mergedMe.crmName = crmUserInfo.crmName;
+      if (crmUserInfo.crmAvatar) mergedMe.crmAvatar = crmUserInfo.crmAvatar;
       // phone: 云端有值则用云端，否则用本地存储
       mergedMe.phone = cloudMe.phone || crmUserInfo.phone || '';
       // 员工/推荐官身份：cloud users.role 或 crmUserInfo 缓存任一命中即生效（用于"我推荐的"等入口可见性）
@@ -74,6 +94,25 @@ Page({
       }
       wx.showToast({ title: "加载失败", icon: "none" });
     }
+  },
+
+  /** 用手机号查 CRM 员工档案；非员工/接口异常都视为查不到，静默返回 null */
+  _fetchStaffInfo(phone) {
+    return new Promise((resolve) => {
+      wx.request({
+        url: `https://crm.andejiazheng.com/api/resumes/staff/info?phone=${encodeURIComponent(phone)}`,
+        method: 'GET',
+        success: (res) => {
+          const body = (res && res.data) || {};
+          if ((res.statusCode === 200 || res.statusCode === 201) && body.success && body.data) {
+            resolve(body.data);
+          } else {
+            resolve(null);
+          }
+        },
+        fail: () => resolve(null),
+      });
+    });
   },
 
   goLogin() {
@@ -146,6 +185,10 @@ Page({
     wx.navigateTo({ url: "/pages/salaryAssessment/index" });
   },
 
+  goCourse() {
+    wx.navigateTo({ url: "/pages/course-list/index" });
+  },
+
   goReferral() {
     wx.navigateTo({ url: "/pages/myReferrals/index" });
   },
@@ -176,6 +219,9 @@ Page({
           // 清除本地存储的用户信息
           wx.removeStorageSync('crmUserInfo');
           wx.removeStorageSync('token');
+          // 同步清除我的网课的学员 token / 学员信息，避免下次进入时复用旧账号数据
+          wx.removeStorageSync('student_token');
+          wx.removeStorageSync('student_info');
 
           // 清除全局用户信息
           const app = getApp();

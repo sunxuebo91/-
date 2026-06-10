@@ -467,6 +467,3 @@
 
 
 <view class="loading" wx:if="{{!loaded}}">加载中...</view>
-
-<!-- 海报生成用隐藏 Canvas（2D 模式，定位到屏幕外） -->
-<canvas type="2d" id="posterCanvas" style="position:fixed;left:-9999px;top:0;width:375px;height:640px;"></canvas>

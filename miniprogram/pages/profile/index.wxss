@@ -303,6 +303,7 @@ page {
 .service-icon-referral{ background: #E8F9EE; }
 .service-icon-poster  { background: #EDE8FF; }
 .service-icon-salary  { background: #E8F5FF; }
+.service-icon-course  { background: #FFF5E0; }
 .service-icon-img {
   width: 60rpx;
   height: 60rpx;

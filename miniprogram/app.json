@@ -67,6 +67,9 @@
     "pages/myReferrals/index",
     "pages/myReferrals/detail",
 
+    "pages/course-list/index",
+    "pages/course-detail/index",
+
     "pages/test-article-api",
     "pages/test-user-api/index",
     "pages/test-customer-service/index",

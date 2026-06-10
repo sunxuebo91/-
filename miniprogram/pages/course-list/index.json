@@ -1,0 +1,7 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "我的网课",
+  "navigationBarBackgroundColor": "#F6F6F6",
+  "navigationBarTextStyle": "black",
+  "enablePullDownRefresh": true
+}

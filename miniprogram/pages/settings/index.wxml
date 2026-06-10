@@ -5,8 +5,8 @@
     <view class="info-item">
       <view class="label">头像</view>
       <view class="value-wrapper">
-        <image class="avatar" src="{{tempAvatarUrl || '/images/icons/avatar.png'}}"></image>
-        <button class="edit-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" hover-class="avatar-btn-hover">
+          <image class="avatar" src="{{tempAvatarUrl || '/images/icons/avatar.png'}}"></image>
           <view class="edit-text">编辑</view>
         </button>
       </view>

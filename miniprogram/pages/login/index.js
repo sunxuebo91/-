@@ -98,6 +98,20 @@ Page({
         console.log("✅ 手机号登录成功，手机号:", phone);
         console.log("✅ OpenID:", openid);
 
+        // 兜底：CRM 接口未返回成功也保证本地有基础登录态（含 phone/openid），
+        // 否则后续依赖 crmUserInfo.phone 的模块（如我的网课）会判定未登录
+        const baseUserInfo = {
+          phone,
+          openid,
+          _openid: openid,
+          nickname: (this.data.nickname || '').trim() || '用户',
+          avatar: cloudAvatarUrl || '',
+          avatarUrl: cloudAvatarUrl || '',
+        };
+        wx.setStorageSync('crmUserInfo', baseUserInfo);
+        const app0 = getApp();
+        if (app0 && app0.globalData) app0.globalData.userInfo = baseUserInfo;
+
         // 3. 调用 CRM 后端注册接口，同步用户信息
         // crmConflict: CRM 返回 409 时置 true；用于阻止后续"登录成功"提示与跳转，
         // 避免用户在账号冲突场景下看到误导性的"登录成功"
@@ -133,7 +147,7 @@ Page({
           const crmBody = crmRes.data || {};
           const crmErrCode = crmBody.code || '';
 
-          if (crmStatus === 200 && crmBody.success) {
+          if ((crmStatus === 200 || crmStatus === 201) && crmBody.success) {
             console.log('✅ 用户信息已同步到 CRM 后端');
 
             const crmData = crmBody.data || {};
