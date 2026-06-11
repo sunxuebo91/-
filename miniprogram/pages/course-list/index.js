@@ -2,28 +2,35 @@ const courseApi = require('../../utils/course-api.js');
 
 /**
  * 把后端各种可能字段统一成 { progressPercent, progressText, statusLabel }
- * 进度口径：**已完成章节数 / 总章节数**（防快进刷分数；与课程详情页里的"已学完"语义一致）
- * 后端的 progressPercent（按观看时长算）仅在缺少章节信息时兜底使用
+ * 进度口径：
+ *  - 进度条 = max(已完成章节占比, 后端给的按时长百分比)，让"已开始但未学完"的状态也有显示
+ *  - "已学 X / Y 节" 中的 X 用 completed（保留防快进语义）；
+ *    当 completed=0 但按时长有进度时，文案改为"进度 X%"，避免显示成"已学 0 / Y 节"误导用户
+ *  - 只要任一进度 > 0，就视为"学习中"
  */
 function decorateCourses(list) {
   return (list || []).map((c) => {
     const total = Number(c.chapterCount || c.totalChapters || (c.chapters && c.chapters.length) || 0);
     const completed = Number(c.completedChapterCount || c.completedChapters || c.finishedChapters || 0);
+    const startedChapters = Number(c.startedChapterCount || c.startedChapters || c.inProgressChapters || 0);
+    const timePercent = Number(c.progressPercent || c.percent || c.progress || 0);
+    const chapterPercent = total > 0 ? (completed / total) * 100 : 0;
 
-    let percent = 0;
-    if (total > 0) {
-      percent = Math.round((completed / total) * 100);
-    } else {
-      percent = Number(c.progressPercent || c.percent || c.progress || 0);
-    }
+    let percent = Math.max(chapterPercent, timePercent);
     percent = Math.max(0, Math.min(100, Math.round(percent)));
 
     const allDone = total > 0 ? completed >= total : percent >= 100;
+    const hasProgress = completed > 0 || startedChapters > 0 || timePercent > 0;
+
     let progressText = '';
     if (allDone) {
       progressText = '已学完';
-    } else if (total > 0) {
+    } else if (total > 0 && completed > 0) {
       progressText = `已学 ${completed} / ${total} 节`;
+    } else if (total > 0 && hasProgress) {
+      progressText = `进度 ${percent}% · 共 ${total} 节`;
+    } else if (total > 0) {
+      progressText = `共 ${total} 节`;
     } else {
       progressText = '尚未开始';
     }
@@ -32,8 +39,8 @@ function decorateCourses(list) {
       ...c,
       progressPercent: allDone ? 100 : percent,
       progressText,
-      statusLabel: allDone ? '已学完' : (completed > 0 ? '学习中' : '未开始'),
-      statusTone: allDone ? 'done' : (completed > 0 ? 'progress' : 'idle'),
+      statusLabel: allDone ? '已学完' : (hasProgress ? '学习中' : '未开始'),
+      statusTone: allDone ? 'done' : (hasProgress ? 'progress' : 'idle'),
     };
   });
 }
@@ -62,6 +69,9 @@ Page({
     try {
       await courseApi.ensureLogin({ silent: true });
       const list = await courseApi.getCourses();
+      if (list && list[0]) {
+        console.log('[course-list] 后端列表项原始字段示例:', Object.keys(list[0]), list[0]);
+      }
       const courses = decorateCourses(list);
       this.setData({
         loading: false,
