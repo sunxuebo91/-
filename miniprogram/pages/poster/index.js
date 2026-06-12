@@ -1,10 +1,6 @@
-﻿// ⚠️ 安全提示：API Key 请勿上传到公开代码仓库
-// 建议换到云函数中调用，避�?Key 被反编译提取
-const DOUBAO_API_KEY   = 'c25615e6-a2bf-4cbc-b9d7-2cdeeba20f56';
-const DOUBAO_IMG_MODEL = 'doubao-seedream-5-0-260128';
-const DOUBAO_TXT_MODEL = 'doubao-seed-2-0-mini-260215';
-const DOUBAO_IMG_URL   = 'https://ark.cn-beijing.volces.com/api/v3/images/generations';
-const DOUBAO_TXT_URL   = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'; // 改用 chat 接口，格式稳�?
+﻿// AI 调用统一走云函数 posterAIService（隔离 ARK Key，不再随小程序包下发）
+// 模型选型与具体 ARK 端点都在云函数侧维护，前端只传业务参数
+const POSTER_AI_CLOUD_FN = 'posterAIService';
 const W = 375, H = 640; // 海报画布尺寸 (px)
 const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 
@@ -280,40 +276,31 @@ Page({
 主句1|副句1
 主句2|副句2
 主句3|副句3`;
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: DOUBAO_TXT_URL,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DOUBAO_API_KEY}`
-        },
-        data: {
-          model: DOUBAO_TXT_MODEL,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.9,
-          max_tokens: 200,
-          thinking: { type: 'disabled' }  // 关闭推理链，直接输出，速度提升 5~10倍
-        },
-        success(res) {
-          // chat/completions 标准格式
-          const raw = res.data?.choices?.[0]?.message?.content || '';
-          if (!raw) return reject(new Error(`未返回内容，状态码:${res.statusCode}`));
-
-          const texts = raw.trim().split('\n')
-            .map(l => l.trim())
-            .filter(l => l.includes('|'))
-            .map(l => {
-              const [main, sub] = l.split('|');
-              return { main: (main || '').trim(), sub: (sub || '').trim() };
-            })
-            .filter(t => t.main && t.sub)
-            .slice(0, 3);
-
-          texts.length ? resolve(texts) : reject(new Error('文案解析失败'));
-        },
-        fail(err) { reject(new Error(err.errMsg || '网络请求失败')); }
-      });
+    return wx.cloud.callFunction({
+      name: POSTER_AI_CLOUD_FN,
+      data: {
+        action: 'generateText',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.9,
+        max_tokens: 200,
+      },
+    }).then((res) => {
+      const r = (res && res.result) || {};
+      if (!r.success) throw new Error(r.userMessage || '文案生成失败');
+      const raw = r.content || '';
+      const texts = raw.trim().split('\n')
+        .map(l => l.trim())
+        .filter(l => l.includes('|'))
+        .map(l => {
+          const [main, sub] = l.split('|');
+          return { main: (main || '').trim(), sub: (sub || '').trim() };
+        })
+        .filter(t => t.main && t.sub)
+        .slice(0, 3);
+      if (!texts.length) throw new Error('文案解析失败');
+      return texts;
+    }, (err) => {
+      throw new Error((err && err.errMsg) || '网络请求失败');
     });
   },
 
@@ -323,19 +310,7 @@ Page({
    * 输出：一段与文案情绪/意境匹配的画面描述（中文，≤60字）
    */
   _generateImagePromptFromText(main, sub, themeName) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: DOUBAO_TXT_URL,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DOUBAO_API_KEY}`
-        },
-        data: {
-          model: DOUBAO_TXT_MODEL,
-          messages: [{
-            role: 'user',
-            content: `你是专业图片创意总监，擅长把文字转化为摄影画面描述。
+    const content = `你是专业图片创意总监，擅长把文字转化为摄影画面描述。
 根据以下女性激励金句，生成一段适合作为海报背景图的画面描述。
 金句：「${main}，${sub}」
 主题分类：${themeName}
@@ -343,47 +318,39 @@ Page({
 - 只输出画面描述，不超过60字，不要解释
 - 场景与金句情绪匹配（可以是人物/风景/空间/静物）
 - 人物要求：若有人物，须为东方女性，真实肤色，情绪自然
-- 画面中绝对不能有任何文字、字母、符号、水印`
-          }],
-          temperature: 0.85,
-          max_tokens: 120,
-          thinking: { type: 'disabled' }  // 关闭推理链，视觉描述无需思考过程
-        },
-        success(res) {
-          const desc = res.data?.choices?.[0]?.message?.content?.trim() || '';
-          console.log('[海报] 视觉描述:', desc);
-          desc ? resolve(desc) : reject(new Error('未生成视觉描述'));
-        },
-        fail(err) { reject(new Error(err.errMsg || '请求失败')); }
-      });
+- 画面中绝对不能有任何文字、字母、符号、水印`;
+    return wx.cloud.callFunction({
+      name: POSTER_AI_CLOUD_FN,
+      data: {
+        action: 'generateText',
+        messages: [{ role: 'user', content }],
+        temperature: 0.85,
+        max_tokens: 120,
+      },
+    }).then((res) => {
+      const r = (res && res.result) || {};
+      if (!r.success) throw new Error(r.userMessage || '画面描述生成失败');
+      const desc = (r.content || '').trim();
+      console.log('[海报] 视觉描述:', desc);
+      if (!desc) throw new Error('未生成视觉描述');
+      return desc;
+    }, (err) => {
+      throw new Error((err && err.errMsg) || '请求失败');
     });
   },
 
-  /** 调用豆包文生图 API */
+  /** 调用豆包文生图 API（统一走云函数代理）*/
   _callDoubaoAPI(prompt) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: DOUBAO_IMG_URL,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DOUBAO_API_KEY}`
-        },
-        data: {
-          model: DOUBAO_IMG_MODEL,
-          prompt,
-          response_format: 'url',
-          size: '2k',
-          watermark: false,
-          seed: Math.floor(Math.random() * 2147483647) // 每次随机seed，避免重复图
-        },
-        success(res) {
-          console.log('图片API响应:', JSON.stringify(res.data));
-          const url = res.data?.data?.[0]?.url;
-          url ? resolve(url) : reject(new Error('API未返回图片，错误：' + JSON.stringify(res.data)));
-        },
-        fail(err) { reject(new Error(err.errMsg || '网络请求失败')); }
-      });
+    return wx.cloud.callFunction({
+      name: POSTER_AI_CLOUD_FN,
+      data: { action: 'generateImage', prompt },
+    }).then((res) => {
+      const r = (res && res.result) || {};
+      console.log('图片API响应:', JSON.stringify(r));
+      if (r.success && r.url) return r.url;
+      throw new Error(r.userMessage || '生成失败，请重试');
+    }, (err) => {
+      throw new Error((err && err.errMsg) || '网络请求失败');
     });
   },
 

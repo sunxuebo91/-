@@ -186,12 +186,16 @@ function getCourseDetail(id) {
   });
 }
 
-/** 进度上报（容错：失败不抛，避免影响播放体验） */
-function postProgress({ courseId, chapterId, position, duration }) {
+/**
+ * 进度上报（容错：失败不抛，避免影响播放体验）
+ * 后端字段已升级为 lessonId；保留 chapterId 入参做迁移期回退。
+ */
+function postProgress({ courseId, lessonId, chapterId, position, duration }) {
+  const effectiveLessonId = lessonId || chapterId;
   return request({
     url: '/api/course-student/progress',
     method: 'POST',
-    data: { courseId, chapterId, position, duration },
+    data: { courseId, lessonId: effectiveLessonId, position, duration },
   }).catch((err) => {
     console.warn('[course-api] progress report failed:', err && err.message);
     return null;

@@ -173,6 +173,25 @@ page {
 .chapter-list {
   padding: 0 24rpx;
 }
+
+/* 章分组标题（多章课程使用；单章课程在 WXML 层隐藏） */
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 22rpx 12rpx 12rpx;
+  margin-top: 8rpx;
+}
+.group-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #6E6E78;
+  letter-spacing: 1rpx;
+}
+.group-count {
+  font-size: 22rpx;
+  color: #B0B0BB;
+}
 .chapter-card {
   display: flex;
   align-items: center;

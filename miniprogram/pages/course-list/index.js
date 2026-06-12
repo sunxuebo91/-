@@ -10,9 +10,10 @@ const courseApi = require('../../utils/course-api.js');
  */
 function decorateCourses(list) {
   return (list || []).map((c) => {
-    const total = Number(c.chapterCount || c.totalChapters || (c.chapters && c.chapters.length) || 0);
-    const completed = Number(c.completedChapterCount || c.completedChapters || c.finishedChapters || 0);
-    const startedChapters = Number(c.startedChapterCount || c.startedChapters || c.inProgressChapters || 0);
+    // 接口升级后口径为"节"：优先读 lessonCount/completedLessons；旧字段保留兜底
+    const total = Number(c.lessonCount || c.chapterCount || c.totalChapters || (c.chapters && c.chapters.length) || 0);
+    const completed = Number(c.completedLessons || c.completedLessonCount || c.completedChapterCount || c.completedChapters || c.finishedChapters || 0);
+    const startedChapters = Number(c.startedLessons || c.startedChapterCount || c.startedChapters || c.inProgressChapters || 0);
     const timePercent = Number(c.progressPercent || c.percent || c.progress || 0);
     const chapterPercent = total > 0 ? (completed / total) * 100 : 0;
 

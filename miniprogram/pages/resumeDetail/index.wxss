@@ -177,6 +177,27 @@
   line-height: 1;
 }
 
+/* 右上角第二行：录入人（员工内部信息） */
+.hero-top-right-staff {
+  position: absolute;
+  top: 92rpx;
+  right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44rpx;
+  padding: 0 14rpx;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 22rpx;
+}
+
+.creator-tag {
+  font-size: 20rpx;
+  color: #fff;
+  line-height: 1;
+}
+
 /* 视频加载提示 - 使用普通 view（同层渲染） */
 .hero-video-loading {
   position: absolute;

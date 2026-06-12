@@ -685,7 +685,8 @@ Page({
           selfIntroductionVideo: data.selfIntroductionVideo ? (data.selfIntroductionVideo.url || data.selfIntroductionVideo) : '',
           videoFileId: data.selfIntroductionVideo ? (data.selfIntroductionVideo.url || data.selfIntroductionVideo) : '',
           createdAt: data.createdAt,
-          updatedAt: data.updatedAt
+          updatedAt: data.updatedAt,
+          creatorName: (data.creator && data.creator.name) || ''
         };
 
         const normalizeZodiac = (v) => {

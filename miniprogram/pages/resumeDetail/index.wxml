@@ -98,6 +98,11 @@
       <text class="resume-no">NO. {{detail.resumeNoText || '00000000'}}</text>
     </view>
 
+    <!-- 右上角第二行：录入人（仅员工可见） -->
+    <view class="hero-top-right-staff" wx:if="{{isStaff && detail.creatorName}}">
+      <text class="creator-tag">录入：{{detail.creatorName}}</text>
+    </view>
+
     <!-- 底部小图轮播 -->
     <view class="hero-bottom-gallery" wx:if="{{(heroThumbPhotosPreview && heroThumbPhotosPreview.length) || detail.videoFileId}}">
 

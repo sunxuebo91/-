@@ -1,0 +1,9 @@
+{
+  "name": "posterAIService",
+  "version": "1.0.0",
+  "description": "海报 AI 云函数：代理火山引擎方舟（豆包）文生图 + 文案接口，隔离 API Key 不下发到小程序",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
