@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page {{isShared && sharerInfo && sharerIsStaff ? 'has-bottom-bar' : ''}}">
   <view wx:if="{{loading}}" class="state-wrap">
     <view class="loader"></view>
     <view class="state-text">加载中</view>
@@ -101,5 +101,39 @@
     </view>
 
     <view class="list-footer">— 已经到底了 —</view>
+
+    <!-- 员工专属：课程宣传海报悬浮按钮（左下角）；员工扫他人分享码时不显示，避免与底部顾问条重叠 -->
+    <view
+      wx:if="{{isStaff && !isShared}}"
+      class="promo-fab {{generatingPromo ? 'promo-fab--loading' : ''}}"
+      style="background: linear-gradient(135deg, {{themeColor}} 0%, {{themeColorDark}} 100%);"
+      bindtap="onTapPromoCourse"
+      hover-class="promo-fab--hover"
+      hover-stay-time="80"
+    >
+      <text class="promo-fab__icon">📣</text>
+      <text class="promo-fab__text">课程宣传</text>
+    </view>
+
+    <!-- 分享进入的客户：底部固定顾问联系条（仅员工分享的链接才显示） -->
+    <view wx:if="{{isShared && sharerInfo && sharerIsStaff}}" class="bottom-bar">
+      <view class="bottom-contact">
+        <view class="advisor-mini">
+          <view class="advisor-mini-avatar">
+            <image wx:if="{{sharerInfo.avatar}}" src="{{sharerInfo.avatar}}" mode="aspectFill" class="advisor-avatar-img" />
+            <text wx:else>{{sharerInfo.name ? sharerInfo.name.charAt(0) : '顾'}}</text>
+          </view>
+          <view class="advisor-mini-info">
+            <view class="advisor-mini-name">{{sharerInfo.name || '安得褓贝顾问'}}</view>
+            <view class="advisor-mini-company">{{sharerInfo.company || '安得褓贝'}}</view>
+          </view>
+        </view>
+        <button class="contact-btn" bindtap="onContactAdvisor">联系顾问</button>
+      </view>
+    </view>
   </block>
 </view>
+
+<!-- 海报生成用：屏外定位的两块 canvas（封面主色采样 + 海报合成） -->
+<canvas type="2d" id="colorSampler" style="position:fixed;left:-9999px;top:0;width:32px;height:32px;"></canvas>
+<canvas type="2d" id="coursePosterCanvas" style="position:fixed;left:-9999px;top:0;width:375px;height:1000px;"></canvas>

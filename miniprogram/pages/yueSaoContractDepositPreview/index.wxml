@@ -1,0 +1,51 @@
+<view class="contract-preview">
+  <!-- 头部 -->
+  <view class="header">
+    <view class="header-content">
+      <image class="header-icon" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <view class="header-title">月嫂服务合同（定金）</view>
+      <view class="header-subtitle">安得家政月嫂服务合同-定金</view>
+    </view>
+  </view>
+
+  <!-- 操作按钮区域 -->
+  <view class="actions-container">
+    <view class="action-card" bindtap="previewContract">
+      <image class="action-icon view-icon" src="/images/icons/view.svg" mode="aspectFit"></image>
+      <view class="action-label">查看</view>
+    </view>
+
+    <button class="action-card share-card" open-type="share">
+      <image class="action-icon share-icon" src="/images/icons/share.svg" mode="aspectFit"></image>
+      <view class="action-label">分享</view>
+    </button>
+  </view>
+
+  <!-- 合同信息 -->
+  <view class="info-container">
+    <view class="info-card">
+      <view class="info-title">合同说明</view>
+      <view class="info-item">
+        <view class="info-label">文档名称</view>
+        <view class="info-value">安得家政月嫂服务合同-定金.docx</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">适用场景</view>
+        <view class="info-value">支付定金锁定档期</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">文档类型</view>
+        <view class="info-value">Word文档 (.docx)</view>
+      </view>
+    </view>
+
+    <view class="tips-card">
+      <view class="tips-title">📌 温馨提示</view>
+      <view class="tips-content">
+        <view class="tip-item">• 点击"查看"按钮可以在线预览合同内容</view>
+        <view class="tip-item">• 点击"分享"按钮可以将合同分享给好友</view>
+        <view class="tip-item">• 如需签署合同，请联系客服人员</view>
+      </view>
+    </view>
+  </view>
+</view>

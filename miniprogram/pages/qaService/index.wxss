@@ -82,6 +82,36 @@ page {
   box-shadow: 0 4rpx 12rpx rgba(250, 140, 22, 0.2);
 }
 
+/* 主题色：青色（月嫂合同-定金） */
+.price-card-cyan {
+  background: linear-gradient(135deg, #13C2C2 0%, #36CFC9 100%);
+  box-shadow: 0 8rpx 24rpx rgba(19, 194, 194, 0.3);
+}
+
+.price-card-cyan:active {
+  box-shadow: 0 4rpx 12rpx rgba(19, 194, 194, 0.2);
+}
+
+/* 主题色：玫红（月嫂合同-全款） */
+.price-card-pink {
+  background: linear-gradient(135deg, #EB2F96 0%, #F759AB 100%);
+  box-shadow: 0 8rpx 24rpx rgba(235, 47, 150, 0.3);
+}
+
+.price-card-pink:active {
+  box-shadow: 0 4rpx 12rpx rgba(235, 47, 150, 0.2);
+}
+
+/* 主题色：红色（不退费合同） */
+.price-card-red {
+  background: linear-gradient(135deg, #CF1322 0%, #F5222D 100%);
+  box-shadow: 0 8rpx 24rpx rgba(207, 19, 34, 0.3);
+}
+
+.price-card-red:active {
+  box-shadow: 0 4rpx 12rpx rgba(207, 19, 34, 0.2);
+}
+
 
 
 

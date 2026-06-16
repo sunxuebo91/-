@@ -1,6 +1,14 @@
 const courseApi = require('../../utils/course-api.js');
+const { ensureStaffIdentity } = require('../../utils/staffIdentity.js');
+const { extractDominantColor, FALLBACK: COLOR_FALLBACK } = require('../../utils/imageDominantColor.js');
+const sharerUtils = require('../../utils/sharerUtils.js');
 
 const PROGRESS_THROTTLE_MS = 10 * 1000; // 节流：每 10 秒上报一次
+
+// 海报 Logo（与简历/工资测评海报共用同一张定稿图）
+const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
+// 海报"课程大纲"最多展示节数（超过则截断 + "等 N 节"提示）
+const POSTER_OUTLINE_MAX = 14;
 
 /** 本地缓存"最近播放节"。新 key 用 lesson 命名；旧 key 保留读取做迁移兼容 */
 const LAST_LESSON_KEY = (courseId) => `course_last_lesson_${courseId}`;
@@ -92,10 +100,36 @@ Page({
     duration: 0,
     buffering: false,
     videoWrapHeight: 422,
+    // 员工身份 + 课程宣传海报主题色（取自封面主色，悬浮按钮与海报色块共用）
+    isStaff: false,
+    themeColor: COLOR_FALLBACK.themeColor,
+    themeColorDark: COLOR_FALLBACK.themeColorDark,
+    generatingPromo: false,
+    // 分享归属：客户通过员工分享链接/海报扫码进入时，底部展示顾问联系条
+    isShared: false,
+    sharerInfo: null,
+    sharerIsStaff: false,
   },
 
   onLoad(query) {
-    const id = query && query.id;
+    const options = query || {};
+
+    // 兼容海报小程序码扫码进入：scene 里携带 id
+    let qrId = '';
+    if (!options.id && options.scene) {
+      try {
+        const sceneStr = decodeURIComponent(options.scene);
+        sceneStr.split('&').forEach(pair => {
+          const eqIdx = pair.indexOf('=');
+          if (eqIdx > -1 && pair.slice(0, eqIdx) === 'id') {
+            qrId = pair.slice(eqIdx + 1);
+          }
+        });
+      } catch (e) {
+        console.warn('[course-detail] scene 参数解析失败:', e);
+      }
+    }
+    const id = options.id || qrId;
     if (!id) {
       wx.showToast({ title: '参数错误', icon: 'none' });
       setTimeout(() => wx.navigateBack(), 1000);
@@ -111,7 +145,48 @@ Page({
     this._appHideHandler = () => this._onBackground();
     wx.onAppHide(this._appHideHandler);
 
+    // 解析分享归属（与 resumeDetail/salaryAssessment 同一套协议）
+    this._initSharerFromOptions(options);
+
     this.loadDetail(true);
+    this.checkStaffRole();
+  },
+
+  /**
+   * 解析分享链路上下文，与 resumeDetail 行为对齐：
+   * - shared=1 / sharerId / sharerPhone / scene 任一存在即视为分享访问
+   * - sf=1 表示分享者已确认为员工；姓名/头像缺失时异步从云端补全并标记 sharerIsStaff
+   */
+  _initSharerFromOptions(options) {
+    const sharerInfo = sharerUtils.parseSharerFromOptions(options);
+    if (!sharerInfo) return;
+
+    this.setData({
+      isShared: true,
+      sharerInfo,
+      sharerIsStaff: options.sf === '1',
+    });
+
+    // 分享访问时隐藏 home 按钮
+    try { if (wx.hideHomeButton) wx.hideHomeButton(); } catch (e) {}
+
+    // 海报二维码扫码进入：URL 没有顾问姓名/头像，异步拉云端补全
+    if ((!sharerInfo.name || sharerInfo.name === '安得褓贝顾问' || !sharerInfo.avatar)
+        && (sharerInfo.id || sharerInfo.phone)) {
+      sharerUtils.fetchAndMergeSharer(sharerInfo, (merged) => {
+        this.setData({ sharerInfo: merged, sharerIsStaff: true });
+      });
+    }
+  },
+
+  // 员工身份检测（与 resumeDetail 一致：缓存命中即返回，否则用 phone 调 CRM 校验）
+  async checkStaffRole() {
+    try {
+      const isStaff = await ensureStaffIdentity();
+      if (isStaff !== this.data.isStaff) this.setData({ isStaff });
+    } catch (e) {
+      console.warn('[course-detail] checkStaffRole failed:', e && e.message);
+    }
   },
 
   onUnload() {
@@ -144,6 +219,9 @@ Page({
       const { groups, lessons, showGroupHead } = buildView(data);
       this.setData({ loading: false, course: data, groups, lessons, showGroupHead });
       wx.setNavigationBarTitle({ title: (data && data.title) || '课程详情' });
+
+      // 异步提取封面主色（失败用紫色兜底，不阻塞主流程）
+      this._refreshThemeColor(data && data.cover);
 
       if (autoPick && lessons.length) {
         // 续播优先级：本地新 key > 本地旧 key（迁移兼容） > 后端 lastLessonId > 后端 lastChapterId > 第一节
@@ -314,6 +392,525 @@ Page({
       lessonId: this.data.playingLessonId,
       position: pos,
       duration: dur,
+    });
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // 课程宣传海报（员工专属）
+  // ──────────────────────────────────────────────────────────────
+
+  // 下载图片到本地（兼容 cloud:// 和 https）
+  async _downloadImage(url) {
+    if (!url) return '';
+    if (url.startsWith('cloud://')) {
+      const res = await wx.cloud.downloadFile({ fileID: url });
+      return res.tempFilePath;
+    }
+    const res = await new Promise((resolve, reject) => {
+      wx.downloadFile({ url, success: resolve, fail: reject });
+    });
+    return res.tempFilePath;
+  },
+
+  // 用封面主色刷新主题色（异步、失败兜底紫色）
+  async _refreshThemeColor(coverUrl) {
+    if (!coverUrl) return;
+    try {
+      const localPath = await this._downloadImage(coverUrl);
+      const { themeColor, themeColorDark } = await extractDominantColor(this, '#colorSampler', localPath);
+      this._coverLocalPath = localPath;
+      this.setData({ themeColor, themeColorDark });
+    } catch (err) {
+      console.warn('[course-detail] theme color failed:', err && err.message);
+    }
+  },
+
+  // 调云函数生成课程详情页小程序码（带 sharerId+phone，扫码方进入显示"联系顾问"）
+  async _getCoursePromoMiniCodePath(courseId, staffId, staffPhone) {
+    if (!courseId) return '';
+    try {
+      const cfRes = await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: {
+          type: 'getCoursePromoMiniCode',
+          courseId,
+          staffId: staffId || '',
+          staffPhone: staffPhone || '',
+        },
+      });
+      const fileID = cfRes && cfRes.result && cfRes.result.fileID;
+      if (!fileID) return '';
+      const tempRes = await wx.cloud.getTempFileURL({ fileList: [fileID] });
+      const tempUrl = tempRes && tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL;
+      if (!tempUrl) return '';
+      return await this._downloadImage(tempUrl);
+    } catch (err) {
+      console.warn('[course-detail] 获取课程小程序码失败:', err && err.message);
+      return '';
+    }
+  },
+
+  // 悬浮按钮点击：生成课程宣传海报
+  onTapPromoCourse() {
+    if (this.data.generatingPromo) return;
+    if (!this.data.isStaff) return;
+    const course = this.data.course;
+    if (!course) {
+      wx.showToast({ title: '课程信息加载中', icon: 'none' });
+      return;
+    }
+    this._doGenerateCoursePoster();
+  },
+
+  async _doGenerateCoursePoster() {
+    this.setData({ generatingPromo: true });
+    wx.showLoading({ title: '生成海报中...', mask: true });
+    try {
+      const course = this.data.course || {};
+      const courseId = this.data.courseId;
+
+      // 读取员工信息（与简历海报同样的取数链路）
+      const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+      const staffId = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '');
+      const staffPhone = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
+      const staffName = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
+      const staffAvatar = crmUserInfo.crmAvatar || crmUserInfo.avatarUrl || crmUserInfo.avatar || '';
+
+      // 写云库：扫码方据此查到顾问姓名/头像（与简历海报扫码链路对齐）
+      if ((staffId || staffPhone) && (staffName || staffPhone)) {
+        wx.cloud.callFunction({
+          name: 'userService',
+          data: {
+            action: 'saveStaffProfile',
+            staffId: staffId || staffPhone,
+            name: staffName,
+            phone: staffPhone,
+            avatar: staffAvatar,
+            company: '安得褓贝',
+          },
+        }).catch((err) => console.warn('saveStaffProfile 失败(不影响海报生成):', err && err.message));
+      }
+
+      // 并行：封面图（已缓存可直接复用）、Logo、QR、顾问头像
+      const coverPromise = this._coverLocalPath
+        ? Promise.resolve(this._coverLocalPath)
+        : (course.cover ? this._downloadImage(course.cover) : Promise.resolve(''));
+      const [coverLocalPath, logoLocalPath, qrLocalPath, advisorAvatarPath] = await Promise.all([
+        coverPromise,
+        this._downloadImage(POSTER_LOGO_FILE_ID),
+        this._getCoursePromoMiniCodePath(courseId, staffId, staffPhone),
+        staffAvatar ? this._downloadImage(staffAvatar).catch(() => '') : Promise.resolve(''),
+      ]);
+
+      const posterPath = await this._drawCoursePosterCanvas({
+        course,
+        coverLocalPath,
+        logoLocalPath,
+        qrLocalPath,
+        advisorAvatarPath,
+        advisor: { name: staffName, phone: staffPhone, company: '安得褓贝' },
+        themeColor: this.data.themeColor,
+        themeColorDark: this.data.themeColorDark,
+      });
+
+      wx.hideLoading();
+      wx.showShareImageMenu({
+        path: posterPath,
+        fail: () => {
+          wx.saveImageToPhotosAlbum({
+            filePath: posterPath,
+            success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+            fail: () => wx.showToast({ title: '请长按图片保存', icon: 'none' }),
+          });
+        },
+      });
+    } catch (err) {
+      console.error('[course-detail] 生成课程宣传海报失败:', err);
+      wx.hideLoading();
+      wx.showToast({ title: '海报生成失败', icon: 'none' });
+    } finally {
+      this.setData({ generatingPromo: false });
+    }
+  },
+
+  // 课程宣传海报 Canvas 绘制；高度根据章节数动态计算
+  _drawCoursePosterCanvas(params) {
+    const {
+      course, coverLocalPath, logoLocalPath, qrLocalPath, advisorAvatarPath,
+      advisor, themeColor, themeColorDark,
+    } = params;
+    return new Promise((resolve, reject) => {
+      wx.createSelectorQuery().in(this).select('#coursePosterCanvas')
+        .fields({ node: true, size: true })
+        .exec(async (res) => {
+          try {
+            const canvas = res[0] && res[0].node;
+            if (!canvas) return reject(new Error('Canvas 未找到'));
+
+            const dpr = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).pixelRatio || 2;
+            const W = 375;
+            const lessons = this.data.lessons || [];
+            const total = lessons.length;
+            const showCount = Math.min(POSTER_OUTLINE_MAX, total);
+            const remain = Math.max(0, total - showCount);
+
+            // 预读封面图，得到实际宽高比 → 决定封面区高度（按宽等比，不裁切；上限 320 防止竖图过高）
+            let coverImg = null;
+            let coverDrawH = 200; // 无封面时的兜底高度
+            if (coverLocalPath) {
+              coverImg = canvas.createImage();
+              coverImg.src = coverLocalPath;
+              await new Promise(r => { coverImg.onload = r; coverImg.onerror = r; });
+              const iw = coverImg.width || 1, ih = coverImg.height || 1;
+              coverDrawH = Math.min(320, Math.round((W * ih) / iw));
+            }
+
+            // 预测量课程介绍实际折行数（按真实字宽，避免按 5 行预留导致大面积留白）
+            const introRaw = course.intro || course.description || course.summary || '';
+            const introText = String(introRaw).replace(/\s+/g, ' ').trim()
+              || '系统讲授母婴护理全流程要点，理论结合实战，让学员快速胜任岗位。';
+            const INTRO_MAX_LINES = 5;
+            const INTRO_MAX_W = W - 32;
+            canvas.width = W * dpr;
+            canvas.height = 100 * dpr; // 临时尺寸仅用于 measureText
+            let ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            ctx.font = '13px sans-serif';
+            let introLineCount = 0;
+            {
+              let cur = '';
+              for (let i = 0; i < introText.length && introLineCount < INTRO_MAX_LINES; i++) {
+                const next = cur + introText[i];
+                if (ctx.measureText(next).width > INTRO_MAX_W) {
+                  introLineCount++;
+                  cur = introText[i];
+                } else {
+                  cur = next;
+                }
+              }
+              if (cur && introLineCount < INTRO_MAX_LINES) introLineCount++;
+              introLineCount = Math.max(1, introLineCount);
+            }
+
+            // 高度构成：封面 + 标题条 64 + 介绍区(18+28+lines*20+8) + 大纲头 34 + 节行 26 * showCount + "等N节"行 24 + 间隔 6 + 底部顾问条 110
+            const introH = 18 + 28 + introLineCount * 20 + 8;
+            const H = coverDrawH + 64 + introH + 34 + 26 * showCount + (remain > 0 ? 24 : 0) + 6 + 110;
+
+            // 设回最终尺寸（这会清空 ctx 状态，需重新 scale）
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            // 圆角矩形路径
+            const roundRectPath = (x, y, w, h, r) => {
+              ctx.beginPath();
+              ctx.moveTo(x + r, y);
+              ctx.lineTo(x + w - r, y);
+              ctx.arcTo(x + w, y, x + w, y + r, r);
+              ctx.lineTo(x + w, y + h - r);
+              ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+              ctx.lineTo(x + r, y + h);
+              ctx.arcTo(x, y + h, x, y + h - r, r);
+              ctx.lineTo(x, y + r);
+              ctx.arcTo(x, y, x + r, y, r);
+              ctx.closePath();
+            };
+
+            // 单行截断
+            const ellipsize = (text, maxWidth) => {
+              if (!text) return '';
+              if (ctx.measureText(text).width <= maxWidth) return text;
+              let lo = 0, hi = text.length;
+              while (lo < hi) {
+                const mid = (lo + hi + 1) >> 1;
+                const w = ctx.measureText(text.slice(0, mid) + '…').width;
+                if (w <= maxWidth) lo = mid; else hi = mid - 1;
+              }
+              return text.slice(0, lo) + '…';
+            };
+
+            // 多行折行（按字符宽度）
+            const wrapText = (text, maxWidth, maxLines) => {
+              const lines = [];
+              if (!text) return lines;
+              let cur = '';
+              for (let i = 0; i < text.length; i++) {
+                const next = cur + text[i];
+                if (ctx.measureText(next).width > maxWidth) {
+                  lines.push(cur);
+                  cur = text[i];
+                  if (lines.length === maxLines - 1) {
+                    // 最后一行：把剩余塞进去并裁断
+                    const rest = text.slice(i);
+                    lines.push(ellipsize(rest, maxWidth));
+                    return lines;
+                  }
+                } else {
+                  cur = next;
+                }
+              }
+              if (cur) lines.push(cur);
+              return lines;
+            };
+
+            // ── L1 背景：浅灰底 ──
+            ctx.fillStyle = '#F7F6FB';
+            ctx.fillRect(0, 0, W, H);
+
+            // ── L2 顶部封面：按宽等比缩放（不裁切），上方对齐 ──
+            //   主题色作底色，封面比例超过 320:375 时居中裁切上下，避免封面过高
+            ctx.fillStyle = themeColor;
+            ctx.fillRect(0, 0, W, coverDrawH);
+            if (coverImg) {
+              const iw = coverImg.width || 1, ih = coverImg.height || 1;
+              const naturalH = Math.round((W * ih) / iw);
+              if (naturalH <= coverDrawH) {
+                // 等比缩放即可完整展示
+                ctx.drawImage(coverImg, 0, 0, W, naturalH);
+              } else {
+                // 太高：按宽度填满，上下居中裁切
+                const scale = W / iw;
+                const dh = ih * scale;
+                ctx.drawImage(coverImg, 0, (coverDrawH - dh) / 2, W, dh);
+              }
+            }
+
+            // ── L3 白色标题栏（封面下方，课程名 + 共 N 节）──
+            let y = coverDrawH;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, y, W, 64);
+            ctx.fillStyle = '#1A1A22';
+            ctx.font = 'bold 19px sans-serif';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left';
+            ctx.fillText(ellipsize(course.title || '精品课程', W - 32), 16, y + 24);
+            ctx.fillStyle = themeColor;
+            ctx.font = '12px sans-serif';
+            ctx.fillText(`共 ${total} 节 · 专业母婴系统课`, 16, y + 48);
+            y += 64;
+
+            // ── L4 课程介绍 ──
+            ctx.textBaseline = 'alphabetic';
+            y += 18;
+            // 主题色"标"
+            ctx.fillStyle = themeColor;
+            ctx.fillRect(16, y - 2, 4, 18);
+            ctx.fillStyle = '#1A1A22';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText('课程介绍', 26, y + 12);
+            y += 28;
+
+            // introText 已在尺寸预测算时定义
+            ctx.fillStyle = '#4A4A55';
+            ctx.font = '13px sans-serif';
+            const introLines = wrapText(introText, W - 32, INTRO_MAX_LINES);
+            introLines.forEach((line) => {
+              ctx.fillText(line, 16, y + 12);
+              y += 20;
+            });
+            y += 8;
+
+            // ── L4 课程大纲头 ──
+            ctx.fillStyle = themeColor;
+            ctx.fillRect(16, y, 4, 18);
+            ctx.fillStyle = '#1A1A22';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText('课程大纲', 26, y + 14);
+            // 右侧节数
+            ctx.fillStyle = '#9A9AA5';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`${total} 节`, W - 16, y + 14);
+            ctx.textAlign = 'left';
+            y += 34;
+
+            // ── L5 节列表（前 POSTER_OUTLINE_MAX 节）──
+            const list = lessons.slice(0, showCount);
+            list.forEach((l, i) => {
+              const idx = String(l.indexLabel || (i + 1)).padStart(2, '0');
+              // 序号徽章
+              ctx.fillStyle = themeColor;
+              ctx.font = 'bold 12px sans-serif';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(idx, 16, y + 12);
+              // 节标题
+              ctx.fillStyle = '#1A1A22';
+              ctx.font = '13px sans-serif';
+              const title = ellipsize(l.title || `第 ${i + 1} 节`, W - 16 - 38 - 16 - 50);
+              ctx.fillText(title, 16 + 38, y + 12);
+              // 时长
+              if (l.durationText) {
+                ctx.fillStyle = '#9A9AA5';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(l.durationText, W - 16, y + 12);
+                ctx.textAlign = 'left';
+              }
+              y += 26;
+            });
+            if (remain > 0) {
+              ctx.fillStyle = themeColor;
+              ctx.font = '12px sans-serif';
+              ctx.textBaseline = 'middle';
+              ctx.textAlign = 'center';
+              ctx.fillText(`等 ${remain} 节，扫码查看全部 →`, W / 2, y + 12);
+              ctx.textAlign = 'left';
+              y += 24;
+            }
+            y += 6;
+
+            // ── L6 底部顾问条 110px ──
+            const BAR_H = 110;
+            const BAR_Y = H - BAR_H;
+            // 主题色渐变背景
+            const gradBar = ctx.createLinearGradient(0, BAR_Y, W, BAR_Y + BAR_H);
+            gradBar.addColorStop(0, themeColor);
+            gradBar.addColorStop(1, themeColorDark);
+            ctx.fillStyle = gradBar;
+            ctx.fillRect(0, BAR_Y, W, BAR_H);
+
+            // 左侧顾问头像（圆形）
+            const AV = 54;
+            const AX = 16, AY = BAR_Y + (BAR_H - AV) / 2;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(AX + AV / 2, AY + AV / 2, AV / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            if (advisorAvatarPath) {
+              const av = canvas.createImage();
+              av.src = advisorAvatarPath;
+              await new Promise(r => { av.onload = r; av.onerror = r; });
+              ctx.drawImage(av, AX, AY, AV, AV);
+            } else {
+              // 头像兜底：白底 + 首字
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(AX, AY, AV, AV);
+              ctx.fillStyle = themeColor;
+              ctx.font = 'bold 22px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              const ch = (advisor.name || '顾').charAt(0);
+              ctx.fillText(ch, AX + AV / 2, AY + AV / 2);
+              ctx.textAlign = 'left';
+            }
+            ctx.restore();
+            // 头像白色描边
+            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(AX + AV / 2, AY + AV / 2, AV / 2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 顾问文字：仅姓名 + 电话两行，与头像垂直居中对齐
+            const TX = AX + AV + 14;
+            const QW = 78, QH = 78;
+            const QX = W - QW - 14, QY = BAR_Y + (BAR_H - QH) / 2;
+            const textMaxW = QX - TX - 10;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textBaseline = 'alphabetic';
+            ctx.textAlign = 'left';
+            ctx.fillText(ellipsize(advisor.name || '安得褓贝顾问', textMaxW), TX, BAR_Y + 50);
+            if (advisor.phone) {
+              ctx.fillStyle = 'rgba(255,255,255,0.92)';
+              ctx.font = '16px sans-serif';
+              ctx.fillText(advisor.phone, TX, BAR_Y + 78);
+            }
+
+            // 右侧 QR 圆角白卡
+            roundRectPath(QX, QY, QW, QH, 8);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            if (qrLocalPath) {
+              const qrImg = canvas.createImage();
+              qrImg.src = qrLocalPath;
+              await new Promise(r => { qrImg.onload = r; qrImg.onerror = r; });
+              ctx.save();
+              roundRectPath(QX + 5, QY + 5, QW - 10, QH - 10, 4);
+              ctx.clip();
+              ctx.drawImage(qrImg, QX + 5, QY + 5, QW - 10, QH - 10);
+              ctx.restore();
+            } else {
+              // 小程序码未生成（云函数未部署 / 调用失败）：白卡内显示占位文案，避免空白看起来像断版
+              ctx.save();
+              ctx.fillStyle = '#9A9AA5';
+              ctx.font = '11px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('小程序码', QX + QW / 2, QY + QH / 2 - 8);
+              ctx.fillText('生成中', QX + QW / 2, QY + QH / 2 + 10);
+              ctx.restore();
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'alphabetic';
+            }
+
+            // ── L7 海报水印：安得褓贝 logo 大尺寸淡显，覆盖在内容卡之上，避开底部顾问条 ──
+            if (logoLocalPath) {
+              const wmImg = canvas.createImage();
+              wmImg.src = logoLocalPath;
+              await new Promise(r => { wmImg.onload = r; wmImg.onerror = r; });
+              const wmSize = 260;
+              const wmX = (W - wmSize) / 2;
+              // 居中于"封面下沿 ~ 顾问条上沿"之间，避免覆盖底部联系信息
+              const wmY = coverDrawH + ((H - BAR_H) - coverDrawH - wmSize) / 2;
+              ctx.save();
+              ctx.globalAlpha = 0.06;
+              ctx.drawImage(wmImg, wmX, wmY, wmSize, wmSize);
+              ctx.restore();
+            }
+
+            // ── 导出 ──
+            wx.canvasToTempFilePath({
+              canvas,
+              fileType: 'jpg',
+              quality: 0.95,
+              success: (r) => resolve(r.tempFilePath),
+              fail: (err) => reject(new Error((err && err.errMsg) || '导出失败')),
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
+    });
+  },
+
+  // 客户点击底部"联系顾问"：与 resumeDetail 行为一致，仅暴露电话拨号
+  onContactAdvisor() {
+    const sharerInfo = this.data.sharerInfo;
+    if (!sharerInfo) {
+      wx.showToast({ title: '顾问信息不存在', icon: 'none' });
+      return;
+    }
+
+    const itemList = [];
+    const actions = [];
+
+    if (sharerInfo.phone) {
+      itemList.push(`拨打电话：${sharerInfo.phone}`);
+      actions.push(() => {
+        wx.makePhoneCall({
+          phoneNumber: sharerInfo.phone,
+          fail: (error) => {
+            console.error('拨打电话失败:', error);
+            wx.showToast({ title: '拨打电话失败', icon: 'none' });
+          }
+        });
+      });
+    }
+
+    if (itemList.length === 0) {
+      wx.showToast({ title: '暂无联系方式', icon: 'none' });
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList,
+      success: (res) => {
+        if (res.tapIndex < actions.length) actions[res.tapIndex]();
+      }
     });
   },
 });

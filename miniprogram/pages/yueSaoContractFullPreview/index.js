@@ -1,9 +1,6 @@
-const userService = require('../../services/userService.js');
-
 Page({
   data: {
-    // 云文件ID - 注意：需要确保这个文件在云存储中存在
-    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政保姆服务合同20260121.docx'
+    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政月嫂服务合同-全款.docx'
   },
 
   onLoad() {
@@ -13,67 +10,15 @@ Page({
   // 分享给好友
   onShareAppMessage() {
     return {
-      title: '安得家政保姆服务合同',
-      path: '/pages/qaService/index',
+      title: '安得家政月嫂服务合同-全款',
+      path: '/pages/yueSaoContractFullPreview/index',
       imageUrl: '/images/icons/document.svg'
     };
   },
 
-  // 跳转到上户须知页面
-  goHouseRules() {
-    wx.navigateTo({
-      url: '/pages/houseRules/index'
-    });
-  },
-
-  // 跳转到小时工合同预览详情页
-  goHourlyContractPreview() {
-    wx.navigateTo({
-      url: '/pages/hourlyContractPreview/index'
-    });
-  },
-
-  // 跳转到保姆育儿合同预览详情页
-  goNannyChildcareContractPreview() {
-    wx.navigateTo({
-      url: '/pages/nannyChildcareContractPreview/index'
-    });
-  },
-
-  // 跳转到月嫂合同预览（定金）详情页
-  goYueSaoContractDepositPreview() {
-    wx.navigateTo({
-      url: '/pages/yueSaoContractDepositPreview/index'
-    });
-  },
-
-  // 跳转到月嫂合同预览（全款）详情页
-  goYueSaoContractFullPreview() {
-    wx.navigateTo({
-      url: '/pages/yueSaoContractFullPreview/index'
-    });
-  },
-
-  // 跳转到家政服务合同预览（不退费）详情页
-  goNonRefundContractPreview() {
-    wx.navigateTo({
-      url: '/pages/nonRefundContractPreview/index'
-    });
-  },
-
-  // 跳转到公司介绍页面
-  goCompanyIntro() {
-    wx.navigateTo({
-      url: '/pages/companyIntro/index'
-    });
-  },
-
-
-
-  // 预览合同文档（保留，供详情页使用）
-
+  // 预览合同文档
   previewContract() {
-    console.log('点击了合同预览卡片');
+    console.log('点击了查看按钮');
 
     wx.showLoading({
       title: '加载中...',

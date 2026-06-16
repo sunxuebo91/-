@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "合同预览",
+  "navigationBarBackgroundColor": "#EB2F96",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F759AB",
+  "enablePullDownRefresh": false,
+  "usingComponents": {}
+}

@@ -54,6 +54,9 @@
     "pages/hourlyContractPreview/index",
     "pages/childcareContractPreview/index",
     "pages/nannyChildcareContractPreview/index",
+    "pages/yueSaoContractDepositPreview/index",
+    "pages/yueSaoContractFullPreview/index",
+    "pages/nonRefundContractPreview/index",
 
     "pages/resumeDetail/index",
     "pages/resumeAlbum/index",

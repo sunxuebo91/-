@@ -17,6 +17,30 @@
       <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
     </view>
 
+    <view class="price-card price-card-cyan" bindtap="goYueSaoContractDepositPreview">
+      <view class="price-card-content">
+        <view class="price-card-title">月嫂服务合同预览（定金）</view>
+        <view class="price-card-subtitle">支付定金锁定档期</view>
+      </view>
+      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+    </view>
+
+    <view class="price-card price-card-pink" bindtap="goYueSaoContractFullPreview">
+      <view class="price-card-content">
+        <view class="price-card-title">月嫂服务合同预览（全款）</view>
+        <view class="price-card-subtitle">一次性支付全款签约</view>
+      </view>
+      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+    </view>
+
+    <view class="price-card price-card-red" bindtap="goNonRefundContractPreview">
+      <view class="price-card-content">
+        <view class="price-card-title">家政服务合同预览（不退费）</view>
+        <view class="price-card-subtitle">签约后不支持退费</view>
+      </view>
+      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+    </view>
+
     <view class="price-card price-card-blue" bindtap="goCompanyIntro">
       <view class="price-card-content">
         <view class="price-card-title">关于安得褓贝</view>

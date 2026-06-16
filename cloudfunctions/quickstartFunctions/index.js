@@ -154,6 +154,49 @@ const getSalaryAssessmentMiniCode = async (event) => {
   return { success: true, fileID: upload.fileID };
 };
 
+// 生成课程详情页小程序码（员工分享课程宣传海报用）
+// path: pages/course-detail/index?id=xxx&shared=1&sharerId=...&sf=1&p=...
+// 支持 128 字符路径降级，员工独立缓存
+const getCoursePromoMiniCode = async (event) => {
+  const courseId   = (event.courseId   || '').toString();
+  const staffId    = (event.staffId    || '').toString();
+  const staffPhone = (event.staffPhone || '').toString();
+  if (!courseId) throw new Error('missing courseId');
+
+  const basePath = `pages/course-detail/index?id=${encodeURIComponent(courseId)}`;
+  let path = basePath;
+
+  if (staffId || staffPhone) {
+    const sharerPart = staffId    ? `&sharerId=${encodeURIComponent(staffId)}`   : '';
+    const phonePart  = staffPhone ? `&p=${encodeURIComponent(staffPhone)}`       : '';
+    const full      = `${basePath}&shared=1${sharerPart}&sf=1${phonePart}`;
+    const noPhone   = `${basePath}&shared=1${sharerPart}&sf=1`;
+    const phoneOnly = staffPhone ? `${basePath}&shared=1&sf=1${phonePart}` : '';
+    const minShared = `${basePath}&shared=1&sf=1`;
+
+    if      (full.length      <= 128) path = full;
+    else if (noPhone.length   <= 128) path = noPhone;
+    else if (phoneOnly && phoneOnly.length <= 128) path = phoneOnly;
+    else if (minShared.length <= 128) path = minShared;
+    else {
+      path = basePath;
+      console.error(`[getCoursePromoMiniCode] 路径超 128 字符，无法附加分享信息`);
+    }
+  }
+
+  const resp = await cloud.openapi.wxacode.get({
+    path,
+    width:      200,
+    is_hyaline: true,
+  });
+  const cacheKey  = staffId || staffPhone.replace(/\D/g, '');
+  const cloudPath = cacheKey
+    ? `course-qrcodes/course-${courseId}-${cacheKey}.png`
+    : `course-qrcodes/course-${courseId}.png`;
+  const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
+  return { success: true, fileID: upload.fileID };
+};
+
 // 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）
 // 发布正式版后扫码即可跳转到推荐人注册页
 // 身份 token：phone + openid（CRM 端任一命中即可定位 staff），不再写入 staffId
@@ -346,5 +389,7 @@ exports.main = async (event, context) => {
       return await getReferrerRegisterMiniCode(event);
     case "getSalaryAssessmentMiniCode":
       return await getSalaryAssessmentMiniCode(event);
+    case "getCoursePromoMiniCode":
+      return await getCoursePromoMiniCode(event);
   }
 };
