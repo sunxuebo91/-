@@ -8,7 +8,7 @@ const PROGRESS_THROTTLE_MS = 10 * 1000; // 节流：每 10 秒上报一次
 // 海报 Logo（与简历/工资测评海报共用同一张定稿图）
 const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 // 海报"课程大纲"最多展示节数（超过则截断 + "等 N 节"提示）
-const POSTER_OUTLINE_MAX = 14;
+const POSTER_OUTLINE_MAX = 8;
 
 /** 本地缓存"最近播放节"。新 key 用 lesson 命名；旧 key 保留读取做迁移兼容 */
 const LAST_LESSON_KEY = (courseId) => `course_last_lesson_${courseId}`;
@@ -551,10 +551,8 @@ Page({
             const W = 375;
             const lessons = this.data.lessons || [];
             const total = lessons.length;
-            const showCount = Math.min(POSTER_OUTLINE_MAX, total);
-            const remain = Math.max(0, total - showCount);
 
-            // 预读封面图，得到实际宽高比 → 决定封面区高度（按宽等比，不裁切；上限 320 防止竖图过高）
+            // 预读封面图，得到实际宽高比 → 决定封面区高度（按宽等比，不裁切；上限 210 控制整体高度，朋友圈友好比例）
             let coverImg = null;
             let coverDrawH = 200; // 无封面时的兜底高度
             if (coverLocalPath) {
@@ -562,14 +560,14 @@ Page({
               coverImg.src = coverLocalPath;
               await new Promise(r => { coverImg.onload = r; coverImg.onerror = r; });
               const iw = coverImg.width || 1, ih = coverImg.height || 1;
-              coverDrawH = Math.min(320, Math.round((W * ih) / iw));
+              coverDrawH = Math.min(210, Math.round((W * ih) / iw));
             }
 
-            // 预测量课程介绍实际折行数（按真实字宽，避免按 5 行预留导致大面积留白）
+            // 预测量课程介绍实际折行数（按真实字宽）
             const introRaw = course.intro || course.description || course.summary || '';
             const introText = String(introRaw).replace(/\s+/g, ' ').trim()
               || '系统讲授母婴护理全流程要点，理论结合实战，让学员快速胜任岗位。';
-            const INTRO_MAX_LINES = 5;
+            const INTRO_MAX_LINES = 3;
             const INTRO_MAX_W = W - 32;
             canvas.width = W * dpr;
             canvas.height = 100 * dpr; // 临时尺寸仅用于 measureText
@@ -592,9 +590,15 @@ Page({
               introLineCount = Math.max(1, introLineCount);
             }
 
+            // 固定海报高度，导出 1080 × 1980（朋友圈友好比例 ≈ 1:1.83）
             // 高度构成：封面 + 标题条 64 + 介绍区(18+28+lines*20+8) + 大纲头 34 + 节行 26 * showCount + "等N节"行 24 + 间隔 6 + 底部顾问条 110
             const introH = 18 + 28 + introLineCount * 20 + 8;
-            const H = coverDrawH + 64 + introH + 34 + 26 * showCount + (remain > 0 ? 24 : 0) + 6 + 110;
+            const H = 688;
+            // 根据剩余高度动态决定大纲展示节数（预留"等 N 节"提示位 24）
+            const lessonsBudget = H - coverDrawH - 64 - introH - 34 - 6 - 110 - 24;
+            const maxByHeight = Math.max(2, Math.floor(lessonsBudget / 26));
+            const showCount = Math.min(POSTER_OUTLINE_MAX, total, maxByHeight);
+            const remain = Math.max(0, total - showCount);
 
             // 设回最终尺寸（这会清空 ctx 状态，需重新 scale）
             canvas.width = W * dpr;
@@ -862,9 +866,13 @@ Page({
               ctx.restore();
             }
 
-            // ── 导出 ──
+            // ── 导出（固定 1080 × 1980，朋友圈友好比例） ──
             wx.canvasToTempFilePath({
               canvas,
+              width: W,
+              height: H,
+              destWidth: 1080,
+              destHeight: 1980,
               fileType: 'jpg',
               quality: 0.95,
               success: (r) => resolve(r.tempFilePath),
