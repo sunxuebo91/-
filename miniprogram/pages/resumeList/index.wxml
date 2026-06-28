@@ -97,9 +97,13 @@
 
       <!-- 右侧内容 -->
       <view class="content">
+        <!-- 头部：左姓名+等级，右上角价格 -->
+        <view class="head-row">
         <!-- 姓名和标识 -->
         <view class="name-row">
           <text class="name">{{item.name || '未命名'}}</text>
+          <!-- 工种小勋章：紧跟姓名展示身份 -->
+          <view class="job-type" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</view>
           <!-- 月嫂等级标签 - 只在有等级时显示 -->
           <block wx:if="{{item.maternityNurseLevel}}">
             <!-- 初级月嫂 -->
@@ -135,16 +139,21 @@
           </block>
         </view>
 
-        <!-- 基本信息（单行展示，超出用省略号） -->
-        <view class="info-row">
-          <text class="info-text">{{item.infoLine}}</text>
+          <!-- 价格：移至右上角；月嫂显示"/26天"，保姆显示"/月"，其他类型不显示单位 -->
+          <view class="price-row">
+            <text class="price-sym">¥</text>
+            <text class="price-amount">{{item.priceMonth || 0}}</text>
+            <text class="price-unit" wx:if="{{item.priceUnit}}">{{item.priceUnit}}</text>
+          </view>
         </view>
 
-	        <!-- 价格：月嫂显示“/26天”，保姆显示“/月”，其他类型不显示单位；去掉“左右”文案 -->
-	        <view class="price-row">
-	          <text class="price-amount">{{item.priceMonth || 0}}</text>
-	          <text class="price-unit" wx:if="{{item.priceUnit}}">{{item.priceUnit}}</text>
-	        </view>
+        <!-- 基本信息：籍贯丨年龄丨经验丨学历，用竖线分隔 -->
+        <view class="meta-row">
+          <block wx:for="{{item.infoItems}}" wx:for-item="info" wx:for-index="idx" wx:key="*this">
+            <text wx:if="{{idx > 0}}" class="info-sep">丨</text>
+            <text class="info-item">{{info}}</text>
+          </block>
+        </view>
 
         <!-- 技能标签 -->
         <view class="tags" wx:if="{{item.tags && item.tags.length}}">

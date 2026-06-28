@@ -10,10 +10,10 @@ Page({
   },
 
   onShow() {
-    // 更新自定义 tabBar 选中状态（我的现在是索引2）
+    // 更新自定义 tabBar 选中状态（我的现在是索引3）
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({
-        selected: 2
+        selected: 3
       });
     }
     this.loadMe();
@@ -191,6 +191,10 @@ Page({
 
   goReferral() {
     wx.navigateTo({ url: "/pages/myReferrals/index" });
+  },
+
+  goOrderHall() {
+    wx.switchTab({ url: "/pages/orderHall/index" });
   },
 
   goPoster() {

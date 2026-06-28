@@ -70,6 +70,11 @@
     "pages/myReferrals/index",
     "pages/myReferrals/detail",
 
+    "pages/orderHall/index",
+    "pages/orderHall/detail",
+    "pages/orderHall/grab",
+    "pages/orderHall/myGrabs",
+
     "pages/course-list/index",
     "pages/course-detail/index",
 
@@ -101,6 +106,10 @@
       {
         "pagePath": "pages/message/index",
         "text": "消息"
+      },
+      {
+        "pagePath": "pages/orderHall/index",
+        "text": "接单大厅"
       },
       {
         "pagePath": "pages/profile/index",

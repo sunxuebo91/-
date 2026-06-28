@@ -1,0 +1,55 @@
+<view class="page">
+  <!-- 未登录且无 openid -->
+  <view class="empty-card" wx:if="{{!hasIdentifier}}">
+    <text class="empty-text">需要登录后查看您的抢单记录</text>
+    <button class="primary-btn" bindtap="goLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <!-- 统计 -->
+    <view class="stat-card">
+      <view class="stat-item">
+        <text class="stat-num">{{stats.total}}</text>
+        <text class="stat-label">全部</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num stat-pending">{{stats.pending}}</text>
+        <text class="stat-label">抢单中</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num stat-accepted">{{stats.accepted}}</text>
+        <text class="stat-label">已录用</text>
+      </view>
+    </view>
+
+    <!-- 列表 -->
+    <view class="list">
+      <view class="grab-card" wx:for="{{list}}" wx:key="_id"
+            bindtap="goDetail" data-orderid="{{item.orderId}}">
+        <view class="grab-head">
+          <text class="grab-title">{{item.serviceTypeLabel || item.orderTitle}}</text>
+          <text class="status-tag" style="color: {{item.statusColor}}; border-color: {{item.statusColor}}">{{item.statusText}}</text>
+        </view>
+        <view class="grab-salary" wx:if="{{item.salaryText}}">{{item.salaryText}}</view>
+        <view class="grab-meta" wx:if="{{item.area || item.workContent}}">
+          <text wx:if="{{item.area}}" class="meta-tag">{{item.area}}</text>
+          <text wx:if="{{item.workContent}}" class="meta-content">{{item.workContent}}</text>
+        </view>
+        <view class="grab-foot">
+          <text class="grab-time" wx:if="{{item.createdAtText}}">抢单于 {{item.createdAtText}}</text>
+          <text class="grab-link">查看详情 ›</text>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!loading && list.length === 0}}">
+        <text>暂无抢单记录</text>
+        <button class="link-btn" bindtap="goHall">去接单大厅看看 ›</button>
+      </view>
+      <view class="loading" wx:if="{{loading}}">
+        <text>加载中...</text>
+      </view>
+    </view>
+  </block>
+</view>

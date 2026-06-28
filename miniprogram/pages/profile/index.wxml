@@ -57,6 +57,14 @@
         <text class="service-label">我推荐的</text>
       </view>
 
+      <!-- 接单大厅入口：所有用户可见，阿姨抢单不强制登录 -->
+      <view class="service-item" bindtap="goOrderHall">
+        <view class="service-icon-wrap service-icon-order">
+          <image class="service-icon-img" src="/images/icons/my-orders.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">接单大厅</text>
+      </view>
+
       <!-- 推荐海报：仅员工（招生老师、派单老师）和管理员可见；兼容同时身为推荐官的员工（role='referrer' 但 isStaff=true） -->
       <view class="service-item" bindtap="goPoster"
         wx:if="{{me.role === 'staff' || me.role === 'admin' || me.isStaff}}">

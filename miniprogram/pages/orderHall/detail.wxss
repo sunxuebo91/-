@@ -1,0 +1,136 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx 24rpx 160rpx;
+  box-sizing: border-box;
+}
+
+.status-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+}
+.status-open {
+  background: linear-gradient(135deg, #ede7ff, #d9c9ff);
+}
+.status-grabbed, .status-closed, .status-cancelled {
+  background: #f0f0f0;
+}
+.status-text {
+  font-size: 30rpx;
+  color: #5b3fc1;
+  font-weight: 700;
+}
+.status-grabbed .status-text,
+.status-closed .status-text,
+.status-cancelled .status-text {
+  color: #888;
+}
+.grab-count {
+  font-size: 24rpx;
+  color: #888;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.title {
+  font-size: 34rpx;
+  color: #222;
+  font-weight: 700;
+  flex: 1;
+  margin-right: 16rpx;
+}
+.type-tag {
+  background: #f0ebff;
+  color: #8766F3;
+  font-size: 24rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 24rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+.paragraph {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.7;
+}
+
+.row {
+  display: flex;
+  padding: 12rpx 0;
+  font-size: 28rpx;
+}
+.label {
+  color: #888;
+  width: 140rpx;
+  flex-shrink: 0;
+}
+.value {
+  color: #222;
+  flex: 1;
+}
+.value.salary {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.tip-card {
+  background: #fffbe6;
+  border-radius: 16rpx;
+  padding: 20rpx 28rpx;
+  margin-bottom: 24rpx;
+}
+.tip-text {
+  font-size: 24rpx;
+  color: #b8860b;
+  line-height: 1.7;
+}
+
+.btn-wrap {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+.primary-btn {
+  width: 100%;
+  height: 96rpx;
+  background: #8766F3;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+.btn-disabled { background: #c4b8f5 !important; }
+
+.loading {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 80rpx 0;
+}

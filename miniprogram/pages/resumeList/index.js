@@ -12,6 +12,24 @@ const MATERNITY_LEVEL_MAP = {
   'crown': '皇冠'
 };
 
+// 工种完整中文名映射（卡片工种标签展示用，与详情页 JOB_TYPE_MAP 对齐）
+const JOB_TYPE_LABEL_MAP = {
+  'yuexin': '月嫂',
+  'yuesao': '月嫂',
+  'zhujia-yuer': '住家育儿嫂',
+  'baiban-yuer': '白班育儿嫂',
+  'yuer': '育儿嫂',
+  'baojie': '保洁',
+  'baiban-baomu': '白班保姆',
+  'zhujia-baomu': '住家保姆',
+  'baomu': '保姆',
+  'yangchong': '养宠',
+  'xiaoshi': '小时工',
+  'zhujia-hulao': '住家护老',
+  'hugong': '护工',
+  'qita': '其他'
+};
+
 // 服务等级选项（自定义弹层，不受 ActionSheet 6 条限制）
 const LEVEL_OPTIONS = [
   { key: null, label: '全部' },
@@ -665,6 +683,8 @@ Page({
 	      // 预先格式化部分字段，便于后续组合展示
 	      const jobTypeText = formatJobType(item.jobType);
 	      const educationText = formatEducation(item.education);
+	      // 工种标签（如“住家育儿嫂”），用于第二行最前展示
+	      const jobTypeLabel = JOB_TYPE_LABEL_MAP[item.jobType] || '';
 	      // 价格单位：
 	      // - 月嫂（jobType === 'yuexin'）统一显示“/26天”，不再依赖是否有等级
 	      // - 保姆岗位（*baomu）显示“/月”
@@ -677,13 +697,17 @@ Page({
 	      }
 
           // 组装“基本信息”单行文案，用竖线分隔，超出时由样式控制省略号
+          // 注：工种标签（jobTypeLabel）在 wxml 中单独渲染为胶囊样式，不放进文字信息项
           const infoParts = [];
-          // 籍贯：只显示省或直辖市
+
+          // 籍贯：只显示省或直辖市，作为“XX人”放到信息行
           const nativeText = formatNativePlace(item.nativePlace, item.currentAddress);
-          if (nativeText) infoParts.push(nativeText);
+          const nativePerson = nativeText
+            ? `${nativeText.replace(/(省|特别行政区|自治区|市)$/, '')}人`
+            : '';
+          if (nativePerson) infoParts.push(nativePerson);
           if (item.age) infoParts.push(`${item.age}岁`);
           if (item.experienceYears) infoParts.push(`${item.experienceYears}年经验`);
-          if (jobTypeText) infoParts.push(jobTypeText);
           if (educationText) infoParts.push(educationText);
           const infoLine = infoParts.length ? infoParts.join(' | ') : '—';
 
@@ -715,11 +739,14 @@ Page({
             videoLocalPath: '',  // 预加载后的本地路径
             jobType: item.jobType,
             jobTypeText,
+            jobTypeLabel,
+            nativePerson,
             orderStatus: item.orderStatus,
             maternityNurseLevel: item.maternityNurseLevel,
             education: item.education,
             educationText,
             infoLine,
+            infoItems: infoParts, // 拆分后的信息项，供两端分散对齐展示
             updatedAt: item.updatedAt,
             phone: item.phone || item.mobile || ''  // 员工搜索用（不对外展示）
           };

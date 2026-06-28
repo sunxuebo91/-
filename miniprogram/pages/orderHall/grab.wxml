@@ -1,0 +1,51 @@
+<view class="page">
+  <view class="order-card" wx:if="{{title || serviceTypeLabel}}">
+    <view class="order-card-title">📋 抢单订单</view>
+    <view class="order-row">
+      <text class="order-label">工种</text>
+      <text class="order-value">{{title || serviceTypeLabel}}</text>
+    </view>
+    <view class="order-row" wx:if="{{serviceTypeLabel && title && serviceTypeLabel !== title}}">
+      <text class="order-label">订单</text>
+      <text class="order-value">{{title}}</text>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="section-title">您的信息</view>
+
+    <view class="form-item">
+      <text class="form-label">姓名 <text class="req">*</text></text>
+      <input class="form-input" placeholder="请输入您的真实姓名"
+             value="{{form.name}}" bindinput="onInput" data-field="name" maxlength="20"/>
+    </view>
+
+    <view class="form-item last">
+      <text class="form-label">手机号 <text class="req">*</text></text>
+      <input class="form-input" type="number" maxlength="11"
+             placeholder="请输入手机号" value="{{form.phone}}"
+             bindinput="onInput" data-field="phone"/>
+      <view class="phone-wx-hint" wx:if="{{phoneFromWx && form.phone}}">
+        <text>✓ 已通过微信授权填入</text>
+      </view>
+      <button class="wx-phone-btn" open-type="getPhoneNumber"
+              bindgetphonenumber="onGetPhoneNumber">
+        <text class="wx-phone-icon">📱</text>
+        <text>使用微信手机号一键填入</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="tip-card">
+    <text class="tip-text">
+      ⚠️ 同一手机号对同一订单仅可抢一次；抢单成功后，归属顾问将主动与您联系，请保持电话畅通。
+    </text>
+  </view>
+
+  <view class="btn-wrap">
+    <button class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+            bindtap="onSubmit" disabled="{{submitting}}">
+      {{submitting ? '提交中...' : '确认抢单'}}
+    </button>
+  </view>
+</view>

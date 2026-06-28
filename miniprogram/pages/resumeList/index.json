@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "简历列表",
+  "navigationBarBackgroundColor": "#EDE8FD",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#EDE8FD",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark",
   "onReachBottomDistance": 200

@@ -1,11 +1,12 @@
 .page {
-  background: #f7f7f7;
+  /* 主题紫淡色背景（实色，与导航栏/筛选栏一致），配合白色独立卡片 */
+  background: #EDE8FD;
   min-height: 100vh;
 }
 
 /* 顶部标题 */
 .header {
-  background: #ffffff;
+  background: #EDE8FD; /* 与页面淡紫背景一致 */
   padding: 24rpx 32rpx;
 }
 
@@ -30,8 +31,8 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border-bottom: 1rpx solid #f0f0f0;
+  background: #EDE8FD; /* 与页面淡紫背景一致，固定栏需不透明以遮住滚动内容 */
+  border-bottom: 1rpx solid rgba(135, 102, 243, 0.12);
 }
 
 /* 筛选按钮行 */
@@ -53,7 +54,7 @@
 .staff-search-box {
   display: flex;
   align-items: center;
-  background: #f5f5f7;
+  background: #ffffff; /* 淡紫背景上用白色输入框，提升对比 */
   border-radius: 32rpx;
   padding: 0 24rpx;
   height: 68rpx;
@@ -256,15 +257,21 @@
 }
 
 .card {
-  background: var(--ui-surface);
-  border-radius: 20rpx;
-  padding: 28rpx;
-  margin-bottom: 20rpx;
+  background: #ffffff;
+  padding: 24rpx; /* 独立卡片内边距 */
   display: flex;
-  gap: 24rpx;
-  align-items: stretch; /* 改为拉伸对齐，让头像跟随内容高度 */
-  border: 1rpx solid var(--ui-border);
-  box-shadow: var(--ui-shadow-card);
+  gap: 28rpx;
+  align-items: stretch; /* 拉伸对齐，让头像跟随内容高度 */
+  /* 独立卡片：圆角 + 卡片间留白 + 发丝紫边（与头像呼应）+ 极淡阴影 */
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  border: 1rpx solid rgba(135, 102, 243, 0.35);
+  box-shadow: 0 2rpx 8rpx rgba(135, 102, 243, 0.06);
+}
+
+/* 列表最后一条去掉多余底部留白 */
+.list .card:last-child {
+  margin-bottom: 0;
 }
 
 /* 头像 */
@@ -277,6 +284,8 @@
   background: #f0f0f0;
   flex-shrink: 0;
   object-fit: cover; /* 确保图片填充方式正确 */
+  /* 细主题紫描边：外圈紫色描边 + 极细内描边，呼应整体淡紫主题 */
+  box-shadow: 0 0 0 2rpx rgba(135, 102, 243, 0.45), inset 0 0 0 1rpx rgba(0, 0, 0, 0.04);
 }
 
 /* 内容区域 */
@@ -284,28 +293,47 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+  /* 头部贴顶（对齐头像上边）、标签贴底（对齐头像下边），中间信息行垂直分散 */
+  justify-content: space-between;
+  gap: 14rpx; /* 作为分布的最小间距，内容紧凑时不至于贴在一起 */
   min-width: 0; /* 防止内容溢出 */
   overflow: visible; /* 确保内容可见 */
-  justify-content: space-between; /* 让内容两端对齐：姓名靠上，标签靠下 */
+}
+
+/* 头部行：左姓名+等级，右上角价格——整体按姓名底部对齐 */
+.head-row {
+  display: flex;
+  align-items: flex-end; /* 价格与姓名行底部对齐 */
+  justify-content: space-between;
+  gap: 8rpx; /* 收紧间距，给 5 位数价格让出空间，避免徽章换行 */
 }
 
 /* 姓名行 */
 .name-row {
   display: flex;
-  align-items: center;
-  gap: 12rpx;
+  align-items: flex-end; /* 工种徽章底部对齐到姓名底部 */
+  gap: 8rpx; /* 收紧姓名与徽章间距 */
   flex-wrap: wrap; /* 允许换行 */
-  width: 100%; /* 占满父容器宽度 */
+  flex: 1; /* 占满左侧剩余空间，把价格挤到右上角 */
   min-width: 0; /* 允许内容收缩 */
 }
 
 .name {
   font-size: 36rpx;
   font-weight: 700;
-  color: #333;
+  color: #1F1F1F; /* 比 #333 更沉，主标题更立 */
   flex-shrink: 0; /* 防止姓名被压缩 */
   line-height: 1.2; /* 调整行高，确保与徽章视觉上居中对齐 */
+  letter-spacing: 0.5rpx; /* 微字距，提升精致感 */
+}
+
+/* 籍贯（“XX人”）：紧跟姓名，弱化为副信息 */
+.native {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: #999;
+  flex-shrink: 0;
+  line-height: 1.2;
 }
 
 /* 初级月嫂 */
@@ -366,7 +394,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6rpx;
-  /* 改成更有“高端感”的紫色系渐变，而不是普通灰色 */
+  /* 改成更有"高端感"的紫色系渐变，而不是普通灰色 */
   background: linear-gradient(135deg, #f5f3ff 0%, #d6bcfa 45%, #9f7aea 100%);
   color: #fff;
   font-size: 22rpx;
@@ -448,45 +476,83 @@
   line-height: 1; /* 统一文字行高为1，与图标保持一致 */
 }
 
-/* 基本信息行：单行展示，超出以省略号结尾 */
-.info-row {
+/* 基本信息行：籍贯丨年龄丨经验丨学历，竖线分隔，紧凑左对齐排布 */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx; /* 竖线两侧的间距 */
   width: 100%;
-  font-size: 26rpx;
-  color: #666;
-  padding: 0;
-  margin: 0;
-}
-
-.info-text {
-  display: block;
-  width: 100%;
+  min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
-/* 价格行 */
+/* 信息项之间的竖线分隔符 */
+.info-sep {
+  font-size: 22rpx;
+  color: #e0e0e0;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+/* 工种小勋章：品牌紫渐变填充 + 柔和紫调投影 + 顶部高光，紧跟姓名作为身份标识 */
+.job-type {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #a98bf5 0%, #8766f3 100%);
+  padding: 6rpx 12rpx; /* 收紧左右内边距，配合一行内排下姓名+徽章 */
+  border-radius: 8rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+  letter-spacing: 0.5rpx;
+  box-shadow: 0 4rpx 10rpx rgba(135, 102, 243, 0.3), inset 0 1rpx 0 rgba(255, 255, 255, 0.28);
+}
+
+/* 信息项：弱化为副信息 */
+.info-item {
+  flex-shrink: 0; /* 根据内容自然宽度，不再等分布局 */
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 如果第一项是工种，可以让它特殊高亮一下，如果你需要的话；目前先统一字体颜色 */
+.info-item:first-child {
+  /* color: #333; 或者加粗等 */
+}
+
+/* 价格行：移至右上角，与姓名顶部对齐 */
 .price-row {
   display: flex;
-  align-items: flex-end; /* 改为底部对齐，让单位与金额底部对齐 */
-  color: #ff6b6b;
+  align-items: baseline;
+  color: #E5484D; /* 收敛的高级红，替代偏廉价的亮珊瑚红 */
+  flex-shrink: 0;
   padding: 0;
   margin: 0;
-  flex-grow: 1; /* 让价格行占据剩余空间，把标签推到底部 */
+}
+
+.price-sym {
+  font-size: 24rpx;
+  font-weight: 700;
+  margin-right: 2rpx;
 }
 
 .price-amount {
-  font-size: 40rpx;
+  font-size: 34rpx; /* 调小，避免数字过大显得扎眼/廉价 */
   font-weight: 700;
   line-height: 1; /* 设置行高为1，减少文字上下留白 */
+  letter-spacing: 0.5rpx;
 }
 
 .price-unit {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 22rpx;
+  color: #bbb;
   margin-left: 4rpx;
-  line-height: 1; /* 设置行高为1，确保与金额底部对齐 */
-  padding-bottom: 2rpx; /* 微调底部位置，确保视觉上完全对齐 */
+  font-weight: 400;
 }
 
 /* 技能标签 */
@@ -495,19 +561,21 @@
   flex-wrap: wrap;
   gap: 8rpx;
   padding: 0;
-  margin: 0;
-  /* 移除 margin-top: auto，让标签紧跟价格，整体内容通过 .content 的 justify-content: center 实现垂直居中 */
-  /* 限制最多显示3行（增加到3行以显示更多标签） */
+  margin-top: 0; /* 紧跟信息行，避免标签少时被推到底部产生大片空白 */
+  /* 最多显示 2 行，避免第 3 行被裁掉一半且撑高卡片 */
   overflow: hidden;
-  max-height: calc(20rpx * 1.4 * 3 + 8rpx * 2); /* 字体大小 * 行高 * 3行 + 2个gap */
+  /* 单行高度 = 字号 * 行高 + 上下 padding = 20rpx*1.4 + 12rpx = 40rpx；2行 + 1个 gap */
+  max-height: calc((20rpx * 1.4 + 12rpx) * 2 + 8rpx);
 }
 
 .tag {
-  font-size: 20rpx; /* 从24rpx缩小到20rpx */
-  color: #666;
-  background: #f5f5f5;
-  padding: 4rpx 10rpx; /* 从8rpx 16rpx缩小到4rpx 10rpx */
-  border-radius: 6rpx; /* 从8rpx缩小到6rpx */
+  font-size: 20rpx;
+  color: #888; /* 比 #666 更轻，降低噪音 */
+  background: #F7F7F9; /* 提亮底色，更安静 */
+  padding: 6rpx 14rpx; /* 给松一点，更精致 */
+  /* 发丝紫边用内阴影实现，不占布局高度，避免两行标签被裁切 */
+  box-shadow: inset 0 0 0 1rpx rgba(135, 102, 243, 0.3);
+  border-radius: 8rpx;
   line-height: 1.4; /* 设置行高 */
   white-space: nowrap; /* 防止单个标签内换行 */
 }
