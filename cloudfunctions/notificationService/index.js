@@ -4,8 +4,9 @@ const https = require('https');
 
 const db = cloud.database();
 
-// 订阅消息模板 ID（简历被查看通知）
+// 订阅消息模板 ID
 const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+const ORDER_GRAB_TEMPLATE_ID  = 'BLTv1XLncYInvkyERP8fgoHtM0UQoXOwgK4SmbQF93E';
 
 // 格式化时间：2024年04月10日 16:30
 function formatViewTime(date) {
@@ -92,6 +93,47 @@ async function sendResumeViewNotify(event) {
     // 47003 = 模板不存在或已删除
     // 40001 = access_token 无效（云函数内不应出现）
     console.error('[sendResumeViewNotify] ❌ 发送失败, errCode:', err.errCode, 'errMsg:', err.errMsg || err.message, '完整错误:', JSON.stringify(err));
+    return { success: false, errMsg: err.errMsg || err.message, errCode: err.errCode };
+  }
+}
+
+// 发送"抢单成功"订阅通知给订单发布人（员工）
+async function sendOrderGrabNotify(event) {
+  const { publisherPhone, auntieName, serviceTypeLabel, orderId } = event;
+
+  if (!publisherPhone) return { success: false, errMsg: '缺少 publisherPhone' };
+  if (!auntieName)     return { success: false, errMsg: '缺少 auntieName' };
+
+  const touser = await getOpenidByPhone(publisherPhone);
+  if (!touser) {
+    console.warn('[sendOrderGrabNotify] ❌ 未找到员工 openid, phone:', publisherPhone);
+    return { success: false, errMsg: '未找到员工微信账号' };
+  }
+
+  const page = orderId
+    ? `pages/orderHall/detail?id=${encodeURIComponent(orderId)}`
+    : 'pages/orderHall/index';
+
+  const grabTime = formatViewTime(new Date());
+  const safeAuntieName   = (auntieName       || '').slice(0, 20);
+  const safeServiceType  = (serviceTypeLabel || '家政服务').slice(0, 20);
+
+  try {
+    await cloud.openapi.subscribeMessage.send({
+      touser,
+      template_id: ORDER_GRAB_TEMPLATE_ID,
+      page,
+      data: {
+        thing10: { value: safeAuntieName  },   // 接单人员（阿姨姓名）
+        thing5:  { value: safeServiceType },   // 服务类型（工种）
+        time9:   { value: grabTime        },   // 接单时间
+      },
+      miniprogram_state: 'formal',
+    });
+    console.log('[sendOrderGrabNotify] ✅ 发送成功 → openid:', touser);
+    return { success: true };
+  } catch (err) {
+    console.error('[sendOrderGrabNotify] ❌ 发送失败, errCode:', err.errCode, err.errMsg || err.message);
     return { success: false, errMsg: err.errMsg || err.message, errCode: err.errCode };
   }
 }
@@ -192,6 +234,9 @@ exports.main = async (event) => {
       // 新增：发送简历查看通知给员工
       case 'sendResumeViewNotify':
         return await sendResumeViewNotify(event);
+
+      case 'sendOrderGrabNotify':
+        return await sendOrderGrabNotify(event);
 
       // 诊断：直接向指定手机号发测试通知
       case 'sendTestNotify':

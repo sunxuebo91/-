@@ -20,8 +20,8 @@
     <view class="subscribe-banner-content">
       <text class="subscribe-banner-icon">🔔</text>
       <view class="subscribe-banner-text">
-        <text class="subscribe-banner-title">开启简历查看提醒</text>
-        <text class="subscribe-banner-desc">客户查看您分享的简历时，第一时间通知您</text>
+        <text class="subscribe-banner-title">开启消息提醒</text>
+        <text class="subscribe-banner-desc">接收简历查看提醒和抢单通知，实时掌握动态</text>
       </view>
     </view>
     <view class="subscribe-banner-actions">

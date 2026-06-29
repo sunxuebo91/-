@@ -1,5 +1,11 @@
 const userService = require('../../services/userService.js');
 
+// 需要员工订阅的两个模板
+const SUBSCRIBE_TMPL_IDS = [
+  'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM',  // 简历查看提醒
+  'BLTv1XLncYInvkyERP8fgoHtM0UQoXOwgK4SmbQF93E',   // 接单成功提醒
+];
+
 Page({
   data: {
     me: {
@@ -7,6 +13,7 @@ Page({
       avatarUrl: "",
     },
     isLoggedIn: false,
+    showSubscribeBanner: false,
   },
 
   onShow() {
@@ -75,8 +82,12 @@ Page({
       mergedMe.isReferrer = cloudMe.role === 'referrer' || cloudMe.role === '推荐官'
         || cloudMe.isReferrer === true || crmUserInfo.isReferrer === true;
 
+      // 员工才显示订阅横幅；今日已关闭则不再出现
+      const dismissed = wx.getStorageSync('subscribeBannerDismissed');
+      const today = new Date().toDateString();
       this.setData({
         me: mergedMe,
+        showSubscribeBanner: mergedMe.isStaff && dismissed !== today,
       });
       console.log('✅ 合并后的用户信息:', mergedMe);
     } catch (e) {
@@ -209,6 +220,27 @@ Page({
     wx.navigateTo({
       url: '/pages/test-customer-service/index'
     });
+  },
+
+  // 员工订阅消息（简历查看 + 接单通知）
+  onSubscribe() {
+    wx.requestSubscribeMessage({
+      tmplIds: SUBSCRIBE_TMPL_IDS,
+      success: (res) => {
+        const accepted = SUBSCRIBE_TMPL_IDS.filter(id => res[id] === 'accept');
+        wx.showToast({ title: accepted.length ? '提醒已开启' : '未开启提醒', icon: accepted.length ? 'success' : 'none' });
+        this.setData({ showSubscribeBanner: false });
+      },
+      fail: (err) => {
+        console.warn('[profile] 订阅失败:', err);
+        wx.showToast({ title: '开启失败，请重试', icon: 'none' });
+      },
+    });
+  },
+
+  onDismissSubscribeBanner() {
+    try { wx.setStorageSync('subscribeBannerDismissed', new Date().toDateString()); } catch (_) {}
+    this.setData({ showSubscribeBanner: false });
   },
 
   // 退出登录

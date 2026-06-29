@@ -1,17 +1,58 @@
 <view class="page">
-  <!-- 顶部筛选 -->
-  <view class="filter-bar">
-    <picker mode="selector" range="{{serviceTypes}}" range-key="label"
-            value="{{serviceTypeIndex}}" bindchange="onServiceTypeChange">
-      <view class="filter-picker">
-        <text class="filter-label">工种</text>
-        <text class="filter-value">{{serviceTypes[serviceTypeIndex].label}}</text>
-        <text class="filter-arrow">▾</text>
+  <!-- 筛选遮罩 -->
+  <view wx:if="{{activeDropdown}}" class="filter-backdrop" catchtap="onCloseDropdown"></view>
+
+  <!-- 顶部三段筛选（sticky 包裹，含下拉面板） -->
+  <view class="filter-wrapper">
+    <view class="filter-bar">
+      <view class="filter-item {{activeDropdown === 'publisher' ? 'active' : filterPublisher ? 'filtered' : ''}}"
+            bindtap="onToggleDropdown" data-type="publisher">
+        <text class="filter-label">{{filterPublisher || '发布人'}}</text>
+        <text class="filter-arrow">{{activeDropdown === 'publisher' ? '▲' : '▼'}}</text>
       </view>
-    </picker>
-    <view class="filter-action" bindtap="goMyGrabs">
-      <text>我的抢单 ›</text>
+      <view class="filter-sep"></view>
+      <view class="filter-item {{activeDropdown === 'salary' ? 'active' : filterSalaryKey ? 'filtered' : ''}}"
+            bindtap="onToggleDropdown" data-type="salary">
+        <text class="filter-label">{{filterSalaryLabel || '薪资区间'}}</text>
+        <text class="filter-arrow">{{activeDropdown === 'salary' ? '▲' : '▼'}}</text>
+      </view>
+      <view class="filter-sep"></view>
+      <view class="filter-item {{activeDropdown === 'type' ? 'active' : filterServiceType ? 'filtered' : ''}}"
+            bindtap="onToggleDropdown" data-type="type">
+        <text class="filter-label">{{filterServiceTypeLabel || '工种'}}</text>
+        <text class="filter-arrow">{{activeDropdown === 'type' ? '▲' : '▼'}}</text>
+      </view>
     </view>
+
+    <!-- 发布人下拉 -->
+    <view wx:if="{{activeDropdown === 'publisher'}}" class="filter-panel">
+      <view class="filter-panel-item {{filterPublisher === '' ? 'selected' : ''}}"
+            bindtap="onSelectPublisher" data-value="">全部</view>
+      <view wx:for="{{publisherOptions}}" wx:key="value"
+            class="filter-panel-item {{filterPublisher === item.value ? 'selected' : ''}}"
+            bindtap="onSelectPublisher" data-value="{{item.value}}">{{item.label}}</view>
+      <view wx:if="{{!publisherOptions.length}}" class="filter-panel-empty">暂无发布人数据</view>
+    </view>
+
+    <!-- 薪资区间下拉 -->
+    <view wx:if="{{activeDropdown === 'salary'}}" class="filter-panel">
+      <view wx:for="{{salaryOptions}}" wx:key="value"
+            class="filter-panel-item {{filterSalaryKey === item.value ? 'selected' : ''}}"
+            bindtap="onSelectSalary" data-value="{{item.value}}">{{item.label}}</view>
+    </view>
+
+    <!-- 工种下拉 -->
+    <view wx:if="{{activeDropdown === 'type'}}" class="filter-panel">
+      <view wx:for="{{serviceTypes}}" wx:key="value"
+            class="filter-panel-item {{filterServiceType === item.value ? 'selected' : ''}}"
+            bindtap="onSelectServiceType" data-value="{{item.value}}">{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 右下角悬浮：我的抢单 -->
+  <view class="fab-my-grabs" bindtap="goMyGrabs">
+    <text class="fab-icon">📋</text>
+    <text class="fab-text">我的抢单</text>
   </view>
 
   <!-- 订单列表 -->
@@ -20,7 +61,8 @@
           bindtap="goDetail" data-id="{{item._id}}">
       <view class="order-head">
         <text class="order-title">{{item.title || '家政服务订单'}}</text>
-        <text wx:if="{{item.grabbedTag}}" class="order-tag {{item.grabbedTagClass}}">{{item.grabbedTag}}</text>
+        <!-- 右上角显示发布人，无发布人时兜底显示工种 -->
+        <text wx:if="{{item.publisherText}}" class="order-tag order-tag-publisher">{{item.publisherText}}</text>
         <text wx:else class="order-tag">{{item.serviceTypeLabel}}</text>
       </view>
 

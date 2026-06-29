@@ -40,7 +40,9 @@
 
 
 .hero-video,
-.hero-image {
+.hero-image,
+.hero-image-swiper,
+.hero-image-swiper-item {
   width: 100%;
   height: 100%;
   display: block;
@@ -1088,6 +1090,251 @@
 
 
 
+/* ========== 认证卡片 ========== */
+.auth-card {
+  background: linear-gradient(135deg, #FFEFD3 0%, #FFE1BA 100%);
+  border-radius: 24rpx;
+  padding: 0;
+  margin: 0 0 24rpx 0;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03);
+}
+
+.auth-header {
+  padding: 36rpx 40rpx 48rpx;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* 顶部右上角的弧形装饰色块 */
+.auth-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.auth-shield {
+  position: relative;
+  width: 140rpx;
+  height: 168rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6rpx;
+  margin-right: 28rpx;
+}
+
+.auth-shield-bg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  filter: drop-shadow(0 4rpx 12rpx rgba(220, 170, 100, 0.25));
+}
+
+.auth-shield-text {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #B28247;
+  line-height: 1.25;
+  margin-top: -12rpx;
+  letter-spacing: 2rpx;
+  text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.6);
+}
+
+.auth-header-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-slogan-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 28rpx;
+}
+
+.auth-slogan {
+  font-size: 34rpx;
+  font-weight: 400;
+  color: #AF7836;
+  letter-spacing: 3rpx;
+}
+
+.auth-arrow {
+  color: #AF7836;
+  font-size: 28rpx;
+  margin-left: auto; /* 将箭头推到最右侧 */
+  font-weight: 300;
+  opacity: 0.8;
+}
+
+.auth-icons-row {
+  display: flex;
+  justify-content: flex-start;
+  gap: 40rpx;
+}
+
+.auth-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.auth-icon-box {
+  position: relative;
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.auth-icon {
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+}
+
+.auth-icon-badge {
+  position: absolute;
+  right: -10rpx;
+  bottom: -10rpx;
+  width: 28rpx;
+  height: 28rpx;
+}
+
+.auth-icon-text {
+  font-size: 22rpx;
+  color: #AF7836;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.auth-list {
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 32rpx 32rpx;
+  position: relative;
+  /* 用负margin让白色内容区上浮盖住头部，实现圆角交叠效果 */
+  margin-top: -24rpx;
+}
+
+.auth-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 32rpx;
+  line-height: 1.5;
+}
+
+.auth-item:last-child {
+  margin-bottom: 0;
+}
+
+.auth-check-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-top: 2rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.auth-item-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+  width: 140rpx;
+  flex-shrink: 0;
+}
+
+.auth-item-value {
+  font-size: 28rpx;
+  color: #666;
+  flex: 1;
+}
+
+.auth-item-highlight {
+  color: #C75C29;
+}
+
+/* 背景调查「实时更新」标签 */
+.auth-realtime-tag {
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 12rpx;
+  font-size: 20rpx;
+  color: #C9A86A;
+  background: #FBF3E4;
+  padding: 2rpx 14rpx;
+  border-radius: 16rpx;
+  line-height: 1.6;
+}
+
+/* ========== 服务流程 ========== */
+.service-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.flow-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.flow-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.flow-icon-wrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #F8F8FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flow-icon-img {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.flow-label {
+  font-size: 24rpx;
+  color: #333;
+  white-space: nowrap;
+}
+
+.flow-dots {
+  flex-shrink: 0;
+  width: 32rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #C9A86A;
+  letter-spacing: 2rpx;
+}
+
 /* ========== 底部提示和操作栏 ========== */
 .safe-tip {
   width: 100%;
@@ -1097,6 +1344,7 @@
   padding: 0;
   line-height: 1.6;
   box-sizing: border-box;
+  text-align: center;
 }
 
 

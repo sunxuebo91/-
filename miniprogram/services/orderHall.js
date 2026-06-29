@@ -21,6 +21,9 @@ const getOrderList = (params = {}) => {
   };
   if (params.serviceType) data.serviceType = params.serviceType;
   if (params.area && String(params.area).trim()) data.area = String(params.area).trim();
+  if (params.publisherName && String(params.publisherName).trim()) data.publisherName = String(params.publisherName).trim();
+  if (params.salaryMin) data.salaryMin = params.salaryMin;
+  if (params.salaryMax) data.salaryMax = params.salaryMax;
 
   return publicRequest({
     url: '/order-hall/miniprogram/orders',

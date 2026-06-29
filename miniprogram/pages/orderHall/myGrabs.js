@@ -2,10 +2,11 @@ const orderHallService = require('../../services/orderHall.js');
 
 // 与 接单大厅列表 / 订单详情 统一文案
 const STATUS_MAP = {
-  pending:   { text: '抢单中', color: '#f5572b' },
-  accepted:  { text: '已录用', color: '#27ae60' },
-  rejected:  { text: '未录用', color: '#e74c3c' },
-  cancelled: { text: '已取消', color: '#999'    },
+  pending:   { text: '审核中',   color: '#f5a623' },
+  approved:  { text: '审核通过', color: '#C9A86A' },
+  accepted:  { text: '已录用',   color: '#27ae60' },
+  rejected:  { text: '已拒绝',   color: '#e74c3c' },
+  cancelled: { text: '已取消',   color: '#999'    },
 };
 
 const SERVICE_TYPE_MAP = {

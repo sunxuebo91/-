@@ -162,6 +162,61 @@ function formatDistrict(district) {
   return DISTRICT_MAP[district.toLowerCase()] || district;
 }
 
+/**
+ * 认证卡片里的技能认证工种：去掉“住家/白班”，保姆/小时工统一展示为“家政师”。
+ */
+function formatCertificationJobType(jobType, jobTypeText) {
+  const typeKey = (jobType || '').toString().trim().toLowerCase();
+  const originalText = (jobTypeText || JOB_TYPE_MAP[typeKey] || jobType || '').toString().trim();
+
+  if (typeKey === 'xiaoshi' || typeKey.includes('baomu') || /小时工|保姆/.test(originalText)) {
+    return '家政师';
+  }
+
+  return originalText.replace(/^(住家|白班)/, '').trim() || '家政师';
+}
+
+/**
+ * 后端可返回背调记录数组/数量/布尔值；这里只判断“是否存在最新背调记录”。
+ */
+function hasBackgroundCheckRecord(data = {}) {
+  const arrayKeys = [
+    'backgroundCheckRecords',
+    'backgroundChecks',
+    'backcheckRecords',
+    'bgCheckRecords',
+    'backgroundInvestigations',
+    'backgroundInvestigationRecords'
+  ];
+  if (arrayKeys.some((key) => Array.isArray(data[key]) && data[key].length > 0)) return true;
+
+  const countKeys = ['backgroundCheckRecordCount', 'backgroundCheckCount', 'backcheckRecordCount'];
+  for (const key of countKeys) {
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+      return Number(data[key]) > 0;
+    }
+  }
+
+  const booleanKeys = [
+    'hasBackgroundCheckRecord',
+    'hasBackgroundRecord',
+    'hasBackcheckRecord',
+    'backgroundCheckRecordExists',
+    'backgroundCheck'
+  ];
+  for (const key of booleanKeys) {
+    if (typeof data[key] === 'boolean') return data[key];
+  }
+
+  const objectKeys = [
+    'latestBackgroundCheckRecord',
+    'latestBackgroundCheck',
+    'backgroundCheckRecord',
+    'backgroundInvestigation'
+  ];
+  return objectKeys.some((key) => data[key] && typeof data[key] === 'object' && Object.keys(data[key]).length > 0);
+}
+
 // 推荐理由：生成“默认 TopN + 展开/收起”的视图数据，并让每行左右对齐铺满
 function buildRecommendationView(tagsAll, expanded, limit, itemsPerRow = 3) {
   const all = Array.isArray(tagsAll) ? tagsAll : [];
@@ -264,6 +319,9 @@ Page({
     heroThumbPhotosPreview: [],
     // 媒体总数量（视频+照片）
     heroTotalMediaCount: 0,
+    // 主图横向滑动图片列表
+    heroImageSwiperItems: [],
+    heroImageSwiperCurrent: 0,
 
     // 证书（用于"获取证书"票券展示）
     certTicketsAll: [],
@@ -531,6 +589,12 @@ Page({
           listLikeCoverFileId
         });
 
+        const jobTypeText = JOB_TYPE_MAP[data.jobType] || data.jobTypeText || data.jobType;
+        const authJobTypeText = formatCertificationJobType(data.jobType, jobTypeText);
+        const authBackgroundCheckText = hasBackgroundCheckRecord(data)
+          ? '最新背调结果通过'
+          : '暂无最新背调记录';
+
         const detail = {
           _id: resumeId,
           resumeNoText: resumeId ? resumeId.slice(-8) : '00000000',
@@ -539,7 +603,9 @@ Page({
           age: data.age,
           gender: data.gender === 'female' ? '女' : '男',
           jobType: data.jobType,
-          jobTypeText: JOB_TYPE_MAP[data.jobType] || data.jobType,
+          jobTypeText,
+          authSkillCertificationText: `${authJobTypeText}认证通过`,
+          authBackgroundCheckText,
           education: data.education,
           educationText: EDUCATION_MAP[data.education] || data.education,
           experienceYears: data.experienceYears,
@@ -985,7 +1051,10 @@ Page({
               ...reportUrls
             ];
         const allPhotoUrls = Array.from(new Set(allAlbumUrls.filter(Boolean))).filter((u) => !certificateUrls.includes(u));
-        const heroTotalMediaCount = (detailWithAvatar.videoFileId ? 1 : 0) + allPhotoUrls.length;
+        const firstHeroImage = detailWithAvatar.avatarSrc || detailWithAvatar.coverFileId || avatarUrl || '';
+        const heroImageUrls = Array.from(new Set([firstHeroImage, ...allPhotoUrls].filter(Boolean)));
+        const heroImageSwiperItems = heroImageUrls.map((url) => makeThumb(url, photoCategories[url] || ''));
+        const heroTotalMediaCount = (detailWithAvatar.videoFileId ? 1 : 0) + heroImageUrls.length;
 
 
         // 证书票券：优先使用 certificates 数组，并尽量关联 skills 的名称
@@ -1047,6 +1116,8 @@ Page({
           heroThumbPhotos,
           heroThumbPhotosPreview,
           heroTotalMediaCount,
+          heroImageSwiperItems,
+          heroImageSwiperCurrent: 0,
           certTicketsAll,
           certTicketsShowSwipeHint,
 
@@ -1059,7 +1130,7 @@ Page({
 
           loaded: true,
           heroMediaType: detailWithAvatar.videoFileId ? 'video' : 'image',
-          heroSelectedImage: '',
+          heroSelectedImage: detailWithAvatar.videoFileId ? '' : ((heroImageSwiperItems[0] && heroImageSwiperItems[0].url) || ''),
           heroShowCenterPlayBtn: detailWithAvatar.videoFileId ? true : false
         });
 
@@ -1201,9 +1272,31 @@ Page({
     if (type === 'image' && url) {
       // 切换成图片时暂停视频，避免后台继续播放
       this.pauseHeroVideo();
-      this.setData({ heroMediaType: 'image', heroSelectedImage: url });
+      const index = this.findHeroImageSwiperIndex(url);
+      this.setData({
+        heroMediaType: 'image',
+        heroSelectedImage: url,
+        heroImageSwiperCurrent: index >= 0 ? index : 0
+      });
     }
 
+  },
+
+  findHeroImageSwiperIndex(url) {
+    const list = this.data.heroImageSwiperItems || [];
+    return list.findIndex((item) => item && item.url === url);
+  },
+
+  onHeroImageSwiperChange(e) {
+    const current = (e && e.detail && typeof e.detail.current === 'number') ? e.detail.current : 0;
+    const item = (this.data.heroImageSwiperItems || [])[current];
+    if (!item || !item.url) return;
+
+    this.setData({
+      heroMediaType: 'image',
+      heroImageSwiperCurrent: current,
+      heroSelectedImage: item.url
+    });
   },
 
   // 查看全部照片：进入相册页（按分类展示）

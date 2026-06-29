@@ -112,6 +112,22 @@ Page({
       if (res && res.success) {
         // 持久化本次抢单使用的手机号，供"我的抢单"页在未登录 CRM 时也能定位身份
         try { wx.setStorageSync('orderHall_lastPhone', phone); } catch (_) {}
+
+        // 通知订单发布人（员工）：fire-and-forget，不阻塞主流程
+        const publisherPhone = res.data && res.data.publisherPhone;
+        if (publisherPhone) {
+          wx.cloud.callFunction({
+            name: 'notificationService',
+            data: {
+              action: 'sendOrderGrabNotify',
+              publisherPhone,
+              auntieName: name,
+              serviceTypeLabel: this.data.serviceTypeLabel,
+              orderId: this.data.orderId,
+            },
+          }).catch(e => console.warn('[grab] 通知发布人失败（不影响抢单）:', e));
+        }
+
         wx.showToast({ title: '抢单成功，等待顾问联系', icon: 'success' });
         setTimeout(() => {
           wx.redirectTo({ url: '/pages/orderHall/myGrabs' });

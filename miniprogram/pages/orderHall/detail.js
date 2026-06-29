@@ -45,9 +45,10 @@ function fmtDate(val) {
 
 // 与 接单大厅列表 / 我的抢单 统一文案
 const GRAB_STATUS_TEXT = {
-  pending:   '抢单中',
+  pending:   '审核中',
+  approved:  '审核通过',
   accepted:  '已录用',
-  rejected:  '未录用',
+  rejected:  '已拒绝',
   cancelled: '已取消',
 };
 
