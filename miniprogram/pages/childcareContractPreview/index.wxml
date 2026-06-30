@@ -2,7 +2,7 @@
   <!-- 头部 -->
   <view class="header">
     <view class="header-content">
-      <image class="header-icon" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <image class="header-icon" src="/images/icons_v2/document.png" mode="aspectFit"></image>
       <view class="header-title">育儿嫂服务合同</view>
       <view class="header-subtitle">安得家政服务合同20260121</view>
     </view>
@@ -11,12 +11,12 @@
   <!-- 操作按钮区域 -->
   <view class="actions-container">
     <view class="action-card" bindtap="previewContract">
-      <image class="action-icon view-icon" src="/images/icons/view.svg" mode="aspectFit"></image>
+      <image class="action-icon view-icon" src="/images/icons_v2/view.png" mode="aspectFit"></image>
       <view class="action-label">查看</view>
     </view>
     
     <button class="action-card share-card" open-type="share">
-      <image class="action-icon share-icon" src="/images/icons/share.svg" mode="aspectFit"></image>
+      <image class="action-icon share-icon" src="/images/icons_v2/share.png" mode="aspectFit"></image>
       <view class="action-label">分享</view>
     </button>
   </view>

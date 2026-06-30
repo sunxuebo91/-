@@ -12,7 +12,7 @@ Page({
     return {
       title: '安得家政育儿嫂服务合同',
       path: '/pages/childcareContractPreview/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 

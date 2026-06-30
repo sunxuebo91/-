@@ -44,9 +44,9 @@ const LEVEL_OPTIONS = [
 // 工种类型选项（大类，不受 ActionSheet 6 条限制）
 const TYPE_OPTIONS = [
   { key: null, label: '全部', emoji: '📋', iconClass: 'icon-all' },
-  { key: 'yuesao', label: '月嫂', icon: '/images/icons/yuexin.svg', iconClass: 'icon-yuexin' },
-  { key: 'yuer', label: '育儿嫂', icon: '/images/icons/yuer.svg', iconClass: 'icon-yuer' },
-  { key: 'baomu', label: '保姆', icon: '/images/icons/baomu.svg', iconClass: 'icon-baomu' },
+  { key: 'yuesao', label: '月嫂', icon: '/images/icons_v2/yuexin.png', iconClass: 'icon-yuexin' },
+  { key: 'yuer', label: '育儿嫂', icon: '/images/icons_v2/yuer.png', iconClass: 'icon-yuer' },
+  { key: 'baomu', label: '保姆', icon: '/images/icons_v2/baomu.png', iconClass: 'icon-baomu' },
   { key: 'zhujia-hulao', label: '住家护老', emoji: '👴', iconClass: 'icon-hulao' }
 ];
 

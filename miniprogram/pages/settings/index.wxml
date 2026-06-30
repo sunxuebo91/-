@@ -6,7 +6,7 @@
       <view class="label">头像</view>
       <view class="value-wrapper">
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" hover-class="avatar-btn-hover">
-          <image class="avatar" src="{{tempAvatarUrl || '/images/icons/avatar.png'}}"></image>
+          <image class="avatar" src="{{tempAvatarUrl || '/images/icons_v2/avatar.png'}}"></image>
           <view class="edit-text">编辑</view>
         </button>
       </view>

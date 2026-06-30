@@ -6,7 +6,7 @@
         <view class="price-card-title">安得阿姨上户须知</view>
         <view class="price-card-subtitle">查看详细上户须知</view>
       </view>
-      <image class="price-card-image" src="/images/icons/info-circle.svg" mode="aspectFit"></image>
+      <image class="price-card-image" src="/images/icons_v2/info-circle.png" mode="aspectFit"></image>
     </view>
     
     <view class="price-card price-card-purple" bindtap="goNannyChildcareContractPreview">
@@ -14,7 +14,7 @@
         <view class="price-card-title">保姆育儿服务合同预览</view>
         <view class="price-card-subtitle">查看最新服务合同</view>
       </view>
-      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <image class="price-card-image" src="/images/icons_v2/flow-contract.png" mode="aspectFit"></image>
     </view>
 
     <view class="price-card price-card-cyan" bindtap="goYueSaoContractDepositPreview">
@@ -22,7 +22,7 @@
         <view class="price-card-title">月嫂服务合同预览（定金）</view>
         <view class="price-card-subtitle">支付定金锁定档期</view>
       </view>
-      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <image class="price-card-image" src="/images/icons_v2/flow-contract.png" mode="aspectFit"></image>
     </view>
 
     <view class="price-card price-card-pink" bindtap="goYueSaoContractFullPreview">
@@ -30,7 +30,7 @@
         <view class="price-card-title">月嫂服务合同预览（全款）</view>
         <view class="price-card-subtitle">一次性支付全款签约</view>
       </view>
-      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <image class="price-card-image" src="/images/icons_v2/flow-contract.png" mode="aspectFit"></image>
     </view>
 
     <view class="price-card price-card-red" bindtap="goNonRefundContractPreview">
@@ -38,7 +38,7 @@
         <view class="price-card-title">家政服务合同预览（不退费）</view>
         <view class="price-card-subtitle">签约后不支持退费</view>
       </view>
-      <image class="price-card-image" src="/images/icons/document.svg" mode="aspectFit"></image>
+      <image class="price-card-image" src="/images/icons_v2/flow-contract.png" mode="aspectFit"></image>
     </view>
 
     <view class="price-card price-card-blue" bindtap="goCompanyIntro">
@@ -46,7 +46,7 @@
         <view class="price-card-title">关于安得褓贝</view>
         <view class="price-card-subtitle">了解品牌故事与服务保障</view>
       </view>
-      <image class="price-card-image" src="/images/icons/baobei-share.svg" mode="aspectFit"></image>
+      <image class="price-card-image logo-image" src="{{shareLogo || '/images/icons_v2/baobei-share.png'}}" mode="aspectFill"></image>
     </view>
 
   </view>

@@ -60,6 +60,7 @@ Page({
     id: '',
     loading: true,
     order: null,
+    errorMsg: '',           // 加载失败时的错误提示
     myGrab: null,          // 当前用户对该订单的抢单记录
     btnText: '立即抢单',
     btnDisabled: false,
@@ -70,7 +71,7 @@ Page({
   onLoad(options) {
     const id = options && options.id;
     if (!id) {
-      wx.showToast({ title: '参数错误', icon: 'none' });
+      this.setData({ loading: false, errorMsg: '参数错误，请返回重试' });
       return;
     }
     this.setData({ id });
@@ -86,12 +87,13 @@ Page({
   },
 
   async loadDetail() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, errorMsg: '' });
     try {
       const res = await orderHallService.getOrderDetail(this.data.id);
       if (!res || !res.success || !res.data) {
-        wx.showToast({ title: (res && res.message) || '加载失败', icon: 'none' });
-        this.setData({ loading: false });
+        const msg = (res && res.message) || '订单加载失败，请返回重试';
+        wx.showToast({ title: msg, icon: 'none' });
+        this.setData({ loading: false, errorMsg: msg });
         return;
       }
       const raw = res.data;
@@ -141,8 +143,9 @@ Page({
       await this.checkMyGrab();
     } catch (e) {
       console.error('[orderHall/detail] 加载失败:', e);
-      wx.showToast({ title: e.message || '网络异常', icon: 'none' });
-      this.setData({ loading: false });
+      const msg = e.message || '网络异常，请重试';
+      wx.showToast({ title: msg, icon: 'none' });
+      this.setData({ loading: false, errorMsg: msg });
     }
   },
 
@@ -246,13 +249,15 @@ Page({
       const staffId      = String(crmUserInfo._id || crmUserInfo.id || crmUserInfo.userId || wx.getStorageSync('userId') || '');
       const staffPhone   = crmUserInfo.phone || wx.getStorageSync('userPhone') || '';
       const staffName    = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
+      const staffAvatar  = crmUserInfo.crmAvatar || crmUserInfo.avatar || '';
 
-      const [qrLocalPath, logoLocalPath] = await Promise.all([
+      const [qrLocalPath, logoLocalPath, avatarLocalPath] = await Promise.all([
         this._getOrderMiniCodePath(order._id, staffId, staffPhone),
         this._downloadImage(POSTER_LOGO_FILE_ID),
+        this._downloadImage(staffAvatar),
       ]);
 
-      const posterPath = await this._drawOrderPosterCanvas(order, qrLocalPath, logoLocalPath, staffName, staffPhone);
+      const posterPath = await this._drawOrderPosterCanvas(order, qrLocalPath, logoLocalPath, staffName, staffPhone, avatarLocalPath);
       wx.hideLoading();
       wx.showShareImageMenu({
         path: posterPath,
@@ -309,7 +314,7 @@ Page({
   },
 
   // Canvas 绘制订单海报（深紫渐变背景 + 内容信息 + 顾问区 + QR）
-  _drawOrderPosterCanvas(order, qrLocalPath, logoLocalPath, staffName, staffPhone) {
+  _drawOrderPosterCanvas(order, qrLocalPath, logoLocalPath, staffName, staffPhone, avatarLocalPath) {
     return new Promise((resolve, reject) => {
       wx.createSelectorQuery().in(this).select('#orderPosterCanvas')
         .fields({ node: true, size: true })
@@ -319,7 +324,7 @@ Page({
             if (!canvas) return reject(new Error('Canvas \u672a\u627e\u5230'));
             const ctx = canvas.getContext('2d');
             const dpr = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).pixelRatio || 2;
-            const W = 375, H = 600; // \u9ad8\u5ea6\u4ece 640 \u7f29\u5c0f\u5230 600\uff0c\u66f4\u9002\u5408\u670b\u53cb\u5708\u5c55\u793a
+            const W = 375, H = 565; // \u9ad8\u5ea6 640->600->565\uff0c\u88c1\u6389\u5e95\u90e8\u591a\u4f59\u7a7a\u767d
             canvas.width  = W * dpr;
             canvas.height = H * dpr;
             ctx.scale(dpr, dpr);
@@ -337,7 +342,8 @@ Page({
             // \u2500\u2500 \u8f85\u52a9\uff1a\u81ea\u52a8\u6362\u884c\u7ed8\u5236\u6587\u5b57\uff0c\u8fd4\u56de\u5b9e\u9645\u884c\u6570 \u2500\u2500
             const drawWrapped = (text, x, y, maxW, lineH, maxLines) => {
               const chars = text.split('');
-              let line = '', count = 0;\n              for (const ch of chars) {
+              let line = '', count = 0;
+              for (const ch of chars) {
                 const test = line + ch;
                 if (ctx.measureText(test).width > maxW) {
                   if (count >= maxLines - 1) {
@@ -354,24 +360,43 @@ Page({
               return count;
             };
 
-            // \u2500\u2500 Layer 1: \u6df1\u7d2b\u6e10\u53d8\u80cc\u666f \u2500\u2500
-            const bg = ctx.createLinearGradient(0, 0, 0, H);
-            bg.addColorStop(0, '#1a0533');
-            bg.addColorStop(0.45, '#2d1060');
-            bg.addColorStop(1, '#0f0520');
-            ctx.fillStyle = bg;
-            ctx.fillRect(0, 0, W, H);
+            // ── Layer 1: 背景（员工头像 cover 铺满 + 紫色半透明蒙版；无头像时回退纯紫渐变）──
+            if (avatarLocalPath) {
+              const avatarImg = canvas.createImage();
+              avatarImg.src = avatarLocalPath;
+              await new Promise(r => { avatarImg.onload = r; avatarImg.onerror = r; });
+              const iw = avatarImg.width || W, ih = avatarImg.height || H;
+              const scale = Math.max(W / iw, H / ih);
+              const dw = iw * scale, dh = ih * scale;
+              ctx.drawImage(avatarImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+              const ov = ctx.createLinearGradient(0, 0, 0, H);
+              ov.addColorStop(0,   'rgba(26,5,51,0.80)');
+              ov.addColorStop(0.5, 'rgba(45,16,96,0.74)');
+              ov.addColorStop(1,   'rgba(15,5,32,0.90)');
+              ctx.fillStyle = ov;
+              ctx.fillRect(0, 0, W, H);
+            } else {
+              const bg = ctx.createLinearGradient(0, 0, 0, H);
+              bg.addColorStop(0, '#1a0533');
+              bg.addColorStop(0.45, '#2d1060');
+              bg.addColorStop(1, '#0f0520');
+              ctx.fillStyle = bg;
+              ctx.fillRect(0, 0, W, H);
+            }
 
             // \u88c5\u9970\u5149\u6655\u5706
-            ctx.beginPath(); ctx.arc(W + 20, -20, 130, 0, Math.PI * 2);\n            ctx.fillStyle = 'rgba(135,102,243,0.18)'; ctx.fill();
-            ctx.beginPath(); ctx.arc(-30, H - 50, 100, 0, Math.PI * 2);\n            ctx.fillStyle = 'rgba(135,102,243,0.12)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(W + 20, -20, 130, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(135,102,243,0.18)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(-30, H - 50, 100, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(135,102,243,0.12)'; ctx.fill();
 
             // \u2500\u2500 Layer 2: Logo \u2500\u2500
             if (logoLocalPath) {
               const logoImg = canvas.createImage();
               logoImg.src = logoLocalPath;
               await new Promise(r => { logoImg.onload = r; logoImg.onerror = r; });
-              ctx.drawImage(logoImg, W - 80, 10, 70, 70);\n            }
+              ctx.drawImage(logoImg, W - 80, 10, 70, 70);
+            }
 
             // \u2500\u2500 Layer 3: \u54c1\u724c\u6587\u5b57 \u2500\u2500
             ctx.textBaseline = 'top';
@@ -402,35 +427,51 @@ Page({
               ctx.textAlign = 'left';
             }
 
-            // \u2500\u2500 Layer 5: \u5173\u952e\u4fe1\u606f\u4e09\u683c \u2500\u2500
+            // \u2500\u2500 Layer 5+6: \u5173\u952e\u4fe1\u606f + \u7528\u6237\u8981\u6c42\uff08\u5408\u5e76\u4e3a\u4e00\u680f\uff0c\u7a7a\u503c\u4e0d\u5c55\u793a\uff09\u2500\u2500
             const INFO_Y = 150;
             ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 0.8;
             ctx.beginPath(); ctx.moveTo(20, INFO_Y - 15); ctx.lineTo(W - 20, INFO_Y - 15); ctx.stroke();
 
-            const infoItems = [\n              { label: '\u4e0a\u6237\u65f6\u95f4', value: order.expectedStartText || order.dueDateText || '--' },\n              { label: '\u670d\u52a1\u5468\u671f', value: order.serviceDaysText  || '--' },\n              { label: '\u5730\u533a',     value: order.area             || '--' },\n            ];
-            const colW = (W - 40) / 3;
-            ctx.textBaseline = 'top';
-            infoItems.forEach((item, i) => {\n              const cx = 20 + colW * i;
-              ctx.fillStyle = '#C8A96E';
-              ctx.font = 'bold 16px sans-serif'; // 13 -> 16
-              ctx.fillText(item.value.slice(0, 8), cx, INFO_Y);
-              ctx.fillStyle = 'rgba(255,255,255,0.6)'; // 0.45 -> 0.6
-              ctx.font = '13px sans-serif'; // 11 -> 13
-              ctx.fillText(item.label, cx, INFO_Y + 24);
+            // \u5173\u952e\u4fe1\u606f\u9879\uff08\u7a7a\u503c\u6216 '--' \u4e0d\u5c55\u793a\uff09\uff0c\u5e76\u5165\u7528\u6237\u8981\u6c42\u7f51\u683c
+            const headItems = [];
+            const pushInfo = (label, value) => {
+              const v = String(value || '').trim();
+              if (v && v !== '--') headItems.push({ label, value: v });
+            };
+            pushInfo('\u4e0a\u6237\u65f6\u95f4', order.expectedStartText || order.dueDateText);
+            pushInfo('\u670d\u52a1\u5468\u671f', order.serviceDaysText);
+            pushInfo('\u5730\u533a', order.area);
+
+            const reqSrc = (order.requirementsList || []).filter((r) => {
+              const v = String(r.value || '').trim();
+              return v && v !== '--';
             });
+            const usedLabels = new Set(headItems.map((it) => it.label));
+            const mergedReq = headItems.concat(reqSrc.filter((r) => !usedLabels.has(r.label)));
 
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';\n            ctx.beginPath(); ctx.moveTo(20, INFO_Y + 55); ctx.lineTo(W - 20, INFO_Y + 55); ctx.stroke();
-
-            // \u2500\u2500 Layer 6: \u7528\u6237\u8981\u6c42 \u2500\u2500
-            let curY = INFO_Y + 70;
-            if (order.requirementsList && order.requirementsList.length) {
+            let curY = INFO_Y;
+            ctx.textAlign = 'left';
+            if (mergedReq.length) {
               ctx.fillStyle = 'rgba(255,255,255,0.6)';
-              ctx.font = '13px sans-serif'; ctx.textBaseline = 'top'; // 11 -> 13
+              ctx.font = '13px sans-serif'; ctx.textBaseline = 'top';
               ctx.fillText('\u7528\u6237\u8981\u6c42', 20, curY);
               curY += 22;
               const rColW = (W - 40) / 2;
-              order.requirementsList.slice(0, 6).forEach((req, i) => {\n                const col = i % 2, row = Math.floor(i / 2);\n                const rx = 20 + col * rColW;\n                const ry = curY + row * 26;\n                ctx.fillStyle = 'rgba(255,255,255,0.5)';\n                ctx.font = '14px sans-serif'; ctx.textBaseline = 'top';\n                ctx.fillText(req.label, rx, ry);\n                const lw = ctx.measureText(req.label).width + 8;\n                ctx.fillStyle = 'rgba(255,255,255,0.95)';\n                ctx.fillText(req.value, rx + lw, ry);\n              });
-              const reqRows = Math.ceil(Math.min(order.requirementsList.length, 6) / 2);\n              curY += reqRows * 26 + 18;\n            }
+              const showReq = mergedReq.slice(0, 8);
+              showReq.forEach((req, i) => {
+                const col = i % 2, row = Math.floor(i / 2);
+                const rx = 20 + col * rColW;
+                const ry = curY + row * 26;
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '14px sans-serif'; ctx.textBaseline = 'top';
+                ctx.fillText(req.label, rx, ry);
+                const lw = ctx.measureText(req.label).width + 8;
+                ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                ctx.fillText(req.value, rx + lw, ry);
+              });
+              const reqRows = Math.ceil(showReq.length / 2);
+              curY += reqRows * 26 + 18;
+            }
 
             // \u2500\u2500 Layer 7: \u5de5\u4f5c\u5185\u5bb9 \u2500\u2500
             if (order.workContent) {
@@ -474,10 +515,10 @@ Page({
             const staffMidY = SEP_Y + (H - SEP_Y) / 2 - 5;
             ctx.fillStyle = '#C8A96E';
             ctx.font = 'bold 18px sans-serif'; ctx.textBaseline = 'middle'; // 15 -> 18
-            ctx.fillText('\u987e\u95ee\uff1a' + (staffName || '\u5b89\u5f97\u8913\u8d1d'), 20, staffMidY - 20);
+            ctx.fillText('\u8001\u5e08\uff1a' + (staffName || '\u5b89\u5f97\u8913\u8d1d'), 20, staffMidY - 20);
             ctx.fillStyle = 'rgba(255,255,255,0.8)';
             ctx.font = '14px sans-serif'; // 12 -> 14
-            ctx.fillText(staffPhone || '', 20, staffMidY + 6);
+            ctx.fillText('\u7535\u8bdd\uff1a' + (staffPhone || ''), 20, staffMidY + 6);
             ctx.fillStyle = 'rgba(200,169,110,0.6)';
             ctx.font = 'italic 12px sans-serif'; // 11 -> 12
             ctx.fillText('\u4e3a\u7231\uff0c\u5168\u529b\u4ee5\u8d74\uff01', 20, staffMidY + 30);

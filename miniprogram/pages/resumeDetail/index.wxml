@@ -236,7 +236,7 @@
   <!-- 自我介绍 -->
   <view class="section" wx:if="{{detail.intro}}">
     <view class="section-title-with-icon">
-      <image class="section-icon" src="/images/icons/info-circle.svg" mode="aspectFit"></image>
+      <image class="section-icon" src="/images/icons_v2/info-circle.png" mode="aspectFit"></image>
       <text class="section-title-text">自我介绍</text>
     </view>
     <view class="intro">{{detail.intro}}</view>
@@ -245,7 +245,7 @@
   <!-- 推荐理由标签 -->
   <view class="section" wx:if="{{detail.recommendationTags && detail.recommendationTags.length > 0}}">
     <view class="section-title-with-icon">
-      <image class="section-icon" src="/images/icons/thumbs-up.svg" mode="aspectFit"></image>
+      <image class="section-icon" src="/images/icons_v2/thumbs-up.png" mode="aspectFit"></image>
       <text class="section-title-text">推荐理由</text>
     </view>
 
@@ -279,7 +279,7 @@
   </view>
   <view class="section" wx:elif="{{detail.intro}}">
     <view class="section-title-with-icon">
-      <image class="section-icon" src="/images/icons/thumbs-up.svg" mode="aspectFit"></image>
+      <image class="section-icon" src="/images/icons_v2/thumbs-up.png" mode="aspectFit"></image>
       <text class="section-title-text">推荐理由</text>
     </view>
     <view class="no-recommendation-tags">暂无推荐理由</view>
@@ -288,7 +288,7 @@
   <!-- 工作经历 -->
   <view class="section" wx:if="{{detail.workExperiences && detail.workExperiences.length}}">
     <view class="section-title-with-icon">
-      <image class="section-icon" src="/images/icons/work-experience.svg" mode="aspectFit"></image>
+      <image class="section-icon" src="/images/icons_v2/work-experience.png" mode="aspectFit"></image>
       <text class="section-title-text">工作经历</text>
     </view>
 
@@ -298,7 +298,7 @@
         <!-- 左侧：月嫂标签 + 日期 -->
         <view class="work-period">
           <view class="period-main">
-            <image class="period-icon" src="{{item.jobTypeIcon || '/images/icons/work-experience.svg'}}" mode="aspectFit"></image>
+            <image class="period-icon" src="{{item.jobTypeIcon || '/images/icons_v2/work-experience.png'}}" mode="aspectFit"></image>
             <text class="period-text">{{item.jobTypeText || item.jobType || detail.jobTypeText || '服务'}}</text>
           </view>
           <text class="period-date">{{item.startDate || '—'}}-{{item.endDate || '至今'}}</text>
@@ -329,7 +329,7 @@
 
         <!-- 服务区域 -->
         <view class="service-area" wx:if="{{item.serviceArea}}">
-          <image class="area-icon" src="data:image/svg+xml;base64,PHN2ZyB0PSIxNzY3OTY2MzYwMzUxIiBjbGFzcz0iaWNvbiIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHAtaWQ9IjU1MjkxIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+PHBhdGggZD0iTTUxMiAyNDkuOTc2NDcxYy05OS4zODgyMzUgMC0xODAuNzA1ODgyIDgxLjMxNzY0Ny0xODAuNzA1ODgyIDE4MC43MDU4ODJzODEuMzE3NjQ3IDE4MC43MDU4ODIgMTgwLjcwNTg4MiAxODAuNzA1ODgyIDE4MC43MDU4ODItODEuMzE3NjQ3IDE4MC43MDU4ODItMTgwLjcwNTg4Mi04MS4zMTc2NDctMTgwLjcwNTg4Mi0xODAuNzA1ODgyLTE4MC43MDU4ODJ6IG0wIDMwMS4xNzY0N2MtNjYuMjU4ODI0IDAtMTIwLjQ3MDU4OC01NC4yMTE3NjUtMTIwLjQ3MDU4OC0xMjAuNDcwNTg4czU0LjIxMTc2NS0xMjAuNDcwNTg4IDEyMC40NzA1ODgtMTIwLjQ3MDU4OCAxMjAuNDcwNTg4IDU0LjIxMTc2NSAxMjAuNDcwNTg4IDEyMC40NzA1ODgtNTQuMjExNzY1IDEyMC40NzA1ODgtMTIwLjQ3MDU4OCAxMjAuNDcwNTg4eiIgZmlsbD0iIzg3NjZGMyIgcC1pZD0iNTUyOTIiPjwvcGF0aD48cGF0aCBkPSJNNTEyIDM5LjE1Mjk0MWMtMjE2Ljg0NzA1OSAwLTM5MS41Mjk0MTIgMTc0LjY4MjM1My0zOTEuNTI5NDEyIDM5MS41Mjk0MTIgMCAzNDkuMzY0NzA2IDM5MS41Mjk0MTIgNTcyLjIzNTI5NCAzOTEuNTI5NDEyIDU3Mi4yMzUyOTRzMzkxLjUyOTQxMi0yMjIuODcwNTg4IDM5MS41Mjk0MTItNTcyLjIzNTI5NGMwLTIxNi44NDcwNTktMTc0LjY4MjM1My0zOTEuNTI5NDEyLTM5MS41Mjk0MTItMzkxLjUyOTQxMnogbTAgODkxLjQ4MjM1M0M0MjQuNjU4ODI0IDg3My40MTE3NjUgMTgwLjcwNTg4MiA2ODYuNjgyMzUzIDE4MC43MDU4ODIgNDMwLjY4MjM1M2MwLTE4My43MTc2NDcgMTQ3LjU3NjQ3MS0zMzEuMjk0MTE4IDMzMS4yOTQxMTgtMzMxLjI5NDExOHMzMzEuMjk0MTE4IDE0Ny41NzY0NzEgMzMxLjI5NDExOCAzMzEuMjk0MTE4YzAgMjU2LTI0My45NTI5NDEgNDQyLjcyOTQxMi0zMzEuMjk0MTE4IDQ5OS45NTI5NDF6IiBmaWxsPSIjODc2NkYzIiBwLWlkPSI1NTI5MyI+PC9wYXRoPjwvc3ZnPg=="></image>
+          <image class="area-icon" src="/images/icons_v2/location.png"></image>
           <text>{{item.serviceArea}}</text>
         </view>
       </view>
@@ -378,7 +378,7 @@
   <!-- 员工评价 -->
   <view class="section" wx:if="{{(evaluations.statistics && evaluations.statistics.totalCount > 0) || (evaluations.list && evaluations.list.length)}}">
     <view class="section-title-with-icon">
-      <image class="section-icon" src="/images/icons/star.svg" mode="aspectFit"></image>
+      <image class="section-icon" src="/images/icons_v2/star.png" mode="aspectFit"></image>
       <text class="section-title-text">员工评价</text>
     </view>
 
@@ -459,7 +459,7 @@
   <view class="auth-card">
     <view class="auth-header">
       <view class="auth-shield">
-        <image class="auth-shield-bg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTIwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI1MCUiIHkxPSIwJSIgeDI9IjUwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0ZGRiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0ZGRTNEQiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik01MCAwIEM1MCAwIDYgMTQgNiAxNCBWNTUgQzYgOTIgNTAgMTIwIDUwIDEyMCBDNTAgMTIwIDk0IDkyIDk0IDU1IFYxNCBDOTQgMTQgNTAgMCA1MCAwIFoiIGZpbGw9InVybCgjZykiLz48cGF0aCBkPSJNNTAgNCBDNTAgNCAxMSAxNiAxMSAxNiBWNTUgQzExIDg5IDUwIDExNCA1MCAxMTQgQzUwIDExNCA4OSA4OSA4OSA1NSBWMTYgQzg5IDE2IDUwIDQgNTAgNCBaIiBmaWxsPSIjRkZGRiIvPjwvc3ZnPg==" mode="aspectFit"></image>
+        <image class="auth-shield-bg" src="/images/icons_v2/auth-shield.png" mode="aspectFit"></image>
         <view class="auth-shield-text">
           <view>安得</view>
           <view>认证</view>
@@ -473,22 +473,19 @@
         <view class="auth-icons-row">
           <view class="auth-icon-item">
             <view class="auth-icon-box">
-              <image class="auth-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQUY4NTQzIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMkg2YTIgMiAwIDAgMC0yIDJ2MTZhMiAyIDAgMCAwIDIgMmgxMmEyIDIgMCAwIDAgMi0yVjh6Ij48L3BhdGg+PHBvbHlsaW5lIHBvaW50cz0iMTQgMiAxNCA4IDIwIDgiPjwvcG9seWxpbmU+PGxpbmUgeDE9IjE2IiB5MT0iMTMiIHgyPSI4IiB5Mj0iMTMiPjwvbGluZT48bGluZSB4MT0iMTYiIHkxPSIxNyIgeDI9IjgiIHkyPSIxNyI+PC9saW5lPjxwb2x5bGluZSBwb2ludHM9IjEwIDkgOSA5IDggOSI+PC9wb2x5bGluZT48L3N2Zz4=" mode="aspectFit"/>
-              <image class="auth-icon-badge" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTEiIGZpbGw9IiNGRkYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI5IiBmaWxsPSIjQUY4NTQzIi8+PHBhdGggZD0iTTEwIDE0LjVsLTMtMyAxLjUtMS41IDEuNSAxLjUgNC41LTQuNSAxLjUgMS41LTZ6IiBmaWxsPSIjRkZGIi8+PC9zdmc+" mode="aspectFit"/>
+              <image class="auth-icon" src="/images/icons_v2/auth-file-check.png" mode="aspectFit"/>
             </view>
             <text class="auth-icon-text">背景核查</text>
           </view>
           <view class="auth-icon-item">
             <view class="auth-icon-box">
-              <image class="auth-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQUY4NTQzIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNC4zMTggNi4zMThhNC41IDQuNSAwIDAwMCA2LjM2NEwxMiAyMC4zNjRsNy42ODItNy42ODJhNC41IDQuNSAwIDAwLTYuMzY0LTYuMzY0TDEyIDcuNjM2bC0xLjMxOC0xLjMxOGE0LjUgNC41IDAgMDAtNi4zNjQgMHoiLz48cGF0aCBkPSJNMyAxMmg0bDEuNS0yLjUgMyA1LjUgMi0zaDcuNSIvPjwvc3ZnPg==" mode="aspectFit"/>
-              <image class="auth-icon-badge" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTEiIGZpbGw9IiNGRkYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI5IiBmaWxsPSIjQUY4NTQzIi8+PHBhdGggZD0iTTEwIDE0LjVsLTMtMyAxLjUtMS41IDEuNSAxLjUgNC41LTQuNSAxLjUgMS41LTZ6IiBmaWxsPSIjRkZGIi8+PC9zdmc+" mode="aspectFit"/>
+              <image class="auth-icon" src="/images/icons_v2/auth-heart-pulse.png" mode="aspectFit"/>
             </view>
             <text class="auth-icon-text">体检报告</text>
           </view>
           <view class="auth-icon-item">
             <view class="auth-icon-box">
-              <image class="auth-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQUY4NTQzIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNCAxOS41QTIuNSAyLjUgMCAwIDEgNi41IDE3SDIwIj48L3BhdGg+PHBhdGggZD0iTTYuNSAySDIwdjIwSDYuNUEyLjUgMi41IDAgMCAxIDQgMTkuNXYtMTVBMi41IDIuNSAwIDAgMSA2LjUgMnoiPjwvcGF0aD48L3N2Zz4=" mode="aspectFit"/>
-              <image class="auth-icon-badge" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTEiIGZpbGw9IiNGRkYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI5IiBmaWxsPSIjQUY4NTQzIi8+PHBhdGggZD0iTTEwIDE0LjVsLTMtMyAxLjUtMS41IDEuNSAxLjUgNC41LTQuNSAxLjUgMS41LTZ6IiBmaWxsPSIjRkZGIi8+PC9zdmc+" mode="aspectFit"/>
+              <image class="auth-icon" src="/images/icons_v2/auth-certificate.png" mode="aspectFit"/>
             </view>
             <text class="auth-icon-text">职业培训</text>
           </view>
@@ -498,38 +495,38 @@
 
     <view class="auth-list">
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">身份认证</text>
         <text class="auth-item-value">安得褓贝身份认证通过</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">技能认证</text>
         <text class="auth-item-value">{{detail.authSkillCertificationText || '家政师认证通过'}}</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">职业培训</text>
         <text class="auth-item-value">参加家政服务项目并考核通过</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">简历真实</text>
         <text class="auth-item-value auth-item-highlight">已签署真实性承诺</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">上户保险</text>
         <text class="auth-item-value auth-item-highlight">赠送上户后实时保险</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">背景调查</text>
         <text class="auth-item-value">{{detail.authBackgroundCheckText || '暂无最新背调记录'}}</text>
         <text class="auth-realtime-tag">实时更新</text>
       </view>
       <view class="auth-item">
-        <image class="auth-check-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNEREI3NzgiLz48cGF0aCBkPSJNMTAgMTZsLTQtNCAxLjUtMS41IDIuNSAyLjUgNi02TDE3LjUgOC41IDEwIDE2eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg=="></image>
+        <image class="auth-check-icon" src="/images/icons_v2/auth-check-purple.png"></image>
         <text class="auth-item-label">体检报告</text>
         <text class="auth-item-value">指定合作的体检机构完成体检</text>
       </view>
@@ -543,21 +540,21 @@
       <view class="flow-row">
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTE1LjUgMWgtOEM2LjEyIDEgNSAyLjEyIDUgMy41djE3QzUgMjEuODggNi4xMiAyMyA3LjUgMjNoOGMxLjM4IDAgMi41LTEuMTIgMi41LTIuNXYtMTdDMTggMi4xMiAxNi44OCAxIDE1LjUgMXptLTQgMjFjLS44MyAwLTEuNS0uNjctMS41LTEuNXMuNjctMS41IDEuNS0xLjUgMS41LjY3IDEuNSAxLjUtLjY3IDEuNS0xLjUgMS41em0zLjUtNEg3VjRoOHYxNHoiLz48L3N2Zz4=" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-phone.png" mode="aspectFit" />
           </view>
           <text class="flow-label">1.在线预约</text>
         </view>
         <view class="flow-dots">···</view>
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTEyIDIxLjM1bC0xLjQ1LTEuMzJDNS40IDE1LjM2IDIgMTIuMjggMiA4LjUgMiA1LjQyIDQuNDIgMyA3LjUgM2MxLjc0IDAgMy40MS44MSA0LjUgMi4wOUMxMy4wOSAzLjgxIDE0Ljc2IDMgMTYuNSAzIDE5LjU4IDMgMjIgNS40MiAyMiA4LjVjMCAzLjc4LTMuNCA2Ljg2LTguNTUgMTEuNTRMMTIgMjEuMzV6Ii8+PC9zdmc+" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-heart.png" mode="aspectFit" />
           </view>
           <text class="flow-label">2.匹配保姆</text>
         </view>
         <view class="flow-dots">···</view>
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTE0IDExYzAgMi4yMS0xLjc5IDQtNCA0cy00LTEuNzktNC00IDEuNzktNCA0LTQgNCAxLjc5IDQgNHptLTQgNmMtMy4zMSAwLTEwIDEuNjctMTAgNXYyaDIwdi0yYzAtMy4zMy02LjY5LTUtMTAtNXptMTAtN2g0djJoLTR2LTJ6bTAtNGg0djJoLTRWNnoiLz48L3N2Zz4=" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-interview.png" mode="aspectFit" />
           </view>
           <text class="flow-label">3.安排面试</text>
         </view>
@@ -565,21 +562,21 @@
       <view class="flow-row">
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTE0IDJINmMtMS4xIDAtMS45OS45LTEuOTkgMkw0IDIwYzAgMS4xLjg5IDIgMS45OSAySDE4YzEuMSAwIDItLjkgMi0yVjhsLTYtNnptMiAxNkg4di0yaDh2MnptMC00SDh2LTJoOHYyem0tMy01VjMuNUwxOC41IDlIMTN6Ii8+PC9zdmc+" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-contract.png" mode="aspectFit" />
           </view>
           <text class="flow-label">4.签订合同</text>
         </view>
         <view class="flow-dots">···</view>
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTEyLjAwMDQgMjEuNjAwNkwyLjM0NTcgOS4wNDkzTDYuMTU1MjcgMy41SDE3Ljg0NDdMMjEuNjU0MyA5LjA0OTNMMTIuMDAwNCAyMS42MDA2WiIvPjwvc3ZnPg==" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-service.png" mode="aspectFit" />
           </view>
           <text class="flow-label">5.上门服务</text>
         </view>
         <view class="flow-dots">···</view>
         <view class="flow-step">
           <view class="flow-icon-wrap">
-            <image class="flow-icon-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0QxQjU3RSI+PHBhdGggZD0iTTEyIDNDNy4wMyAzIDMgNy4wMyAzIDEydjdjMCAxLjEuOSAyIDIgMmgzdi04SDV2LTFjMC0zLjg3IDMuMTMtNyA3LTdzNyAzLjEzIDcgN3YxaC0zdjhoM2MxLjEgMCAyLS45IDItMnYtN2MwLTQuOTctNC4wMy05LTktOXoiLz48L3N2Zz4=" mode="aspectFit" />
+            <image class="flow-icon-img" src="/images/icons_v2/flow-support.png" mode="aspectFit" />
           </view>
           <text class="flow-label">6.售后服务</text>
         </view>

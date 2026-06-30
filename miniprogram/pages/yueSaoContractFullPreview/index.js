@@ -12,7 +12,7 @@ Page({
     return {
       title: '安得家政月嫂服务合同-全款',
       path: '/pages/yueSaoContractFullPreview/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 

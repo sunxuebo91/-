@@ -33,25 +33,25 @@
     <view class="quick-row">
       <view class="quick-btn" bindtap="goResumeList" data-jobtype="baomu">
         <view class="quick-icon bg-1">
-          <image class="quick-icon-img" src="/images/icons/baomu.svg" mode="aspectFit"></image>
+          <image class="quick-icon-img icon-baomu" src="/images/icons_v2/baomu.png" mode="aspectFit"></image>
         </view>
         <text class="quick-text">保姆</text>
       </view>
       <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuesao">
         <view class="quick-icon bg-2">
-          <image class="quick-icon-img" src="/images/icons/yuexin.svg" mode="aspectFit"></image>
+          <image class="quick-icon-img icon-yuexin" src="/images/icons_v2/yuexin.png" mode="aspectFit"></image>
         </view>
         <text class="quick-text">月嫂</text>
       </view>
       <view class="quick-btn" bindtap="goResumeList" data-jobtype="yuer">
         <view class="quick-icon bg-3">
-          <image class="quick-icon-img" src="/images/icons/yuer.svg" mode="aspectFit"></image>
+          <image class="quick-icon-img icon-yuer" src="/images/icons_v2/yuer.png" mode="aspectFit"></image>
         </view>
         <text class="quick-text">育儿嫂</text>
       </view>
       <view class="quick-btn" bindtap="goResumeList" data-jobtype="hulao">
         <view class="quick-icon bg-4">
-          <image class="quick-icon-img" src="/images/icons/hulao.svg" mode="aspectFit"></image>
+          <image class="quick-icon-img icon-hulao" src="/images/icons_v2/hulao.png" mode="aspectFit"></image>
         </view>
         <text class="quick-text">护老</text>
       </view>
@@ -64,14 +64,14 @@
           <view class="service-card-title">透明服务</view>
           <view class="service-card-subtitle">价格透明 服务透明</view>
         </view>
-        <image class="service-card-image" src="/images/icons/transparent-service.svg" mode="aspectFit"></image>
+        <image class="service-card-image" src="/images/icons_v2/transparent-service.png" mode="aspectFit"></image>
       </view>
       <view class="service-card service-card-green" bindtap="goQA">
         <view class="service-card-content">
           <view class="service-card-title">答疑解惑</view>
           <view class="service-card-subtitle">专业解答 贴心服务</view>
         </view>
-        <image class="service-card-image" src="/images/icons/qa-service.svg" mode="aspectFit"></image>
+        <image class="service-card-image" src="/images/icons_v2/qa-service.png" mode="aspectFit"></image>
       </view>
     </view>
 
@@ -79,7 +79,7 @@
     <view class="diary-entry-card" wx:if="{{showBabyDiaryEntry}}" bindtap="goBabyDiary">
       <view class="diary-left">
         <view class="diary-icon">
-          <image class="diary-icon-img" src="/images/icons/baby-diary.svg" mode="aspectFit"></image>
+          <image class="diary-icon-img" src="/images/icons_v2/baby-diary.png" mode="aspectFit"></image>
         </view>
         <view class="diary-info">
           <view class="diary-title">宝贝日记</view>
@@ -109,7 +109,7 @@
 
       <view class="section-header">
         <view class="section-title">
-          <image class="title-icon" src="/images/icons/baobei-share.svg" mode="aspectFit"></image>
+          <image class="title-icon" src="/images/icons_v2/baobei-share.png" mode="aspectFit"></image>
           <text class="title-text">褓贝分享</text>
         </view>
         <view class="section-more" bindtap="goArticleList">

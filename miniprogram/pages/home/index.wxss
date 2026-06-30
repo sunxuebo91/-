@@ -1,5 +1,5 @@
 page {
-  background: #f7f7fb;
+  background: #EDE8FD; /* 改为主题紫淡色背景 */
   padding-bottom: calc(env(safe-area-inset-bottom) + 120rpx);
 }
 
@@ -10,7 +10,7 @@ page {
 /* 顶部渐变：Banner 区域 */
 .top {
   padding: 24rpx 0 40rpx;
-  background: #ffffff;
+  background: #EDE8FD;
 }
 
 
@@ -26,7 +26,7 @@ page {
   border-radius: 20rpx;
   overflow: hidden;
   border: 1rpx solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16rpx 40rpx rgba(135, 102, 243, 0.2);
 }
 
 
@@ -101,7 +101,7 @@ page {
 /* 白底内容：只保留三个入口 */
 .content {
   margin-top: -16rpx;
-  background: #fff;
+  background: #EDE8FD;
   border-top-left-radius: 32rpx;
   border-top-right-radius: 32rpx;
   padding: 28rpx 24rpx 34rpx;
@@ -118,14 +118,18 @@ page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12rpx;
-  padding: 18rpx 0;
-  border-radius: 20rpx;
-  background: #faf9ff;
+  gap: 14rpx;
+  padding: 24rpx 0 20rpx 0;
+  border-radius: 24rpx;
+  background: #ffffff;
+  border: 1rpx solid rgba(135, 102, 243, 0.15);
+  box-shadow: 0 10rpx 28rpx rgba(135, 102, 243, 0.15);
+  transition: all 0.2s ease;
 }
 
 .quick-btn:active {
-  transform: scale(0.98);
+  transform: translateY(2rpx) scale(0.97);
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.1);
 }
 
 .quick-icon {
@@ -135,14 +139,19 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16rpx 40rpx rgba(17, 24, 39, 0.10);
-  border: 1rpx solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 12rpx 24rpx rgba(135, 102, 243, 0.12);
+  border: 2rpx solid #ffffff;
 }
 
 .quick-icon-img {
-  width: 56rpx;
-  height: 56rpx;
+  width: 76rpx;
+  height: 76rpx;
 }
+/* 各图标内部留白不同，逐个微调至视觉等大 */
+.icon-baomu  { width: 70rpx; height: 70rpx; }  /* 留白少，略缩 */
+.icon-yuexin { width: 86rpx; height: 86rpx; }  /* 留白多，放大 */
+.icon-yuer   { width: 84rpx; height: 84rpx; }
+.icon-hulao  { width: 76rpx; height: 76rpx; }  /* 调小，与其他对齐 */
 
 .quick-text {
   font-size: 26rpx;
@@ -170,28 +179,31 @@ page {
 .service-card {
   flex: 1;
   height: 112rpx;
-  border-radius: 20rpx;
-  padding: 20rpx;
+  border-radius: 24rpx;
+  padding: 20rpx 0rpx 20rpx 30rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(17, 24, 39, 0.08);
+  box-shadow: 0 10rpx 28rpx rgba(135, 102, 243, 0.15);
+  border: 2rpx solid #ffffff; /* 加了一圈白边 */
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .service-card:active {
   transform: translateY(2rpx) scale(0.98);
-  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.06);
+  box-shadow: 0 4rpx 16rpx rgba(135, 102, 243, 0.12);
 }
 
 .service-card-blue {
   background: linear-gradient(135deg, #4F9EFF 0%, #6BB6FF 100%);
+  box-shadow: 0 12rpx 28rpx rgba(79, 158, 255, 0.35); /* 蓝色专属投影 */
 }
 
 .service-card-green {
   background: linear-gradient(135deg, #5FD4A0 0%, #7DE5B8 100%);
+  box-shadow: 0 12rpx 28rpx rgba(95, 212, 160, 0.35); /* 绿色专属投影 */
 }
 
 .service-card-content {
@@ -213,22 +225,24 @@ page {
 }
 
 .service-card-image {
-  width: 84rpx;
-  height: 84rpx;
+  width: 104rpx;
+  height: 104rpx;
   z-index: 2;
   flex-shrink: 0;
+  margin-right: -10rpx; /* 进一步向右拉，抵消图片内部留白 */
 }
 
 /* 宝贝日记入口卡片 */
 .diary-entry-card{
   margin-top: 24rpx;
-  border-radius: 22rpx;
+  border-radius: 24rpx;
   padding: 18rpx 18rpx;
   background: linear-gradient(135deg, #FFE8F0 0%, #EDE7FF 100%);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  box-shadow: 0 10rpx 28rpx rgba(17, 24, 39, 0.08);
+  box-shadow: 0 12rpx 32rpx rgba(135, 102, 243, 0.2);
+  border: 2rpx solid #ffffff;
 }
 
 .diary-entry-card:active{
@@ -237,7 +251,7 @@ page {
 
 .diary-left{display:flex;align-items:center;gap:16rpx}
 .diary-icon{width:84rpx;height:84rpx;border-radius:24rpx;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;border:1rpx solid rgba(255,255,255,0.8)}
-.diary-icon-img{width:56rpx;height:56rpx}
+.diary-icon-img{width:72rpx;height:72rpx}
 .diary-title{font-size:30rpx;font-weight:800;color:#2b1b5a}
 .diary-subtitle{margin-top:6rpx;font-size:22rpx;color:rgba(43,27,90,0.75)}
 .diary-right{display:flex;align-items:center;gap:10rpx}
@@ -247,13 +261,14 @@ page {
 /* 女性力量海报入口 */
 .poster-entry-card {
   margin-top: 24rpx;
-  border-radius: 22rpx;
+  border-radius: 24rpx;
   padding: 22rpx 24rpx;
   background: linear-gradient(135deg, #2d1b69 0%, #1a0a2e 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 10rpx 28rpx rgba(124, 58, 237, 0.25);
+  box-shadow: 0 16rpx 36rpx rgba(45, 27, 105, 0.4);
+  border: 2rpx solid rgba(255, 255, 255, 0.25); /* 深色卡片用半透明白边 */
 }
 .poster-entry-card:active { transform: translateY(2rpx) scale(0.99); }
 .poster-entry-left { display: flex; align-items: center; gap: 20rpx; }
@@ -275,7 +290,7 @@ page {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20rpx;
-  padding: 0 8rpx;
+  padding: 0; /* 移除内边距，使其与下方卡片完全左对齐 */
 }
 
 .section-title {
@@ -285,15 +300,16 @@ page {
 }
 
 .title-icon {
-  width: 36rpx;
-  height: 36rpx;
+  width: 34rpx;
+  height: 34rpx;
   display: block;
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1; /* 让文字垂直居中 */
 }
 
 .section-more {
@@ -302,13 +318,35 @@ page {
   gap: 4rpx;
   font-size: 24rpx;
   line-height: 32rpx;
-  color: #999;
+  color: #8766F3;
+  padding: 8rpx 20rpx;
+  background: #ffffff; /* 换成纯白背景在紫底上更明显 */
+  border-radius: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.12); /* 加上紫色的柔和投影 */
+  transition: all 0.2s;
+}
+
+.section-more:active {
+  background: #f7f5ff;
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 6rpx rgba(135, 102, 243, 0.08);
+}
+
+@keyframes arrow-slide {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6rpx);
+  }
 }
 
 .arrow {
-  font-size: 24rpx;
+  font-size: 26rpx;
   line-height: 32rpx;
-  font-weight: 300;
+  font-weight: 400;
+  display: inline-block;
+  animation: arrow-slide 1.5s ease-in-out infinite;
 }
 
 
@@ -324,14 +362,14 @@ page {
   background: var(--ui-surface);
   border-radius: 16rpx;
   overflow: hidden;
-  border: 1rpx solid var(--ui-border);
-  box-shadow: var(--ui-shadow-card);
+  border: 1rpx solid rgba(135, 102, 243, 0.35);
+  box-shadow: 0 8rpx 24rpx rgba(135, 102, 243, 0.12);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .article-card:active {
   transform: translateY(2rpx) scale(0.99);
-  box-shadow: 0 8rpx 20rpx rgba(17, 24, 39, 0.06);
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.1);
 }
 
 /* 文章封面 */

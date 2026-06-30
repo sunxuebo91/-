@@ -724,22 +724,24 @@
 .section-title-with-icon {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: 0rpx;
   margin-bottom: 16rpx;
 }
 
 .section-icon {
-  width: 44rpx;
-  height: 44rpx;
+  width: 72rpx;
+  height: 72rpx;
   display: block;
   flex-shrink: 0;
+  margin-left: -18rpx; /* 抵消图标左侧透明留白，实现左侧贴边对齐 */
+  margin-right: -16rpx; /* 抵消图标右侧透明留白 */
 }
 
 .section-title-text {
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 800;
   color: #111;
-  line-height: 44rpx;
+  line-height: 1; /* 恢复1，靠flex-center对齐 */
 }
 
 /* 自我介绍副标题 */
@@ -896,29 +898,30 @@
 /* 月嫂标签 + 日期 */
 .work-period {
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* 改为 center 确保与图标完全水平对齐 */
   gap: 8rpx;
 }
 
 .period-main {
   display: flex;
   align-items: center;
-  gap: 4rpx;
+  gap: 0rpx; /* 移除原来的间隙，通过负边距紧贴 */
 }
 
 .period-icon {
-  width: 26rpx;
-  height: 26rpx;
+  width: 44rpx; /* 继续放大图标 */
+  height: 44rpx;
   flex-shrink: 0;
   display: block;
-  align-self: center;
+  margin-left: -10rpx; /* 抵消图标左侧透明留白，实现左边对齐 */
+  margin-right: -8rpx; /* 抵消右侧透明留白，贴紧文字 */
 }
 
 .period-text {
   font-size: 26rpx;
-  font-weight: 600;
-  color: #333;
-  line-height: 1;
+  font-weight: 800; /* 加粗与整体风格一致 */
+  color: #111;
+  line-height: 1; /* 与图标高度保持一致 */
 }
 
 .period-date {
@@ -1147,11 +1150,11 @@
   text-align: center;
   font-size: 34rpx;
   font-weight: 800;
-  color: #B28247;
+  color: #ffffff;
   line-height: 1.25;
   margin-top: -12rpx;
   letter-spacing: 2rpx;
-  text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1rpx 2rpx rgba(109, 40, 217, 0.5);
 }
 
 .auth-header-right {

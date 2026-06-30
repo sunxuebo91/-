@@ -12,7 +12,7 @@ Page({
     return {
       title: '安得家政保姆育儿服务合同',
       path: '/pages/nannyChildcareContractPreview/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 

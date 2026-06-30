@@ -26,23 +26,23 @@ const JOB_TYPE_MAP = {
 };
 
 const WORK_EXPERIENCE_ICON_MAP = {
-  'yuexin': '/images/icons/yuexin.svg',
-  '月嫂': '/images/icons/yuexin.svg',
-  'zhujia-yuer': '/images/icons/work-yuer.svg',
-  'baiban-yuer': '/images/icons/work-yuer.svg',
-  '育儿嫂': '/images/icons/work-yuer.svg',
-  '住家育儿嫂': '/images/icons/work-yuer.svg',
-  '白班育儿嫂': '/images/icons/work-yuer.svg',
-  'baiban-baomu': '/images/icons/baomu.svg',
-  'zhujia-baomu': '/images/icons/baomu.svg',
-  '保姆': '/images/icons/baomu.svg',
-  '住家保姆': '/images/icons/baomu.svg',
-  '白班保姆': '/images/icons/baomu.svg',
-  'zhujia-hulao': '/images/icons/hulao.svg',
-  '护老': '/images/icons/hulao.svg',
-  '住家护老': '/images/icons/hulao.svg',
-  'hugong': '/images/icons/hulao.svg',
-  '护工': '/images/icons/hulao.svg'
+  'yuexin': '/images/icons_v2/yuexin.png',
+  '月嫂': '/images/icons_v2/yuexin.png',
+  'zhujia-yuer': '/images/icons_v2/work-yuer.png',
+  'baiban-yuer': '/images/icons_v2/work-yuer.png',
+  '育儿嫂': '/images/icons_v2/work-yuer.png',
+  '住家育儿嫂': '/images/icons_v2/work-yuer.png',
+  '白班育儿嫂': '/images/icons_v2/work-yuer.png',
+  'baiban-baomu': '/images/icons_v2/baomu.png',
+  'zhujia-baomu': '/images/icons_v2/baomu.png',
+  '保姆': '/images/icons_v2/baomu.png',
+  '住家保姆': '/images/icons_v2/baomu.png',
+  '白班保姆': '/images/icons_v2/baomu.png',
+  'zhujia-hulao': '/images/icons_v2/hulao.png',
+  '护老': '/images/icons_v2/hulao.png',
+  '住家护老': '/images/icons_v2/hulao.png',
+  'hugong': '/images/icons_v2/hulao.png',
+  '护工': '/images/icons_v2/hulao.png'
 };
 
 const EDUCATION_MAP = {
@@ -730,7 +730,7 @@ Page({
               workPhotos: workPhotos,
               jobType: expJobType,
               jobTypeText: expJobTypeText,
-              jobTypeIcon: WORK_EXPERIENCE_ICON_MAP[expJobType] || WORK_EXPERIENCE_ICON_MAP[expJobTypeText] || '/images/icons/work-experience.svg'
+              jobTypeIcon: WORK_EXPERIENCE_ICON_MAP[expJobType] || WORK_EXPERIENCE_ICON_MAP[expJobTypeText] || '/images/icons_v2/work-experience.png'
             };
           }),
 

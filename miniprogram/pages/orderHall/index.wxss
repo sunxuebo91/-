@@ -78,7 +78,7 @@
 .fab-my-grabs {
   position: fixed;
   right: 32rpx;
-  bottom: 180rpx;
+  bottom: 200rpx;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -48,17 +48,17 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{order.workContent}}">
-    <view class="section-title">工作内容</view>
-    <view class="paragraph">{{order.workContent}}</view>
-  </view>
-
   <view class="card" wx:if="{{order.requirementsList.length}}">
     <view class="section-title">用户要求</view>
     <view class="row" wx:for="{{order.requirementsList}}" wx:key="label">
       <text class="label">{{item.label}}</text>
       <text class="value">{{item.value}}</text>
     </view>
+  </view>
+
+  <view class="card" wx:if="{{order.workContent}}">
+    <view class="section-title">工作内容</view>
+    <view class="paragraph">{{order.workContent}}</view>
   </view>
 
   <view class="card" wx:if="{{order.remark}}">
@@ -92,6 +92,12 @@
 
 <view class="loading" wx:elif="{{loading}}">
   <text>加载中...</text>
+</view>
+
+<view class="error-wrap" wx:else>
+  <text class="error-icon">⚠️</text>
+  <text class="error-msg">{{errorMsg || '订单加载失败，请返回重试'}}</text>
+  <button class="retry-btn" bindtap="loadDetail">重新加载</button>
 </view>
 
 <!-- 海报生成用隐藏 Canvas（2D 模式，定位到屏幕外） -->

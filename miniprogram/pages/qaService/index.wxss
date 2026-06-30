@@ -135,4 +135,17 @@ page {
   width: 120rpx;
   height: 120rpx;
   margin-left: 24rpx;
+  margin-right: -12rpx; /* 抵消内部右侧留白 */
+  mix-blend-mode: multiply; /* 去除白边，让图标融入背景 */
+}
+
+/* 针对安得褓贝logo保持原样，覆盖 mix-blend-mode */
+.logo-image {
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  background: #fff;
+  margin-right: 0rpx; /* 不抵消留白，居中对齐 */
+  mix-blend-mode: normal; /* 不应用 multiply，保留白底 */
 }

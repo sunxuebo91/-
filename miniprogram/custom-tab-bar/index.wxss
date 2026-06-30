@@ -48,14 +48,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44rpx;
-  height: 44rpx;
+  width: 64rpx;
+  height: 64rpx;
   transition: all 0.2s ease;
 }
 
 .tab-icon {
-  width: 44rpx;
-  height: 44rpx;
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: -4rpx; /* 略微往下压一点抵消上方留白 */
 }
 
 .text {

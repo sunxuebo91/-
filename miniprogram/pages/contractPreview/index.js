@@ -12,7 +12,7 @@ Page({
     return {
       title: '安得家政保姆服务合同',
       path: '/pages/contractPreview/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 

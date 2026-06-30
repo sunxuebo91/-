@@ -1,13 +1,16 @@
 const userService = require('../../services/userService.js');
+const { loadShareLogo } = require('../../utils/shareLogo.js');
 
 Page({
   data: {
     // 云文件ID - 注意：需要确保这个文件在云存储中存在
-    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政保姆服务合同20260121.docx'
+    contractFileId: 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得最新合同/安得家政保姆服务合同20260121.docx',
+    shareLogo: ''
   },
 
   onLoad() {
     // 页面加载
+    loadShareLogo(this);
   },
 
   // 分享给好友
@@ -15,7 +18,7 @@ Page({
     return {
       title: '安得家政保姆服务合同',
       path: '/pages/qaService/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 

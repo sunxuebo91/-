@@ -12,7 +12,7 @@ Page({
     return {
       title: '安得家政服务合同-不退费',
       path: '/pages/nonRefundContractPreview/index',
-      imageUrl: '/images/icons/document.svg'
+      imageUrl: '/images/icons_v2/document.png'
     };
   },
 
