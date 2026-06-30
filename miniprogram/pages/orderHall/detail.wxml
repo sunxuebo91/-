@@ -70,7 +70,19 @@
     <text class="tip-text">⚠️ 抢单后顾问将联系您安排面试，同一手机号对同一订单仅可抢一次。</text>
   </view>
 
-  <view class="btn-wrap">
+  <!-- 员工：转发订单 + 生成海报 双按钮 -->
+  <view class="btn-wrap" wx:if="{{isStaff}}">
+    <view class="btn-row">
+      <button class="btn-half btn-outline" open-type="share">转发订单</button>
+      <button class="btn-half primary-btn {{posterGenerating ? 'btn-disabled' : ''}}"
+              bindtap="onGenerateOrderPoster" disabled="{{posterGenerating}}">
+        {{posterGenerating ? '生成中...' : '生成海报'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 非员工：原抢单按钮 -->
+  <view class="btn-wrap" wx:else>
     <button class="primary-btn {{btnDisabled ? 'btn-disabled' : ''}}"
             bindtap="goGrab" disabled="{{btnDisabled}}">
       {{btnText}}
@@ -81,3 +93,6 @@
 <view class="loading" wx:elif="{{loading}}">
   <text>加载中...</text>
 </view>
+
+<!-- 海报生成用隐藏 Canvas（2D 模式，定位到屏幕外） -->
+<canvas type="2d" id="orderPosterCanvas" style="position:fixed;left:-9999px;top:0;width:375px;height:600px;"></canvas>

@@ -11,6 +11,9 @@ desktop.ini
 *.tmp
 temp.txt
 
+# 临时输出目录（视频抽帧等）
+__tmp/
+
 # Node modules
 node_modules/
 

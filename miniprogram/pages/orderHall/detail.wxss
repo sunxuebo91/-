@@ -128,6 +128,30 @@
 }
 .btn-disabled { background: #c4b8f5 !important; }
 
+/* 员工双按钮行 */
+.btn-row {
+  display: flex;
+  gap: 20rpx;
+}
+.btn-half {
+  flex: 1;
+  height: 96rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+.btn-outline {
+  background: #fff;
+  color: #8766F3;
+  border: 2rpx solid #8766F3;
+}
+.btn-outline::after { border: none; }
+.primary-btn::after { border: none; }
+
 .loading {
   text-align: center;
   color: #999;

@@ -197,6 +197,47 @@ const getCoursePromoMiniCode = async (event) => {
   return { success: true, fileID: upload.fileID };
 };
 
+// 生成接单大厅订单详情页小程序码（员工分享订单海报用）
+// path: pages/orderHall/detail?id=xxx&shared=1&sharerId=...&p=...
+// 支持 128 字符路径降级，按员工独立缓存
+const getOrderDetailMiniCode = async (event) => {
+  const orderId    = (event.orderId    || '').toString();
+  const staffId    = (event.staffId    || '').toString();
+  const staffPhone = (event.staffPhone || '').toString();
+  if (!orderId) throw new Error('missing orderId');
+
+  const basePath = `pages/orderHall/detail?id=${encodeURIComponent(orderId)}`;
+  let path = basePath;
+
+  if (staffId || staffPhone) {
+    const idPart    = staffId    ? `&sharerId=${encodeURIComponent(staffId)}`  : '';
+    const phonePart = staffPhone ? `&p=${encodeURIComponent(staffPhone)}`      : '';
+    const full    = `${basePath}&shared=1${idPart}${phonePart}`;
+    const noPhone = `${basePath}&shared=1${idPart}`;
+    const minPath = `${basePath}&shared=1`;
+
+    if      (full.length    <= 128) path = full;
+    else if (noPhone.length <= 128) path = noPhone;
+    else if (minPath.length <= 128) path = minPath;
+    else {
+      path = basePath;
+      console.error(`[getOrderDetailMiniCode] 路径超 128 字符，无法附加分享信息`);
+    }
+  }
+
+  const resp = await cloud.openapi.wxacode.get({
+    path,
+    width:      200,
+    is_hyaline: true,
+  });
+  const cacheKey  = staffId || staffPhone.replace(/\D/g, '');
+  const cloudPath = cacheKey
+    ? `order-qrcodes/order-${orderId}-${cacheKey}.png`
+    : `order-qrcodes/order-${orderId}.png`;
+  const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
+  return { success: true, fileID: upload.fileID };
+};
+
 // 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）
 // 发布正式版后扫码即可跳转到推荐人注册页
 // 身份 token：phone + openid（CRM 端任一命中即可定位 staff），不再写入 staffId
@@ -391,5 +432,7 @@ exports.main = async (event, context) => {
       return await getSalaryAssessmentMiniCode(event);
     case "getCoursePromoMiniCode":
       return await getCoursePromoMiniCode(event);
+    case "getOrderDetailMiniCode":
+      return await getOrderDetailMiniCode(event);
   }
 };
