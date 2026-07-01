@@ -33,6 +33,7 @@
         data-type="{{item.type}}"
         data-contractid="{{item.contractId}}"
         data-read="{{item.read}}"
+        data-page="{{item.page}}"
       >
         <!-- 类型图标 -->
         <view class="msg-icon-wrap" style="background:{{item.color}}20;">
@@ -43,7 +44,7 @@
         <view class="message-content">
           <view class="message-header">
             <view class="message-title {{item.read ? 'read' : ''}}">{{item.title}}</view>
-            <view wx:if="{{item.showActionBtn}}" class="msg-action-btn" catchtap="onActionBtnTap" data-id="{{item.id}}" data-contractid="{{item.contractId}}" data-type="{{item.type}}" data-read="{{item.read}}">{{item.actionBtnText}}</view>
+            <view wx:if="{{item.showActionBtn}}" class="msg-action-btn" catchtap="onActionBtnTap" data-id="{{item.id}}" data-contractid="{{item.contractId}}" data-type="{{item.type}}" data-read="{{item.read}}" data-page="{{item.page}}">{{item.actionBtnText}}</view>
           </view>
           <view class="message-desc">{{item.content}}</view>
         </view>

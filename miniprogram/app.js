@@ -1,5 +1,6 @@
 // app.js
-const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+const { TEMPLATES, topUpIfPermanent } = require('./utils/subscribe');
+const RESUME_VIEW_TEMPLATE_ID = TEMPLATES.RESUME_VIEW;
 
 App({
   onLaunch: function () {
@@ -213,8 +214,19 @@ App({
   },
 
   onShow() {
-    // 每次切到前台时，计算员工是否需要订阅提醒，结果存到 globalData 供 profile 页读取
+    // 1. 每次切到前台时，计算员工是否需要订阅提醒
     this.calcSubscribeReminder();
+
+    // 2. 刷新未读消息红点
+    const crmUserInfo = wx.getStorageSync('crmUserInfo');
+    if (crmUserInfo && crmUserInfo.phone) {
+      this.refreshMessageBadge(crmUserInfo.phone);
+    }
+
+    // 3. 尝试为永久授权用户补配额
+    if (crmUserInfo && crmUserInfo.isStaff) {
+      topUpIfPermanent();
+    }
   },
 
   /**

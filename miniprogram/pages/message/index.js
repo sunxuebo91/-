@@ -21,6 +21,9 @@ const TYPE_CONFIG = {
   referral_timeout:      { emoji: '⏰', color: '#f5222d', title: '推荐简历审核超时流转',  actionBtn: '去处理 →', navUrl: '/pages/admin/referralReview/index' },
   referral_contracted:   { emoji: '🎉', color: '#fa8c16', title: '推荐阿姨已成功签单',   navUrl: '/pages/myReferrals/index' },
   referral_reward_paid:  { emoji: '💸', color: '#52c41a', title: '推荐返费已到账',        navUrl: '/pages/myReferrals/index' },
+  // ── 员工动态相关 ──────────────────────────────────────────────────────
+  resume_view:           { emoji: '👤', color: '#8766F3', title: '简历被查看提醒',      navUrl: '/pages/resumeList/index' },
+  order_grab:            { emoji: '⚡', color: '#52c41a', title: '接单成功提醒',        navUrl: '/pages/orderHall/myGrabs' },
 };
 
 /** 格式化通知时间 */
@@ -42,7 +45,8 @@ function formatTime(isoStr) {
 }
 
 /** 跳转路径（根据通知类型，TYPE_CONFIG.navUrl 优先）*/
-function resolveNavUrl(type, contractId) {
+function resolveNavUrl(type, contractId, page) {
+  if (page) return page.startsWith('/') ? page : '/' + page;
   const cfg = TYPE_CONFIG[type];
   if (cfg && cfg.navUrl) return cfg.navUrl;
   if (contractId) return '/pages/myOrders/index';
@@ -122,6 +126,7 @@ Page({
           color: cfg.color,
           showActionBtn,
           actionBtnText: cfg.actionBtn || '',  // 按钮文案，如"去审核 →"
+          page: n.page || '',
         };
       });
       this.setData({ messages, unreadCount: data.unreadCount || 0, loading: false });
@@ -135,7 +140,7 @@ Page({
 
   // ─── 标记单条已读 ────────────────────────────────────
   async onMessageTap(e) {
-    const { id, contractid, read } = e.currentTarget.dataset;
+    const { id, contractid, read, page } = e.currentTarget.dataset;
     const isRead = read === true || read === 'true';
     if (!isRead) {
       const messages = this.data.messages.map(m =>
@@ -151,13 +156,13 @@ Page({
       }
     }
     // 跳转
-    const url = resolveNavUrl(e.currentTarget.dataset.type, contractid);
+    const url = resolveNavUrl(e.currentTarget.dataset.type, contractid, page);
     if (url) wx.navigateTo({ url });
   },
 
   // ─── 操作按钮（去签署 / 去审核 / 去审批等）───────────────
   async onActionBtnTap(e) {
-    const { id, contractid, type, read } = e.currentTarget.dataset;
+    const { id, contractid, type, read, page } = e.currentTarget.dataset;
     const isRead = read === true || read === 'true';
     const phone = wx.getStorageSync('crmUserInfo')?.phone;
     if (phone && id) {
@@ -172,7 +177,7 @@ Page({
       }
     }
     // 按类型跳转到对应功能页（合同/推荐审核/推荐审批等）
-    const url = resolveNavUrl(type, contractid);
+    const url = resolveNavUrl(type, contractid, page);
     if (url) wx.navigateTo({ url });
   },
 

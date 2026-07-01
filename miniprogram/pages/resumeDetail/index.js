@@ -3,6 +3,7 @@ const employeeEvaluationService = require('../../services/employeeEvaluation.js'
 const userService = require('../../services/userService.js');
 const { publicRequest } = require('../../utils/request.js');
 const { ensureStaffIdentity } = require('../../utils/staffIdentity.js');
+const { TEMPLATES, requestSubscribe } = require('../../utils/subscribe.js');
 
 // 简历详情页视频缓存（用于提升手机端二次打开速度；非 Wi-Fi 不强制预下载）
 const VIDEO_CACHE_KEY = 'resumeDetailVideoCache_v1';
@@ -254,7 +255,7 @@ const SHARE_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h
 const POSTER_LOGO_FILE_ID = 'cloud://cloud1-6gyrh73h8e8206ce.636c-cloud1-6gyrh73h8e8206ce-1393415530/安得褓贝定稿.png';
 
 // 简历查看订阅通知模板 ID（与 app.js / settings / profile 保持一致）
-const RESUME_VIEW_TEMPLATE_ID = 'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM';
+const RESUME_VIEW_TEMPLATE_ID = TEMPLATES.RESUME_VIEW;
 
 Page({
   onHide() {
@@ -1932,15 +1933,7 @@ Page({
     }
 
     // ① 直接在同步 tap handler 中调用，保证手势上下文有效
-    wx.requestSubscribeMessage({
-      tmplIds: [RESUME_VIEW_TEMPLATE_ID],
-      success: (res) => {
-        console.log('📨 订阅配额申请结果:', res[RESUME_VIEW_TEMPLATE_ID]);
-      },
-      fail: (err) => {
-        console.warn('⚠️ 订阅配额申请失败（不影响海报生成）:', err);
-      }
-    });
+    requestSubscribe([RESUME_VIEW_TEMPLATE_ID]);
 
     // ② 异步执行后续海报生成逻辑（不阻塞订阅弹窗）
     this._doGeneratePoster(detail);
@@ -2500,22 +2493,8 @@ Page({
   // 申请"简历被查看"订阅通知配额（在用户点击事件中调用，fire-and-forget）
   // 每次分享前调用，确保有可用配额；已永久订阅时微信自动跳过弹窗
   _requestResumeViewSubscription() {
-    return new Promise((resolve) => {
-      wx.requestSubscribeMessage({
-        tmplIds: [RESUME_VIEW_TEMPLATE_ID],
-        success: (res) => {
-          const status = res[RESUME_VIEW_TEMPLATE_ID];
-          console.log('📨 订阅配额申请结果:', status);
-          resolve(status === 'accept');
-        },
-        fail: (err) => {
-          // 非员工或模板配置问题时忽略，不影响分享主流程
-          console.warn('⚠️ 订阅配额申请失败（不影响分享）:', err);
-          resolve(false);
-        }
-      });
-    });
-  }
+    return requestSubscribe([RESUME_VIEW_TEMPLATE_ID]);
+  },
 });
 
 

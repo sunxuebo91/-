@@ -1,10 +1,8 @@
 const userService = require('../../services/userService.js');
+const { TEMPLATES, requestSubscribe } = require('../../utils/subscribe.js');
 
 // 需要员工订阅的两个模板
-const SUBSCRIBE_TMPL_IDS = [
-  'VXhA_qhgIRRy8avH1X9uE-eLGk--0M5Bs9Q27EEDmrM',  // 简历查看提醒
-  'BLTv1XLncYInvkyERP8fgoHtM0UQoXOwgK4SmbQF93E',   // 接单成功提醒
-];
+const SUBSCRIBE_TMPL_IDS = Object.values(TEMPLATES);
 
 Page({
   data: {
@@ -224,17 +222,13 @@ Page({
 
   // 员工订阅消息（简历查看 + 接单通知）
   onSubscribe() {
-    wx.requestSubscribeMessage({
-      tmplIds: SUBSCRIBE_TMPL_IDS,
-      success: (res) => {
-        const accepted = SUBSCRIBE_TMPL_IDS.filter(id => res[id] === 'accept');
-        wx.showToast({ title: accepted.length ? '提醒已开启' : '未开启提醒', icon: accepted.length ? 'success' : 'none' });
-        this.setData({ showSubscribeBanner: false });
-      },
-      fail: (err) => {
-        console.warn('[profile] 订阅失败:', err);
-        wx.showToast({ title: '开启失败，请重试', icon: 'none' });
-      },
+    requestSubscribe(SUBSCRIBE_TMPL_IDS).then((res) => {
+      const accepted = SUBSCRIBE_TMPL_IDS.filter(id => res[id] === 'accept');
+      wx.showToast({
+        title: accepted.length ? '提醒已开启' : '未开启提醒',
+        icon: accepted.length ? 'success' : 'none'
+      });
+      this.setData({ showSubscribeBanner: false });
     });
   },
 

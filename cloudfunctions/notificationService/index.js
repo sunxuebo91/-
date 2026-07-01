@@ -51,26 +51,28 @@ async function sendResumeViewNotify(event) {
   if (!sharerPhone) return { success: false, errMsg: '缺少 sharerPhone' };
   if (!nurseName)   return { success: false, errMsg: '缺少 nurseName' };
 
-  // 1. 查员工 openid
-  const touser = await getOpenidByPhone(sharerPhone);
-  if (!touser) {
-    console.warn('[sendResumeViewNotify] ❌ 未找到员工 openid, phone:', sharerPhone,
-      '→ 请确认 users 集合中该手机号记录存在且含 _openid 字段');
-    return { success: false, errMsg: '未找到员工微信账号' };
-  }
-  console.log('[sendResumeViewNotify] ✅ 查到 openid:', touser);
-
-  // 2. 构建跳转页面
+  const viewTime = formatViewTime(new Date());
+  const safeCustomerName = (customerName || '新客户').slice(0, 20);
+  const safeNurseName = nurseName.slice(0, 20);
   const page = resumeId
     ? `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`
     : 'pages/resumeList/index';
 
-  // 3. 发送订阅消息
-  const viewTime = formatViewTime(new Date());
-  const safeCustomerName = (customerName || '新客户').slice(0, 20);
-  const safeNurseName = nurseName.slice(0, 20);
+  // --- 1. 写入 CRM 站内信（强通知/留痕） ---
+  await writeCrmNotification({
+    phone: sharerPhone,
+    type: 'resume_view',
+    title: '简历被查看提醒',
+    content: `客户 ${safeCustomerName} 查看了阿姨 ${safeNurseName} 的简历`,
+    page
+  });
 
-  console.log('[sendResumeViewNotify] 准备发送 →', { touser, template_id: RESUME_VIEW_TEMPLATE_ID, page, safeCustomerName, safeNurseName, viewTime });
+  // --- 2. 发送订阅消息（即时推送） ---
+  const touser = await getOpenidByPhone(sharerPhone);
+  if (!touser) {
+    console.warn('[sendResumeViewNotify] 未找到员工 openid，仅写入站内信');
+    return { success: true, msg: '已记录站内信，但未找到微信账号发送订阅消息' };
+  }
 
   try {
     await cloud.openapi.subscribeMessage.send({
@@ -85,15 +87,10 @@ async function sendResumeViewNotify(event) {
       },
       miniprogram_state: 'formal'
     });
-    console.log('[sendResumeViewNotify] ✅ 发送成功 → openid:', touser);
     return { success: true };
   } catch (err) {
-    // 常见错误码：
-    // 43101 = 用户未订阅该消息（订阅次数耗尽或从未订阅）→ 员工需在分享前点击订阅
-    // 47003 = 模板不存在或已删除
-    // 40001 = access_token 无效（云函数内不应出现）
-    console.error('[sendResumeViewNotify] ❌ 发送失败, errCode:', err.errCode, 'errMsg:', err.errMsg || err.message, '完整错误:', JSON.stringify(err));
-    return { success: false, errMsg: err.errMsg || err.message, errCode: err.errCode };
+    console.error('[sendResumeViewNotify] 订阅消息发送失败:', err.errCode, err.errMsg);
+    return { success: true, msg: '站内信已发，订阅消息发送失败', errCode: err.errCode };
   }
 }
 
@@ -104,19 +101,28 @@ async function sendOrderGrabNotify(event) {
   if (!publisherPhone) return { success: false, errMsg: '缺少 publisherPhone' };
   if (!auntieName)     return { success: false, errMsg: '缺少 auntieName' };
 
-  const touser = await getOpenidByPhone(publisherPhone);
-  if (!touser) {
-    console.warn('[sendOrderGrabNotify] ❌ 未找到员工 openid, phone:', publisherPhone);
-    return { success: false, errMsg: '未找到员工微信账号' };
-  }
-
+  const grabTime = formatViewTime(new Date());
+  const safeAuntieName   = (auntieName       || '').slice(0, 20);
+  const safeServiceType  = (serviceTypeLabel || '家政服务').slice(0, 20);
   const page = orderId
     ? `pages/orderHall/detail?id=${encodeURIComponent(orderId)}`
     : 'pages/orderHall/index';
 
-  const grabTime = formatViewTime(new Date());
-  const safeAuntieName   = (auntieName       || '').slice(0, 20);
-  const safeServiceType  = (serviceTypeLabel || '家政服务').slice(0, 20);
+  // --- 1. 写入 CRM 站内信 ---
+  await writeCrmNotification({
+    phone: publisherPhone,
+    type: 'order_grab',
+    title: '接单成功提醒',
+    content: `阿姨 ${safeAuntieName} 已抢占您发布的 ${safeServiceType} 订单`,
+    page
+  });
+
+  // --- 2. 发送订阅消息 ---
+  const touser = await getOpenidByPhone(publisherPhone);
+  if (!touser) {
+    console.warn('[sendOrderGrabNotify] 未找到员工 openid，仅写入站内信');
+    return { success: true, msg: '已记录站内信，但未找到微信账号发送订阅消息' };
+  }
 
   try {
     await cloud.openapi.subscribeMessage.send({
@@ -130,11 +136,29 @@ async function sendOrderGrabNotify(event) {
       },
       miniprogram_state: 'formal',
     });
-    console.log('[sendOrderGrabNotify] ✅ 发送成功 → openid:', touser);
     return { success: true };
   } catch (err) {
-    console.error('[sendOrderGrabNotify] ❌ 发送失败, errCode:', err.errCode, err.errMsg || err.message);
-    return { success: false, errMsg: err.errMsg || err.message, errCode: err.errCode };
+    console.error('[sendOrderGrabNotify] 订阅消息发送失败:', err.errCode, err.errMsg);
+    return { success: true, msg: '站内信已发，订阅消息发送失败', errCode: err.errCode };
+  }
+}
+
+/**
+ * 写入 CRM 站内通知
+ */
+async function writeCrmNotification({ phone, type, title, content, page }) {
+  console.log('[writeCrmNotification] 准备写入 CRM:', { phone, type, title, content, page });
+  try {
+    await crmRequest('POST', '/api/miniprogram/notifications', {
+      phone,
+      type,
+      title,
+      content,
+      page
+    });
+    console.log('[writeCrmNotification] ✅ CRM 写入成功');
+  } catch (err) {
+    console.warn('[writeCrmNotification] ❌ CRM 写入失败:', err.message);
   }
 }
 
