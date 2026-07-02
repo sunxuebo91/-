@@ -305,8 +305,8 @@ page {
 .service-icon-salary  { background: #E8F5FF; }
 .service-icon-course  { background: #FFF5E0; }
 .service-icon-img {
-  width: 96rpx;
-  height: 96rpx;
+  width: 112rpx;
+  height: 112rpx;
 }
 .service-label {
   font-size: 24rpx;

@@ -23,7 +23,9 @@ const TYPE_CONFIG = {
   referral_reward_paid:  { emoji: '💸', color: '#52c41a', title: '推荐返费已到账',        navUrl: '/pages/myReferrals/index' },
   // ── 员工动态相关 ──────────────────────────────────────────────────────
   resume_view:           { emoji: '👤', color: '#8766F3', title: '简历被查看提醒',      navUrl: '/pages/resumeList/index' },
-  order_grab:            { emoji: '⚡', color: '#52c41a', title: '接单成功提醒',        navUrl: '/pages/orderHall/myGrabs' },
+  // 接单成功通知发给「订单发布人」：详情页由 CRM 的 page 字段（pages/orderHall/detail?id=…）提供并优先，
+  // 故不设 fallback navUrl（orderHall/index 是 tabBar 页，navigateTo 无法打开，myGrabs 又是抢单者视角）
+  order_grab:            { emoji: '⚡', color: '#52c41a', title: '接单成功提醒' },
 };
 
 /** 格式化通知时间 */

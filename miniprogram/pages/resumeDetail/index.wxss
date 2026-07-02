@@ -720,29 +720,31 @@
   color: #111;
 }
 
-/* 带图标的标题 */
+/* 带图标的标题：图标高度 = 标题字号，上下边缘对齐 */
 .section-title-with-icon {
   display: flex;
-  align-items: center;
-  gap: 0rpx;
+  align-items: center;   /* 图标与标题垂直居中对齐 */
+  gap: 8rpx;
   margin-bottom: 16rpx;
+  line-height: 1;
 }
 
 .section-icon {
-  width: 72rpx;
-  height: 72rpx;
+  width: 34rpx;          /* 与标题字号严格一致 */
+  height: 34rpx;
   display: block;
   flex-shrink: 0;
-  margin-left: -18rpx; /* 抵消图标左侧透明留白，实现左侧贴边对齐 */
-  margin-right: -16rpx; /* 抵消图标右侧透明留白 */
+  align-self: center;    /* 上下居中 */
+  margin: 0;
 }
 
 .section-title-text {
   font-size: 34rpx;
   font-weight: 800;
   color: #111;
-  line-height: 1; /* 恢复1，靠flex-center对齐 */
+  line-height: 34rpx;    /* 与图标高度一致 */
 }
+
 
 /* 自我介绍副标题 */
 .intro-subtitle {

@@ -193,14 +193,37 @@ function crmRequest(method, path, body) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(3000, () => { req.destroy(new Error('CRM 请求超时')); });
     if (bodyStr) req.write(bodyStr);
     req.end();
   });
 }
 
+// 归一化 CRM 通知列表返回，兼容多种可能结构，产出统一 { list, total, unreadCount }
+// 修复「tabBar 红点 99+ 但点进去列表空白」：徽标与列表须来自同一份数据，且无通知时未读数必须为 0
+function normalizeNotifications(res) {
+  // CRM body 可能是 { data: {...} } 也可能直接是 {...}
+  const d = (res && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) ? res.data : (res || {});
+  // 列表可能落在 list / items / records / rows / data 任一键上
+  const list = d.list || d.items || d.records || d.rows || (Array.isArray(d.data) ? d.data : []) || [];
+  const total = (d.total != null ? d.total : (d.count != null ? d.count : list.length)) || 0;
+  const unreadField = (d.unreadCount != null ? d.unreadCount : d.unread);
+  const unreadRaw = (unreadField != null ? unreadField : list.filter(n => !(n.isRead || n.read)).length) || 0;
+  // 没有任何通知却报未读 → 视为脏数据，纠正为 0
+  const unreadCount = total > 0 ? unreadRaw : 0;
+  // 诊断日志：只打印形状与数量，不含任何内容/手机号
+  console.log('[getList] CRM shape:', {
+    topKeys: (res && typeof res === 'object') ? Object.keys(res) : typeof res,
+    dataKeys: (d && typeof d === 'object') ? Object.keys(d) : typeof d,
+    listLen: Array.isArray(list) ? list.length : 'not-array',
+    total, unreadRaw, unreadCount,
+  });
+  return { list, total, unreadCount };
+}
+
 // 诊断用：直接向指定手机号发送测试通知，返回详细中间结果
 async function sendTestNotify(event) {
-  const { phone: testPhone } = event;
+  const { phone: testPhone, state = 'formal' } = event;
   if (!testPhone) return { success: false, errMsg: '缺少 phone 参数' };
 
   // step1: 查 openid（走统一查询：users → staff_profiles 双重回退）
@@ -231,7 +254,7 @@ async function sendTestNotify(event) {
         thing7: { value: '这是一条测试通知，收到即为配置正常' },
         time4:  { value: formatViewTime(new Date()) },
       },
-      miniprogram_state: 'developer'   // 测试时用 developer，收到后改回 formal
+      miniprogram_state: state   // 默认 formal，诊断时可传 state:'developer'
     });
     return { success: true, openid: touser, msg: '✅ 测试通知发送成功，请检查微信消息' };
   } catch (err) {
@@ -293,7 +316,7 @@ exports.main = async (event) => {
         if (!phone) return { success: false, errMsg: '缺少 phone' };
         const qs = `phone=${encodeURIComponent(phone)}&page=${page}&pageSize=${pageSize}`;
         const res = await crmRequest('GET', `/api/miniprogram/notifications?${qs}`);
-        return { success: true, data: res.data };
+        return { success: true, data: normalizeNotifications(res) };
       }
       case 'markRead': {
         if (!phone) return { success: false, errMsg: '缺少 phone' };

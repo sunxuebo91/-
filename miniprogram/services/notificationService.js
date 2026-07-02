@@ -42,4 +42,20 @@ function markAllRead(phone) {
   return call('markAllRead', { phone });
 }
 
-module.exports = { getList, markRead, markAllRead };
+/**
+ * 发送"简历被查看"通知给员工（写 CRM 站内信 + 微信订阅消息）
+ * @param {{ sharerPhone, customerName, nurseName, resumeId }} params
+ */
+function sendResumeViewNotify(params) {
+  return call('sendResumeViewNotify', params);
+}
+
+/**
+ * 发送"抢单成功"通知给订单发布人（写 CRM 站内信 + 微信订阅消息）
+ * @param {{ publisherPhone, auntieName, serviceTypeLabel, orderId }} params
+ */
+function sendOrderGrabNotify(params) {
+  return call('sendOrderGrabNotify', params);
+}
+
+module.exports = { getList, markRead, markAllRead, sendResumeViewNotify, sendOrderGrabNotify };

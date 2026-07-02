@@ -1,4 +1,5 @@
 const orderHallService = require('../../services/orderHall.js');
+const notificationService = require('../../services/notificationService.js');
 
 const SERVICE_TYPE_MAP = {
   yuesao:          '月嫂',
@@ -116,15 +117,11 @@ Page({
         // 通知订单发布人（员工）：fire-and-forget，不阻塞主流程
         const publisherPhone = res.data && res.data.publisherPhone;
         if (publisherPhone) {
-          wx.cloud.callFunction({
-            name: 'notificationService',
-            data: {
-              action: 'sendOrderGrabNotify',
-              publisherPhone,
-              auntieName: name,
-              serviceTypeLabel: this.data.serviceTypeLabel,
-              orderId: this.data.orderId,
-            },
+          notificationService.sendOrderGrabNotify({
+            publisherPhone,
+            auntieName: name,
+            serviceTypeLabel: this.data.serviceTypeLabel,
+            orderId: this.data.orderId,
           }).catch(e => console.warn('[grab] 通知发布人失败（不影响抢单）:', e));
         }
 

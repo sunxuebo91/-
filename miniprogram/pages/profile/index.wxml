@@ -37,13 +37,13 @@
     <view class="service-grid">
       <view class="service-item" bindtap="goMyOrders" wx:if="{{me.phone}}">
         <view class="service-icon-wrap service-icon-order">
-          <image class="service-icon-img" src="/images/icons_v2/my-orders.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/my-orders.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我的订单</text>
       </view>
       <view class="service-item" bindtap="goBabyDiary">
         <view class="service-icon-wrap service-icon-diary">
-          <image class="service-icon-img" src="/images/icons_v2/baby-diary.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/baby-diary.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">宝贝日记</text>
       </view>
@@ -52,7 +52,7 @@
       <view class="service-item" bindtap="goReferral"
         wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.role === 'staff' || me.role === 'admin' || me.isReferrer || me.isStaff}}">
         <view class="service-icon-wrap service-icon-referral">
-          <image class="service-icon-img" src="/images/icons_v2/referral.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/referral.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我推荐的</text>
       </view>
@@ -60,7 +60,7 @@
       <!-- 接单大厅入口：所有用户可见，阿姨抢单不强制登录 -->
       <view class="service-item" bindtap="goOrderHall">
         <view class="service-icon-wrap service-icon-order">
-          <image class="service-icon-img" src="/images/icons_v2/my-orders.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/order-hall.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">接单大厅</text>
       </view>
@@ -69,21 +69,21 @@
       <view class="service-item" bindtap="goPoster"
         wx:if="{{me.role === 'staff' || me.role === 'admin' || me.isStaff}}">
         <view class="service-icon-wrap service-icon-poster">
-          <image class="service-icon-img" src="/images/icons_v2/poster.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/poster.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">推荐海报</text>
       </view>
 
       <view class="service-item" bindtap="goSalaryAssessment">
         <view class="service-icon-wrap service-icon-salary">
-          <image class="service-icon-img" src="/images/icons_v2/yuexin.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/yuexin.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">工资测评</text>
       </view>
 
       <view class="service-item" bindtap="goCourse">
         <view class="service-icon-wrap service-icon-course">
-          <image class="service-icon-img" src="/images/icons_v2/document.png" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/document.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我的网课</text>
       </view>

@@ -251,8 +251,22 @@ Page({
       const staffName    = crmUserInfo.crmName || crmUserInfo.name || crmUserInfo.nickname || '';
       const staffAvatar  = crmUserInfo.crmAvatar || crmUserInfo.avatar || '';
 
-      const [qrLocalPath, logoLocalPath, avatarLocalPath] = await Promise.all([
-        this._getOrderMiniCodePath(order._id, staffId, staffPhone),
+      let qrLocalPath = '';
+      try {
+        qrLocalPath = await this._getOrderMiniCodePath(order._id, staffId, staffPhone);
+      } catch (err) {
+        console.error('[orderHall/detail] 二维码获取失败:', err);
+        wx.hideLoading();
+        wx.showModal({
+          title: '二维码生成失败',
+          content: `海报暂时无法生成二维码，请稍后重试。错误信息：${err.message || '未知错误'}`,
+          showCancel: false,
+        });
+        this.setData({ posterGenerating: false });
+        return;
+      }
+
+      const [logoLocalPath, avatarLocalPath] = await Promise.all([
         this._downloadImage(POSTER_LOGO_FILE_ID),
         this._downloadImage(staffAvatar),
       ]);
@@ -284,15 +298,22 @@ Page({
         name: 'quickstartFunctions',
         data: { type: 'getOrderDetailMiniCode', orderId, staffId: staffId || '', staffPhone: staffPhone || '' },
       });
-      const fileID = cfRes && cfRes.result && cfRes.result.fileID;
-      if (!fileID) return '';
+      console.log('[orderHall/detail] getOrderDetailMiniCode 返回:', cfRes);
+      const result = cfRes && cfRes.result;
+      if (!result || !result.success) {
+        const errMsg = (result && result.errorMsg) || '云函数返回失败';
+        console.error('[orderHall/detail] 获取小程序码失败:', errMsg);
+        throw new Error(errMsg);
+      }
+      const fileID = result.fileID;
+      if (!fileID) throw new Error('云函数未返回 fileID');
       const tempRes = await wx.cloud.getTempFileURL({ fileList: [fileID] });
       const tempUrl = tempRes && tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL;
-      if (!tempUrl) return '';
+      if (!tempUrl) throw new Error('未获取到临时下载链接');
       return await this._downloadImage(tempUrl);
     } catch (err) {
-      console.warn('[orderHall/detail] 获取小程序码失败，海报将跳过二维码:', err);
-      return '';
+      console.error('[orderHall/detail] 获取小程序码失败:', err);
+      throw err; // 向上抛出，让 _doGenerateOrderPoster 统一处理
     }
   },
 

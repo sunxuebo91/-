@@ -225,17 +225,27 @@ const getOrderDetailMiniCode = async (event) => {
     }
   }
 
-  const resp = await cloud.openapi.wxacode.get({
-    path,
-    width:      200,
-    is_hyaline: true,
-  });
-  const cacheKey  = staffId || staffPhone.replace(/\D/g, '');
-  const cloudPath = cacheKey
-    ? `order-qrcodes/order-${orderId}-${cacheKey}.png`
-    : `order-qrcodes/order-${orderId}.png`;
-  const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
-  return { success: true, fileID: upload.fileID };
+  console.log(`[getOrderDetailMiniCode] 生成二维码，path=${path}`);
+
+  try {
+    const resp = await cloud.openapi.wxacode.get({
+      path,
+      width:      200,
+      is_hyaline: true,
+    });
+    const cacheKey  = staffId || staffPhone.replace(/\D/g, '') || 'default';
+    const cloudPath = `order-qrcodes/order-${orderId}-${cacheKey}.png`;
+    const upload = await cloud.uploadFile({ cloudPath, fileContent: resp.buffer });
+    console.log(`[getOrderDetailMiniCode] 成功 fileID=${upload.fileID}`);
+    return { success: true, fileID: upload.fileID };
+  } catch (err) {
+    console.error(`[getOrderDetailMiniCode] 失败:`, err);
+    return {
+      success: false,
+      errorCode: err.errCode || err.code || -1,
+      errorMsg: err.errMsg || err.message || String(err),
+    };
+  }
 };
 
 // 生成推荐人注册页小程序码（与 getResumeMiniCode 同样使用 wxacode.get）

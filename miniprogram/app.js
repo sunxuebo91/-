@@ -184,7 +184,7 @@ App({
 
         // 登录成功后拉取未读消息数，更新 tabBar 红点
         if (merged.phone) {
-          this.refreshMessageBadge(merged.phone);
+          this.refreshMessageBadge(merged.phone, true);
           // 同步手机号到云数据库 users 集合
           // 员工若通过账号密码登录，users.phone 可能为空，这里补齐
           // notificationService 依赖 users.phone 查 openid 发订阅消息
@@ -223,9 +223,13 @@ App({
       this.refreshMessageBadge(crmUserInfo.phone);
     }
 
-    // 3. 尝试为永久授权用户补配额
+    // 3. 尝试为永久授权用户补配额（每天最多一次，避免频繁调用）
     if (crmUserInfo && crmUserInfo.isStaff) {
-      topUpIfPermanent();
+      const today = new Date().toDateString();
+      if (wx.getStorageSync('topUpDate') !== today) {
+        wx.setStorageSync('topUpDate', today);
+        topUpIfPermanent();
+      }
     }
   },
 
@@ -262,8 +266,15 @@ App({
     });
   },
 
-  /** 拉取未读数并更新所有页面的 tabBar 红点 */
-  async refreshMessageBadge(phone) {
+  /** 拉取未读数并更新所有页面的 tabBar 红点（5 分钟内复用缓存，force=true 强制刷新） */
+  async refreshMessageBadge(phone, force = false) {
+    const now = Date.now();
+    // 命中缓存：跳过网络请求，但仍把缓存未读数刷到当前页 tabBar（自定义 tabBar 每页一个实例）
+    if (!force && this.globalData.lastBadgeRefresh
+        && (now - this.globalData.lastBadgeRefresh) < 5 * 60 * 1000) {
+      this._applyTabBarBadge(this.globalData.messageUnreadCount || 0);
+      return;
+    }
     try {
       const res = await wx.cloud.callFunction({
         name: 'notificationService',
@@ -272,15 +283,20 @@ App({
       const count = res?.result?.data?.unreadCount || 0;
       // 存全局，消息页 onShow 时也可读取
       this.globalData.messageUnreadCount = count;
-      // 通知当前 tabBar 实例（如已渲染）
-      const pages = getCurrentPages();
-      pages.forEach(p => {
-        if (typeof p.getTabBar === 'function' && p.getTabBar()) {
-          p.getTabBar().setData({ messageBadge: count });
-        }
-      });
+      this.globalData.lastBadgeRefresh = now;
+      this._applyTabBarBadge(count);
     } catch (e) {
       console.warn('[app] refreshMessageBadge failed:', e.message);
     }
+  },
+
+  /** 把未读数刷到当前所有已渲染页面的 tabBar 实例 */
+  _applyTabBarBadge(count) {
+    const pages = getCurrentPages();
+    pages.forEach(p => {
+      if (typeof p.getTabBar === 'function' && p.getTabBar()) {
+        p.getTabBar().setData({ messageBadge: count });
+      }
+    });
   }
 });
