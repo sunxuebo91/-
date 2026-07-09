@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>支付完成 - 安得褓贝</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", sans-serif;
+      background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      color: #fff;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      color: #333;
+      text-align: center;
+    }
+    .icon { font-size: 64px; line-height: 1; margin-bottom: 12px; }
+    .title { font-size: 22px; font-weight: 600; color: #1677ff; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; line-height: 1.6; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary {
+      background: #1677ff;
+      color: #fff;
+    }
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+    }
+    .footer {
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      margin-top: 24px;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="icon" id="icon">⏳</div>
+    <div class="title" id="title">支付完成</div>
+    <div class="subtitle" id="subtitle">
+      请点击下方按钮返回小程序查看订单状态。
+    </div>
+    <a class="btn btn-primary" id="backBtn" href="javascript:void(0)" onclick="backToMiniProgram()">
+      返回小程序查看
+    </a>
+    <a class="btn btn-secondary" href="javascript:void(0)" onclick="closeWindow()">
+      关闭页面
+    </a>
+  </div>
+  <div class="footer">
+    <div class="badge">💙 安得褓贝</div>
+    <div>支付安全由收钱吧提供技术支持</div>
+  </div>
+
+  <script>
+    // 解析 URL 参数（支付成功/失败状态由收钱吧透传）
+    var params = new URLSearchParams(window.location.search);
+    var paymentId = params.get('paymentId') || '';
+    var status = params.get('status') || '';
+    var tradeNo = params.get('trade_no') || '';
+    var isSuccess = status === 'SUCCESS';
+
+    // 根据状态调整文案
+    if (status === 'FAIL' || status === 'FAILED') {
+      document.getElementById('icon').textContent = '❌';
+      document.getElementById('title').textContent = '支付未完成';
+      document.getElementById('subtitle').textContent = '本次支付未完成，请返回小程序重新尝试。';
+    } else if (isSuccess) {
+      document.getElementById('icon').textContent = '✅';
+      document.getElementById('title').textContent = '支付成功';
+      document.getElementById('subtitle').textContent = '感谢您的支付！点击下方按钮返回小程序查看订单详情。';
+    }
+
+    // 跳回小程序（通过 URL Scheme）
+    function backToMiniProgram() {
+      // 安得褓贝小程序原始 ID：gh_xxx（请在微信小程序后台查看并替换）
+      var username = 'gh_xxxxxxxx';  // TODO: 替换为真实 gh_ 开头的原始 ID
+      var path = '/pages/myOrders/detail?id=' + encodeURIComponent(getContractIdFromUrl()) + '&from=alipay&paymentId=' + encodeURIComponent(paymentId);
+      var scheme = 'weixin://dl/business/?appid=wx9144012a42975120&path=' + encodeURIComponent(path);
+      window.location.href = scheme;
+
+      // 兜底：如果 scheme 不生效，提示用户手动返回
+      setTimeout(function() {
+        document.getElementById('subtitle').innerHTML += '<br><br>如未自动跳转，请手动返回微信，<br>进入"我的-我的订单"查看支付状态。';
+      }, 1500);
+    }
+
+    function getContractIdFromUrl() {
+      return params.get('contractId') || '';
+    }
+
+    function closeWindow() {
+      window.close();
+      // 部分浏览器不支持 window.close，给个提示
+      setTimeout(function() {
+        alert('请手动关闭此页面，返回微信小程序');
+      }, 100);
+    }
+
+    // 自动尝试跳回（1.5s 后给用户一个机会）
+    setTimeout(function() {
+      var subtitleEl = document.getElementById('subtitle');
+      if (!isSuccess && status !== 'FAIL' && status !== 'FAILED') {
+        subtitleEl.innerHTML = '检测到您已离开收银台。<br>如已完成支付，点击下方按钮返回小程序查看。';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
