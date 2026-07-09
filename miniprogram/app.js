@@ -52,7 +52,7 @@ App({
       const updateManager = wx.getUpdateManager();
 
       updateManager.onCheckForUpdate((res) => {
-        console.log('🔄 检测新版本:', res && res.hasUpdate ? '有' : '无');
+        if (res && res.hasUpdate) console.log('update available');
       });
 
       updateManager.onUpdateReady(() => {
@@ -84,8 +84,6 @@ App({
 
   async autoLogin() {
     try {
-      console.log('🔐 开始自动登录...');
-
       // 1. 调用 wx.login 获取 code
       const loginRes = await new Promise((resolve, reject) => {
         wx.login({
@@ -95,11 +93,9 @@ App({
       });
 
       if (!loginRes.code) {
-        console.error('❌ 获取登录 code 失败');
+        console.error('autoLogin: no login code');
         return;
       }
-
-      console.log('✅ 获取登录 code 成功:', loginRes.code);
 
       // 2. 调用云函数获取 OpenID
       const cloudRes = await wx.cloud.callFunction({
@@ -109,11 +105,9 @@ App({
 
       const openid = cloudRes.result?.data?._openid;
       if (!openid) {
-        console.error('❌ 获取 OpenID 失败');
+        console.error('autoLogin: no openid');
         return;
       }
-
-      console.log('✅ 获取 OpenID 成功:', openid);
 
       // 3. 调用 CRM 后端登录接口
       const apiRes = await new Promise((resolve, reject) => {
@@ -135,8 +129,12 @@ App({
       const statusCode = apiRes.statusCode;
       const body = apiRes.data || {};
       const errCode = body.code || '';
+      // 静默：只有错误才打日志
+      if (statusCode !== 200 && statusCode !== 201) {
+        console.warn('autoLogin: CRM /miniprogram-users/login 非 2xx:', statusCode);
+      }
 
-      if (statusCode === 200 && body.success) {
+      if ((statusCode === 200 || statusCode === 201) && body.success) {
         const userData = body.data || {};
         this.globalData.userInfo = userData;
 
@@ -155,61 +153,34 @@ App({
         };
         wx.setStorageSync('crmUserInfo', merged);
 
-        // 调小程序专属登录接口换取 JWT Token，供 authenticatedRequest 使用
-        try {
-          const tokenRes = await new Promise((resolve, reject) => {
-            wx.request({
-              url: 'https://crm.andejiazheng.com/api/auth/miniprogram/login',
-              method: 'POST',
-              data: { openid },
-              header: { 'Content-Type': 'application/json' },
-              success: resolve,
-              fail: reject,
-            });
-          });
-          const jwtToken = tokenRes.data?.data?.token || tokenRes.data?.token;
-          if (jwtToken) {
-            wx.setStorageSync('access_token', jwtToken);
-            wx.setStorageSync('token', jwtToken);
-            console.log('✅ 小程序 JWT Token 已保存');
-          } else {
-            console.warn('⚠️ miniprogram/login 未返回 token:', tokenRes.data);
-          }
-        } catch (tokenErr) {
-          console.warn('⚠️ 获取小程序 JWT Token 失败（不影响主流程）:', tokenErr);
-        }
-
-        console.log('✅ 自动登录成功:', merged);
-        console.log('📱 是否已授权手机号:', merged.phone ? '是' : '否');
+        // 注：JWT token 流程已下线。当前功能（个人简历、接单大厅、我的合同等）
+        // 走 publicRequest + 业务身份标识（phone/openid），不需要 JWT。
+        // 以后如果有接口走 authenticatedRequest，再单独接入。
 
         // 登录成功后拉取未读消息数，更新 tabBar 红点
         if (merged.phone) {
           this.refreshMessageBadge(merged.phone, true);
           // 同步手机号到云数据库 users 集合
-          // 员工若通过账号密码登录，users.phone 可能为空，这里补齐
-          // notificationService 依赖 users.phone 查 openid 发订阅消息
           wx.cloud.callFunction({
             name: 'userService',
             data: { action: 'updateMe', data: { phone: merged.phone } }
-          }).catch(err => console.warn('⚠️ 同步手机号到云数据库失败（不影响使用）:', err));
+          }).catch(err => console.warn('sync phone err:', err.message));
         }
       } else if (statusCode === 404 && errCode === 'USER_NOT_REGISTERED') {
         // 当前 openid 在 CRM 尚未建号；等用户主动点手机号授权登录时再调 register
         console.log('ℹ️ 该 openid 尚未在 CRM 注册，等待用户手机号授权登录');
       } else if (statusCode === 409) {
-        // 唯一索引冲突类错误：按 code 分流，不解析 message
+        // 唯一索引冲突类错误：按 code 分流
         const dupTip = {
           DUPLICATE_PHONE:    '手机号已绑定其他微信账号',
           DUPLICATE_USERNAME: '该用户名已被占用',
           DUPLICATE_OPENID:   '该微信账号已绑定其他记录',
         }[errCode];
-        console.warn('⚠️ CRM 登录冲突: code=', errCode, 'tip=', dupTip || body.message || '');
-      } else {
-        console.warn('⚠️ CRM 登录接口异常: statusCode=', statusCode, 'code=', errCode, 'msg=', body.message);
+        console.warn('autoLogin conflict:', errCode || body.message);
       }
+      // 其他非 2xx 已在上面统一 warn
     } catch (err) {
-      console.error('❌ 自动登录失败:', err);
-      // 登录失败不影响小程序正常使用
+      console.error('autoLogin error:', err.message);
     }
   },
 

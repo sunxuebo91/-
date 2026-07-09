@@ -1,0 +1,82 @@
+<view class="page">
+  <!-- Tab 切换器 -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'all' ? 'active' : ''}}" bindtap="onTabChange" data-tab="all">
+      <text>全部</text>
+    </view>
+    <view class="tab-item {{activeTab === 'housekeeping' ? 'active' : ''}}" bindtap="onTabChange" data-tab="housekeeping">
+      <text>派单</text>
+    </view>
+    <view class="tab-item {{activeTab === 'training' ? 'active' : ''}}" bindtap="onTabChange" data-tab="training">
+      <text>职培</text>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-wrap">
+    <view class="state-icon">⏳</view>
+    <view class="state-text">加载中...</view>
+  </view>
+
+  <view wx:elif="{{needRelogin}}" class="state-wrap">
+    <view class="state-icon">🔐</view>
+    <view class="state-text">正在重新连接...</view>
+    <view class="state-sub">请稍候</view>
+  </view>
+
+  <view wx:elif="{{empty}}" class="state-wrap">
+    <view class="state-icon">📋</view>
+    <view wx:if="{{activeTab === 'housekeeping'}}" class="state-text">暂无派单合同</view>
+    <view wx:elif="{{activeTab === 'training'}}" class="state-text">暂无职培订单</view>
+    <view wx:else class="state-text">暂无合同</view>
+    <view wx:if="{{activeTab === 'housekeeping'}}" class="state-sub">您名下的派单合同将在这里显示</view>
+    <view wx:elif="{{activeTab === 'training'}}" class="state-sub">您的职培订单将在这里显示</view>
+    <view wx:else class="state-sub">您的派单合同和职培订单将在这里显示</view>
+  </view>
+
+  <view wx:else class="list">
+    <view
+      wx:for="{{filteredContracts}}"
+      wx:key="_id"
+      class="contract-card {{item.orderCategory === 'training' ? 'card-training' : ''}}"
+      bindtap="goDetail"
+      data-id="{{item._id}}"
+      data-ordercategory="{{item.orderCategory}}"
+    >
+      <view class="card-header">
+        <view class="card-title-wrap">
+          <text class="service-type">{{item.contractTitle}}</text>
+          <text wx:if="{{item.orderCategory === 'training'}}" class="kind-tag kind-tag-training">职培</text>
+          <text wx:else class="kind-tag kind-tag-housekeeping">派单</text>
+        </view>
+        <view class="status-badge status-{{item.contractStatus}}">{{item.statusText}}</view>
+      </view>
+
+      <view class="card-body">
+        <view class="info-row">
+          <text class="label">{{item.orderCategory === 'training' ? '学员' : '客户姓名'}}</text>
+          <text class="value">{{item.customerName}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.contractNo}}">
+          <text class="label">编号</text>
+          <text class="value value-mono">{{item.contractNo}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.amountText}}">
+          <text class="label">{{item.orderCategory === 'training' ? '课程金额' : '服务费用'}}</text>
+          <text class="value">{{item.amountText}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.amountPaidText}}">
+          <text class="label">已支付</text>
+          <text class="value value-paid">{{item.amountPaidText}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.startDateFmt}}">
+          <text class="label">{{item.orderCategory === 'training' ? '创建时间' : '开始日期'}}</text>
+          <text class="value">{{item.startDateFmt}}</text>
+        </view>
+      </view>
+
+      <view class="card-footer">
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+</view>

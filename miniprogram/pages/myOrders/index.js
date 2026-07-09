@@ -68,6 +68,14 @@ Page({
     this.loadTrainingOrder(true);
   },
 
+  // 单类型合同 → 自动切到对应 Tab；多类型保留默认 housekeeping
+  _autoSwitchTabOnSingle(hk, tr) {
+    let active = this.data.activeTab;
+    if (hk && !tr) active = 'housekeeping';
+    else if (!hk && tr) active = 'training';
+    if (active !== this.data.activeTab) this.setData({ activeTab: active });
+  },
+
   // 从详情页/签约 webview 返回后刷新当前 Tab
   onShow() {
     if (this.data.activeTab === 'housekeeping') {
@@ -131,6 +139,12 @@ Page({
             if (startDay) startDay.setHours(0, 0, 0, 0);
             statusText = (startDay && today >= startDay) ? '服务中' : '待服务';
           }
+          // V2 多笔支付
+          const isV2 = c.paymentVersion === 'v2';
+          let paymentProgressText = '';
+          if (isV2 && c.paymentReceivedAmount !== undefined) {
+            paymentProgressText = `已收¥${c.paymentReceivedAmount || 0} / ¥${c.paymentTotalAmount || 0}`;
+          }
           return {
             ...c,
             serviceTypeText: c.contractType || '未知服务',
@@ -141,9 +155,14 @@ Page({
             showSign,
             showOnboard,
             isHistory,
+            isV2,
+            paymentProgressText,
+            paymentReceivedAmount: c.paymentReceivedAmount || 0,
+            paymentTotalAmount:    c.paymentTotalAmount || 0,
           };
         });
-      this.setData({ contracts, empty: contracts.length === 0 });
+      this.setData({ contracts, empty: contracts.length === 0, hasHousekeeping: contracts.length > 0 });
+      this._autoSwitchTabOnSingle(contracts.length > 0, this.data.hasTraining);
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
     } finally {
@@ -228,9 +247,34 @@ Page({
         const isTerminal = contractStatus === 'graduated' || contractStatus === 'refunded';
         // 生命周期驱动：signing → 去签约；graduated/refunded 终态不出任何操作按钮
         const showSign = contractStatus === 'signing';
-        const showPay = !!c.paymentEnabled && !paid && !isTerminal;
-        // 未支付显示应付金额，已支付显示实付金额（CRM 接口口径）
-        const amountYuan = paid ? c.paymentAmountYuan : c.payableAmountYuan;
+        // V2 多笔支付：payments[] 由 CRM shapeBaobeiContract 暴露（2026-07-08 上线）
+        // 注意：amount 单位是「元」整数（不是分），不再除以 100
+        const paymentsArr = Array.isArray(c.payments) ? c.payments : [];
+        const showPay = !!c.paymentEnabled && !paid && !isTerminal && Number(c.paymentConfigAmount || c.payableAmountCents || 0) > 0;
+        // 单位审计（CRM 2026-07-08 PAYMENT-UNIT-FIX）：
+        //   payments[].amount = 元（不加 /100）
+        //   paymentConfigAmount = 元（不加 /100）
+        //   paymentTotalAmount / paymentReceivedAmount = 元
+        //   payableAmountCents / paymentAmountCents = 分（÷100 转元）
+        //   payableAmountYuan / paymentAmountYuan = 元
+        const paymentsSumYuan = paymentsArr.reduce((s, p) => s + Number(p.amount || 0), 0);
+        const amountYuanRaw = paid
+          ? Number(c.paymentAmountYuan || (Number(c.paymentAmountCents || 0) / 100))
+          : (Number(c.payableAmountCents || 0) / 100) || Number(c.payableAmountYuan || 0) || Number(c.paymentConfigAmount || 0) || paymentsSumYuan;
+        const amountYuan = amountYuanRaw > 0 ? amountYuanRaw.toFixed(2) : '';
+        const paymentsList = paymentsArr.map((p) => {
+          // amount 已是「元」整数，直接 toFixed(2) 保留 2 位小数
+          const amt = Number(p.amount || 0);
+          return {
+            ...p,
+            amountYuan: amt.toFixed(2),
+            paidAtFmt: p.paidAt ? formatDateTime(p.paidAt) : '',
+          };
+        });
+        const totalYuan = paymentsArr.reduce((s, p) => s + Number(p.amount || 0), 0) || Number(c.payableAmountCents || 0) / 100 || Number(c.paymentTotalAmount || 0);
+        const paidYuan = paymentsArr.filter((p) => p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0);
+        const paymentProgressPercent = totalYuan > 0 ? Math.min(100, (paidYuan / totalYuan * 100)) : 0;
+        const paymentReceivedYuan = paidYuan > 0 ? paidYuan.toFixed(2) : '0.00';
         return {
           ...c,
           contractStatus,
@@ -245,6 +289,9 @@ Page({
           showSign,
           showPay,
           paid,
+          payments: paymentsList,
+          paymentProgressPercent: Math.round(paymentProgressPercent),
+          paymentReceivedYuan,
         };
       });
       // 有任一合同未签约或未支付 → 点亮角标
@@ -253,6 +300,7 @@ Page({
         trainingLoaded: true,
         trainingEmpty:  contracts.length === 0,
         trainingBadge:  hasTodo,
+        hasTraining:    contracts.length > 0,
         trainingData: {
           lead: raw.lead ? { ...raw.lead, phoneMasked: maskPhone(raw.lead.phone) } : null,
           courseInfo: raw.courseInfo || null,
@@ -260,6 +308,7 @@ Page({
           contracts,
         },
       });
+      this._autoSwitchTabOnSingle(this.data.hasHousekeeping, contracts.length > 0);
     } catch (e) {
       if (!silent) wx.showToast({ title: e.message || '加载失败', icon: 'none' });
     } finally {
@@ -324,11 +373,25 @@ Page({
   async goTrainingPayment(e) {
     if (this.data.paying) return;
     const id = e.currentTarget.dataset.id;
+    const paymentType = e.currentTarget.dataset.paymentType || '';
     const list = this.data.trainingData && this.data.trainingData.contracts || [];
     const target = list.find(c => String(c.id) === String(id));
     if (!target) return;
-    // 支付下单取应付金额（分），paymentAmount 是实付金额，未支付前为 0
-    const amountCents = Number(target.payableAmountCents) || 0;
+
+    // 多笔模式：按笔付（amount 单位元 → 转分给云函数）；单笔模式：按总应付金额
+    let amountCents = 0;
+    let paymentLabel = '';
+    const paymentsArr = Array.isArray(target.payments) ? target.payments : [];
+    if (paymentType) {
+      const pay = paymentsArr.find(p => p.type === paymentType);
+      if (!pay) { wx.showToast({ title: '该笔不存在', icon: 'none' }); return; }
+      // payments[].amount 单位 = 元，云函数 precreateTraining 期望 amount = 分
+      amountCents = Math.round(Number(pay.amount || 0) * 100);
+      paymentLabel = pay.label || pay.type;
+    } else {
+      // payableAmountCents 单位 = 分
+      amountCents = Number(target.payableAmountCents) || Math.round(Number(target.payableAmountYuan || 0) * 100);
+    }
     if (amountCents <= 0) {
       wx.showToast({ title: '金额异常', icon: 'none' });
       return;
@@ -337,7 +400,7 @@ Page({
     const { confirm } = await new Promise(resolve =>
       wx.showModal({
         title: '确认支付',
-        content: `确认支付 ¥${(amountCents / 100).toFixed(2)} 元？`,
+        content: `确认支付${paymentLabel ? '「' + paymentLabel + '」' : ''} ¥${(amountCents / 100).toFixed(2)} 元？`,
         confirmText: '确认支付',
         confirmColor: '#8766F3',
         success: resolve,
@@ -345,7 +408,7 @@ Page({
     );
     if (!confirm) return;
 
-    this.setData({ paying: true });
+    this.setData({ paying: paymentType || true });
     try {
       const res = await wx.cloud.callFunction({
         name: 'paymentService',

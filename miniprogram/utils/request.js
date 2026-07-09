@@ -22,18 +22,17 @@ const publicRequest = (options) => {
         ...options.header
       },
       success: (response) => {
-        console.log(`📡 API 响应 [${options.method || 'GET'}] ${options.url}:`, response);
-        
+        // 成功静默：只在 2xx 范围内 resolve，失败由下面分支处理
         if (response.statusCode >= 200 && response.statusCode < 300) {
           resolve(response.data);
         } else {
           const errorMsg = response.data?.message || `请求失败 (${response.statusCode})`;
-          console.error(`❌ API 错误:`, errorMsg);
+          console.error(`❌ API 错误 [${options.url}]:`, errorMsg);
           reject(new Error(errorMsg));
         }
       },
       fail: (error) => {
-        console.error(`❌ 网络请求失败:`, error);
+        console.error(`❌ 网络请求失败 [${options.url}]:`, error);
         reject(error);
       }
     });
@@ -48,7 +47,6 @@ const authenticatedRequest = (options) => {
   const token = wx.getStorageSync('access_token') || wx.getStorageSync('token');
   
   if (!token) {
-    console.error('❌ 未找到 Token，请先登录');
     return Promise.reject(new Error('请先登录'));
   }
   
@@ -65,8 +63,7 @@ const authenticatedRequest = (options) => {
         ...options.header
       },
       success: (response) => {
-        console.log(`📡 API 响应 [${options.method || 'GET'}] ${options.url}:`, response);
-        
+        // 成功静默；只记录 401 + 业务错误
         if (response.statusCode === 401) {
           // Token 过期，清除本地数据并跳转到登录页
           console.warn('⚠️ Token 已过期，跳转到登录页');
@@ -98,12 +95,12 @@ const authenticatedRequest = (options) => {
           resolve(response.data);
         } else {
           const errorMsg = response.data?.message || `请求失败 (${response.statusCode})`;
-          console.error(`❌ API 错误:`, errorMsg);
+          console.error(`❌ API 错误 [${options.url}]:`, errorMsg);
           reject(new Error(errorMsg));
         }
       },
       fail: (error) => {
-        console.error(`❌ 网络请求失败:`, error);
+        console.error(`❌ 网络请求失败 [${options.url}]:`, error);
         reject(error);
       }
     });

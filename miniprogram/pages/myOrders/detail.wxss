@@ -71,6 +71,31 @@
 .row:last-child { border-bottom: none; }
 .label { font-size: 28rpx; color: #999; width: 160rpx; flex-shrink: 0; }
 .value { font-size: 28rpx; color: #333; flex: 1; }
+.value-inline {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+.value-amount { font-size: 28rpx; color: #333; }
+.value-paid-tag {
+  flex-shrink: 0;
+  padding: 4rpx 14rpx;
+  font-size: 22rpx;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border-radius: 16rpx;
+  font-weight: 500;
+}
+.value-refund-tag {
+  flex-shrink: 0;
+  padding: 4rpx 14rpx;
+  font-size: 22rpx;
+  color: #8766F3;
+  background: #f0ecfd;
+  border-radius: 16rpx;
+  font-weight: 500;
+}
 .value-row { display: flex; align-items: center; flex: 1; justify-content: space-between; }
 .call-btn {
   font-size: 26rpx; color: #8766F3;
@@ -103,6 +128,51 @@
   padding: 20rpx 0;
 }
 
+/* 悬浮底部状态按钮 */
+.floating-action-spacer {
+  height: 180rpx;
+}
+.floating-action {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  gap: 16rpx;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  z-index: 99;
+}
+.floating-action-btn {
+  background: linear-gradient(135deg, #8766F3 0%, #6B4FC7 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  padding: 24rpx 0;
+  border-radius: 48rpx;
+  text-align: center;
+  box-shadow: 0 6rpx 20rpx rgba(135, 102, 243, 0.35);
+  line-height: 1;
+}
+.floating-action-btn--pay {
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  box-shadow: 0 6rpx 20rpx rgba(255, 126, 95, 0.35);
+}
+.floating-action-btn--onboard {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  box-shadow: 0 6rpx 20rpx rgba(46, 204, 113, 0.35);
+}
+.floating-action-btn--download {
+  background: #fff;
+  color: #8766F3;
+  border: 2rpx solid #8766F3;
+  box-shadow: none;
+}
+.floating-action-btn--done {
+  background: #f0ecfd;
+  color: #8766F3;
+  box-shadow: none;
+}
+
 /* 签约进度 */
 .signer-row {
   display: flex; align-items: center;
@@ -114,6 +184,7 @@
 .signer-label { font-size: 28rpx; color: #999; }
 .signer-status { font-size: 28rpx; font-weight: 500; }
 .signer-status.done    { color: #8766F3; }
+.signer-status.signing { color: #f5a623; }
 .signer-status.pending { color: #bbb; }
 
 /* 等待阿姨签约按钮 */
@@ -122,4 +193,312 @@
   border: 2rpx solid #8766F3;
 }
 .btn-waiting[disabled] { opacity: 0.7; }
+
+/* 去支付按钮 */
+.btn-pay {
+  padding: 4rpx 20rpx;
+  font-size: 24rpx;
+  color: #fff;
+  background: #8766F3;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.btn-pay-group {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+.btn-pay-alt {
+  font-size: 22rpx;
+  color: #8766F3;
+  padding: 0;
+  background: transparent;
+  white-space: nowrap;
+}
+.btn-pay-refresh {
+  font-size: 22rpx;
+  color: #999;
+  padding: 0;
+  background: transparent;
+  white-space: nowrap;
+  margin-top: 4rpx;
+  text-decoration: underline;
+}
+
+/* ═══ V2 支付进度 ═══ */
+.progress-bar-wrap {
+  margin-bottom: 24rpx;
+}
+.progress-bar {
+  width: 100%;
+  height: 8rpx;
+  background: #f0f0f0;
+  border-radius: 4rpx;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+.progress-filled {
+  height: 100%;
+  background: #8766F3;
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+.progress-text-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.progress-received {
+  font-size: 28rpx;
+  color: #8766F3;
+  font-weight: 600;
+}
+.progress-total {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 支付明细列表 */
+.payment-list {
+  margin-top: 20rpx;
+}
+.payment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx;
+  background: #fafafa;
+  border-radius: 8rpx;
+  margin-bottom: 12rpx;
+}
+.payment-item:last-child {
+  margin-bottom: 0;
+}
+.payment-item.item-paid {
+  background: #f0faf0;
+}
+.payment-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.payment-seq {
+  font-size: 24rpx;
+  color: #999;
+}
+.payment-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+.payment-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+}
+.payment-amount {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+.payment-status {
+  font-size: 22rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+.payment-status.status-paid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.payment-status.status-pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* ═══ 用支付宝支付按钮（独立行，跟 btn-pay-group 同区域） ═══ */
+.btn-pay-row {
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 4rpx;
+}
+.btn-pay-alipay {
+  font-size: 22rpx;
+  color: #1677ff;
+  padding: 4rpx 16rpx;
+  background: #e6f4ff;
+  border: 1rpx solid #1677ff;
+  border-radius: 20rpx;
+  white-space: nowrap;
+}
+
+/* ═══ 支付按钮独立卡片（服务信息下方） ═══ */
+.pay-action-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 32rpx 32rpx 28rpx;
+}
+.pay-action-hint {
+  font-size: 28rpx;
+  color: #8766F3;
+  font-weight: 500;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+.pay-btn-main {
+  background: #8766F3;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 600;
+  text-align: center;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 48rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(135, 102, 243, 0.25);
+}
+.pay-btn-main:active {
+  background: #6b4fc7;
+}
+.pay-btn-alipay {
+  background: #fff;
+  color: #1677ff;
+  font-size: 30rpx;
+  font-weight: 500;
+  text-align: center;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 40rpx;
+  border: 2rpx solid #1677ff;
+  margin-bottom: 16rpx;
+}
+.pay-btn-refresh {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  padding: 16rpx 0 0;
+  text-decoration: underline;
+}
+
+/* ═══ 支付宝支付弹窗 ═══ */
+.alipay-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+.alipay-dialog {
+  width: 100%;
+  max-width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 36rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.18);
+}
+.alipay-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1677ff;
+  margin-bottom: 12rpx;
+}
+.alipay-amount {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #1677ff;
+  margin-bottom: 8rpx;
+}
+.alipay-subject {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+.alipay-qrcode-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.alipay-qrcode {
+  width: 400rpx;
+  height: 400rpx;
+  background: #fff;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 12rpx;
+}
+.alipay-qrcode-hint {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #1677ff;
+}
+.alipay-qrcode-loading {
+  width: 400rpx;
+  height: 400rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #999;
+  border: 2rpx dashed #ddd;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+}
+.alipay-actions {
+  display: flex;
+  width: 100%;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+.alipay-btn-secondary {
+  flex: 1;
+  background: #f5f5f5;
+  color: #333;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+  border: none;
+  height: 80rpx;
+  line-height: 80rpx;
+  padding: 0;
+}
+.alipay-btn-primary {
+  width: 100%;
+  background: #1677ff;
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 500;
+  border-radius: 40rpx;
+  border: none;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0;
+  margin-bottom: 16rpx;
+}
+.alipay-btn-primary[disabled] {
+  opacity: 0.7;
+}
+.alipay-tip {
+  font-size: 22rpx;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 8rpx;
+}
+.alipay-close {
+  font-size: 26rpx;
+  color: #999;
+  padding: 12rpx 32rpx;
+  margin-top: 4rpx;
+}
 

@@ -78,6 +78,42 @@ async function getSigningUrl(phone, id) {
   return res.data;
 }
 
+async function getPaymentProgress(phone, id) {
+  if (!id) throw new Error('缺少合同ID');
+  if (!phone) throw new Error('请先绑定手机号');
+  const res = await crmRequest('GET', `/api/miniprogram/contracts/${id}/payment-progress?phone=${encodeURIComponent(phone)}`);
+  const data = res.data || res;
+
+  // 如果 progress 接口缺少 payments 数组，从合同详情补充
+  if (!Array.isArray(data.payments)) {
+    try {
+      const contractData = await getContractDetail(phone, id);
+      if (contractData && Array.isArray(contractData.payments)) {
+        data.payments = contractData.payments;
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // 安全网：用 receivedAmount 校准付款状态，确保 nextPayment 正确
+  if (Array.isArray(data.payments) && data.payments.length > 0) {
+    const receivedAmount = Number(data.receivedAmount || 0);
+    if (receivedAmount > 0) {
+      let remaining = receivedAmount;
+      data.payments.forEach(p => {
+        if (remaining >= Number(p.amount || 0)) {
+          p.status = 'paid';
+          remaining -= Number(p.amount || 0);
+        }
+      });
+    }
+    if (!data.nextPayment) {
+      data.nextPayment = data.payments.find(p => p.status !== 'paid') || null;
+    }
+  }
+
+  return data;
+}
+
 exports.main = async (event) => {
   // phone 由小程序端从 crmUserInfo.phone 传入（CRM 登录时已下发，来源可信）
   const phone = event.phone ? String(event.phone).trim() : '';
@@ -98,6 +134,10 @@ exports.main = async (event) => {
       }
       case 'getSigningUrl': {
         const data = await getSigningUrl(phone, event.id);
+        return { success: true, data };
+      }
+      case 'getPaymentProgress': {
+        const data = await getPaymentProgress(phone, event.id);
         return { success: true, data };
       }
       default:

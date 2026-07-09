@@ -18,7 +18,7 @@
         <input
           class="nickname-input"
           type="nickname"
-          placeholder="请输入昵称"
+          placeholder="选填，不填也能用"
           value="{{tempNickname}}"
           bindinput="onNicknameInput"
           bindblur="onNicknameBlur"
@@ -41,4 +41,3 @@
     <button class="save-btn" bindtap="onSave">保存修改</button>
   </view>
 </view>
-

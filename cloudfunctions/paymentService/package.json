@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "qrcode": "^1.5.4",
     "wx-server-sdk": "~2.4.0"
   }
 }

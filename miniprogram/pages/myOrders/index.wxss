@@ -206,6 +206,11 @@
   font-weight: 600;
   color: #ff6b00;
 }
+.value-muted { color: #bbb; }
+.info-row--amount {
+  align-items: center;
+  padding: 8rpx 0;
+}
 
 /* 立即支付按钮 */
 .pay-btn {
@@ -223,5 +228,110 @@
   font-size: 24rpx;
   color: #2bb673;
   margin-left: auto;
+}
+
+/* V2 支付进度迷你条 */
+.payment-progress-mini {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
+}
+.progress-bar-mini {
+  flex: 1;
+  height: 6rpx;
+  background: #f0f0f0;
+  border-radius: 3rpx;
+  overflow: hidden;
+  min-width: 80rpx;
+}
+.progress-filled-mini {
+  height: 100%;
+  background: #8766F3;
+  border-radius: 3rpx;
+  transition: width 0.3s ease;
+}
+.progress-text-mini {
+  font-size: 22rpx;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* V2 收款明细（按笔） */
+.payment-progress {
+  margin: 8rpx 0 16rpx;
+  padding: 16rpx 20rpx;
+  background: #f8f6ff;
+  border-radius: 12rpx;
+}
+.payment-progress-bar {
+  width: 100%;
+  height: 8rpx;
+  background: #e5dffb;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+.payment-progress-filled {
+  height: 100%;
+  background: linear-gradient(90deg, #8766F3 0%, #5b3fd4 100%);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+.payment-progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+}
+.payment-progress-received { color: #8766F3; font-weight: 600; }
+.payment-progress-total { color: #999; }
+
+.payment-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.payment-list-item:last-child { border-bottom: none; }
+.payment-list-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+  min-width: 0;
+}
+.payment-seq {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+.payment-meta {
+  font-size: 22rpx;
+  color: #999;
+}
+.payment-list-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6rpx;
+  flex-shrink: 0;
+}
+.payment-amount {
+  font-size: 30rpx;
+  color: #ff6b00;
+  font-weight: 600;
+}
+.pay-btn-mini {
+  font-size: 22rpx;
+  color: #fff;
+  background: #ff6b00;
+  border-radius: 18rpx;
+  padding: 4rpx 16rpx;
+  line-height: 1.4;
+}
+.paid-tag-mini {
+  font-size: 22rpx;
+  color: #2bb673;
 }
 

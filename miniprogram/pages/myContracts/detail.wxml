@@ -1,0 +1,172 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <view wx:elif="{{contract}}">
+    <!-- 合同状态横幅 -->
+    <view class="status-banner status-{{contract.displayStatus || contract.contractStatus}}">
+      <view class="status-row">
+        <text class="status-text">{{contract.statusText}}</text>
+        <text wx:if="{{contract.orderCategory === 'training'}}" class="status-kind-tag status-kind-tag-training">职培订单</text>
+        <text wx:else class="status-kind-tag status-kind-tag-housekeeping">派单合同</text>
+      </view>
+    </view>
+
+    <!-- 顶部基础信息（家政：合同编号 + 服务类型；职培：订单编号 + 课程） -->
+    <view class="section">
+      <view class="section-title">{{contract.orderCategory === 'training' ? '订单信息' : '服务信息'}}</view>
+      <view class="row" wx:if="{{contract.contractNumber}}">
+        <text class="label">{{contract.orderCategory === 'training' ? '订单编号' : '合同编号'}}</text>
+        <text class="value value-mono" selectable>{{contract.contractNumber}}</text>
+      </view>
+      <!-- 家政：合同类型 -->
+      <view class="row" wx:if="{{contract.orderCategory !== 'training' && contract.serviceTypeText}}">
+        <text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text>
+      </view>
+      <!-- 职培：intendedCourses（数组/字符串/对象多形） -->
+      <view class="row" wx:if="{{contract.orderCategory === 'training'}}">
+        <text class="label">课　　程</text><text class="value">{{contract.coursesLabel || '待定'}}</text>
+      </view>
+      <!-- 家政：我的工资 -->
+      <view class="row" wx:if="{{contract.orderCategory !== 'training' && contract.nannySalary}}">
+        <text class="label">我的工资</text><text class="value">¥{{contract.nannySalary}} 元/月</text>
+      </view>
+      <!-- 职培：课程金额 -->
+      <view class="row" wx:if="{{contract.orderCategory === 'training' && contract.courseAmount}}">
+        <text class="label">课程金额</text><text class="value">¥{{contract.courseAmount}} 元</text>
+      </view>
+      <!-- 家政：起止日期 + 期限 -->
+      <block wx:if="{{contract.orderCategory !== 'training'}}">
+        <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
+        <view class="row"><text class="label">结束日期</text><text class="value">{{contract.endDateFmt || '待定'}}</text></view>
+        <view class="row" wx:if="{{contract.contractDuration}}">
+          <text class="label">合同期限</text><text class="value">{{contract.contractDuration}}</text>
+        </view>
+      </block>
+      <!-- 职培：创建时间 -->
+      <view class="row" wx:if="{{contract.orderCategory === 'training' && contract.createdAtFmt}}">
+        <text class="label">创建时间</text><text class="value">{{contract.createdAtFmt}}</text>
+      </view>
+    </view>
+
+    <!-- 客户/学员信息（双语：家政显示"客户"，职培显示"学员"） -->
+    <view class="section" wx:if="{{contract.customerName || contract.customerPhone}}">
+      <view class="section-title">{{contract.orderCategory === 'training' ? '学员信息' : '客户信息'}}</view>
+      <view class="row"><text class="label">姓　　名</text><text class="value">{{contract.customerName}}</text></view>
+      <view class="row" wx:if="{{contract.customerPhone}}">
+        <text class="label">手　机　号</text>
+        <view class="value-row">
+          <text class="value">{{contract.customerPhone}}</text>
+          <view class="call-btn" bindtap="callCustomer">拨打</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 收款配置（家政：服务费；职培：课程费） -->
+    <view class="section" wx:if="{{contract.customerServiceFee || contract.paymentTotalAmount || contract.paymentStatus}}">
+      <view class="section-title">收款配置</view>
+      <view class="row" wx:if="{{contract.customerServiceFee}}">
+        <text class="label">{{contract.orderCategory === 'training' ? '课程费用' : '服务费用'}}</text>
+        <text class="value-amount">¥{{contract.customerServiceFee}} 元</text>
+      </view>
+      <view class="row" wx:if="{{contract.paymentTotalAmount}}">
+        <text class="label">应收总额</text><text class="value">¥{{contract.paymentTotalAmount}} 元</text></view>
+      <view class="row" wx:if="{{contract.paymentReceivedAmount !== undefined}}">
+        <text class="label">已收金额</text>
+        <view class="value-row">
+          <text class="value">¥{{contract.paymentReceivedAmount}} 元</text>
+          <view class="status-mini {{contract.paymentStatus}}">{{paymentStatusText[contract.paymentStatus] || contract.paymentStatus}}</view>
+        </view>
+      </view>
+      <view class="row" wx:if="{{contract.paymentType}}">
+        <text class="label">支付方式</text><text class="value">{{paymentTypeText[contract.paymentTypeResolved] || contract.paymentTypeResolved || contract.paymentType || '—'}}</text></view>
+      <view class="row" wx:if="{{contract.paidAtFmt}}">
+        <text class="label">支付时间</text><text class="value">{{contract.paidAtFmt}}</text></view>
+    </view>
+
+    <!-- 分期收款明细 -->
+    <view class="section" wx:if="{{contract.payments && contract.payments.length > 0}}">
+      <view class="section-title">分期收款明细</view>
+      <view wx:for="{{contract.payments}}" wx:key="sequenceNo" wx:for-item="payItem" class="payment-item {{payItem.status === 'paid' ? 'paid' : 'pending'}}">
+        <view class="payment-item-main">
+          <view class="payment-item-head">
+            <text class="payment-label">{{payItem.labelText}}</text>
+          </view>
+          <view wx:if="{{payItem.paidAtFmt}}" class="payment-item-meta">{{payItem.status === 'paid' ? '支付时间' : '应付时间'}}：{{payItem.paidAtFmt}}</view>
+        </view>
+        <view class="payment-item-right">
+          <text class="payment-amount">¥{{payItem.amount}} 元</text>
+          <text class="payment-status status-{{payItem.status}}">{{payItem.status === 'paid' ? '✓ 已支付' : '待支付'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签署进度（家政：「我」是乙方阿姨；职培：「我」是学员，即合同甲方） -->
+    <view class="section" wx:if="{{contract.hasSigning}}">
+      <view class="section-title">签署进度</view>
+
+      <view class="signer-card">
+        <view class="signer-head">
+          <text class="signer-label">甲方（{{contract.orderCategory === 'training' ? '学员' : '客户'}}：{{contract.customerName || '客户'}}）</text>
+          <view class="signer-badge {{contract.customerStatus === 'signed' ? 'done' : contract.customerStatus === 'signing' ? 'signing' : 'pending'}}">
+            <text class="signer-badge__text">{{contract.customerStatus === 'signed' ? '✓ 已签署' : contract.customerStatus === 'signing' ? '签约中' : '待签署'}}</text>
+          </view>
+        </view>
+        <view wx:if="{{contract.customerSignedAtFmt}}" class="signer-meta">签署时间：{{contract.customerSignedAtFmt}}</view>
+      </view>
+
+      <view class="signer-card" wx:if="{{contract.orderCategory !== 'training'}}">
+        <view class="signer-head">
+          <text class="signer-label">乙方（服务人员：{{contract.nannyName || contract.workerName || '阿姨'}}）</text>
+          <view class="signer-badge {{contract.nannyStatus === 'signed' ? 'done' : contract.nannyStatus === 'signing' ? 'signing' : 'pending'}}">
+            <text class="signer-badge__text">{{contract.nannyStatus === 'signed' ? '✓ 已签署' : contract.nannyStatus === 'signing' ? '签约中' : '待签署'}}</text>
+          </view>
+        </view>
+        <view wx:if="{{contract.nannySignedAtFmt}}" class="signer-meta">签署时间：{{contract.nannySignedAtFmt}}</view>
+        <view wx:if="{{contract.nannyPhone}}" class="signer-meta">联系电话：{{contract.nannyPhone}}</view>
+      </view>
+
+      <view wx:if="{{contract.actionButtons && contract.actionButtons.length > 0}}" class="sign-action-spacer"></view>
+    </view>
+
+    <!-- 保险信息（家政专属，职培暂无） -->
+    <view class="section" wx:if="{{hasInsurance && contract.orderCategory !== 'training'}}">
+      <view class="section-title">保险信息</view>
+      <view class="row">
+        <text class="label">同步状态</text>
+        <view class="value-row">
+          <text class="value">{{insuranceStatusText[contract.insuranceSyncStatus] || '未同步'}}</text>
+          <view wx:if="{{contract.insuranceSyncPending}}" class="status-mini pending">待同步</view>
+        </view>
+      </view>
+      <view class="row" wx:if="{{contract.insuranceSyncedAt}}"><text class="label">同步时间</text><text class="value">{{contract.insuranceSyncedAtFmt}}</text></view>
+      <view class="row" wx:if="{{contract.insuranceSyncError}}"><text class="label">失败原因</text><text class="value value-error">{{contract.insuranceSyncError}}</text></view>
+      <view wx:if="{{contract.insurancePolicyNo}}" class="row"><text class="label">保单号</text><text class="value value-mono">{{contract.insurancePolicyNo}}</text></view>
+    </view>
+
+    <!-- 上户记录（家政专属） -->
+    <view class="section" wx:if="{{contract.orderCategory !== 'training' && contract.onboardStatus === 'confirmed'}}">
+      <view class="section-title">上户记录</view>
+      <view class="row"><text class="label">上户状态</text><text class="value value-success">✓ 已确认上户</text></view>
+      <view class="row" wx:if="{{contract.onboardConfirmedAt}}"><text class="label">确认时间</text><text class="value">{{contract.onboardConfirmedAt}}</text></view>
+    </view>
+  </view>
+
+  <!-- 悬浮固定底部按钮 -->
+  <view wx:if="{{contract.actionButtons && contract.actionButtons.length > 0}}" class="sign-action">
+    <button
+      wx:for="{{contract.actionButtons}}"
+      wx:key="key"
+      wx:for-item="btn"
+      class="sign-action-btn sign-action-btn--{{btn.kind}}"
+      open-type="{{btn.share ? 'share' : ''}}"
+      bindtap="onActionBtnTap"
+      data-url="{{btn.url}}"
+      data-key="{{btn.key}}"
+      data-label="{{btn.label}}"
+      data-cid="{{contract.contractNumber || contract._id}}"
+      hover-class="none"
+    >{{btn.label}}</button>
+  </view>
+</view>

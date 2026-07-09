@@ -6,7 +6,7 @@
 
   <block wx:elif="{{contract}}">
     <!-- 合同状态横幅 -->
-    <view class="status-banner status-{{contract.contractStatus}}">
+    <view class="status-banner status-{{contract.displayStatus || contract.contractStatus}}">
       <text class="status-text">{{contract.statusText}}</text>
     </view>
 
@@ -21,22 +21,58 @@
     <view class="section">
       <view class="section-title">服务信息</view>
       <view class="row"><text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text></view>
-      <view class="row"><text class="label">服务费用</text><text class="value">¥{{contract.serviceFee}} 元</text></view>
+      <view class="row">
+        <text class="label">服务费用</text>
+        <view class="value value-inline">
+          <text class="value-amount">¥{{contract.serviceFee}} 元{{contract.isV2 && paymentProgress ? '（分' + paymentProgress.payments.length + '笔收取）' : ''}}</text>
+          <text wx:if="{{contract.paymentStatus === 'paid'}}" class="value-paid-tag">✓ 已支付</text>
+          <text wx:elif="{{contract.paymentStatus === 'refunded'}}" class="value-refund-tag">已退款</text>
+        </view>
+      </view>
       <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">结束日期</text><text class="value">{{contract.endDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">合同期限</text><text class="value">{{contract.contractDuration || '—'}}</text></view>
+    </view>
+
+    <!-- ═══ 支付按钮区（旧版内联按钮已撤，状态动作统一到底部悬浮条）═══
+         兜底按钮：付完款回到小程序发现状态没同步时点这个（保留为内嵌快捷链接） -->
+    <view wx:if="{{contract.showPay}}" class="section">
+      <view class="pay-btn-refresh" bindtap="manualRefreshPayment">我已支付？点此刷新</view>
+    </view>
+
+    <!-- V2 支付进度 -->
+    <view class="section" wx:if="{{contract.isV2 && paymentProgress}}">
+      <view class="section-title">支付进度</view>
+      <!-- 进度条 -->
+      <view class="progress-bar-wrap">
+        <view class="progress-bar">
+          <view class="progress-filled" style="width: {{paymentProgress.totalAmount > 0 ? (paymentProgress.receivedAmount / paymentProgress.totalAmount * 100) : 0}}%"></view>
+        </view>
+        <view class="progress-text-row">
+          <text class="progress-received">已收 ¥{{paymentProgress.receivedAmount || 0}}</text>
+          <text class="progress-total">/ 共 ¥{{paymentProgress.totalAmount || 0}}</text>
+        </view>
+      </view>
+      <!-- 每笔明细 -->
+      <view class="payment-list">
+        <view class="payment-item {{item.status === 'paid' ? 'item-paid' : 'item-pending'}}" wx:for="{{paymentProgress.payments}}" wx:key="sequenceNo">
+          <view class="payment-item-left">
+            <text class="payment-seq">第{{item.sequenceNo}}笔</text>
+            <text class="payment-label">{{item.label}}</text>
+          </view>
+          <view class="payment-item-right">
+            <text class="payment-amount">¥{{item.amount}}</text>
+            <text class="payment-status status-{{item.status}}">{{item.status === 'paid' ? '✓ 已支付' : '待支付'}}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 阿姨信息 -->
     <view class="section">
       <view class="section-title-row">
         <text class="section-title">服务阿姨</text>
-        <view wx:if="{{contract.showOnboard}}"
-              class="onboard-btn {{contract.confirming ? 'onboard-btn-disabled' : ''}}"
-              bindtap="confirmOnboard">
-          {{contract.confirming ? '提交中...' : '确认上户'}}
-        </view>
-        <view wx:elif="{{contract.onboardConfirmed}}" class="onboard-done">✓ 已确认上户</view>
+        <view wx:if="{{contract.onboardConfirmed}}" class="onboard-done">✓ 已确认上户</view>
       </view>
       <view class="row"><text class="label">阿姨姓名</text><text class="value">{{contract.nannyName}}</text></view>
       <view class="row"><text class="label">阿姨工资</text><text class="value">¥{{contract.nannySalary}} 元/月</text></view>
@@ -54,14 +90,14 @@
       <view class="section-title">签约进度</view>
       <view class="signer-row">
         <text class="signer-label">甲方（您）</text>
-        <text class="signer-status {{contract.customerSigned ? 'done' : 'pending'}}">
-          {{contract.customerSigned ? '✓ 已签署' : '待签署'}}
+        <text class="signer-status {{contract.customerStatus === 'signed' ? 'done' : contract.customerStatus === 'signing' ? 'signing' : 'pending'}}">
+          {{contract.customerStatus === 'signed' ? '✓ 已签署' : contract.customerStatus === 'signing' ? '签约中' : '待签署'}}
         </text>
       </view>
       <view class="signer-row">
         <text class="signer-label">乙方（阿姨）</text>
-        <text class="signer-status {{contract.nannySigned ? 'done' : 'pending'}}">
-          {{contract.nannySigned ? '✓ 已签署' : '待签署'}}
+        <text class="signer-status {{contract.nannyStatus === 'signed' ? 'done' : contract.nannyStatus === 'signing' ? 'signing' : 'pending'}}">
+          {{contract.nannyStatus === 'signed' ? '✓ 已签署' : contract.nannyStatus === 'signing' ? '签约中' : '待签署'}}
         </text>
       </view>
     </view>
@@ -72,17 +108,44 @@
       <view class="row"><text class="label">确认时间</text><text class="value">{{contract.onboardConfirmedAt}}</text></view>
     </view>
 
-    <!-- 操作按钮区 -->
-    <view class="action-area">
-      <button wx:if="{{contract.showDownload}}" class="btn btn-outline" bindtap="downloadContract">
-        📄 下载合同
-      </button>
-      <button wx:if="{{contract.showSign}}" class="btn btn-primary" bindtap="goSign">
-        ✍️ 去签约
-      </button>
-      <button wx:elif="{{contract.waitingNanny}}" class="btn btn-waiting" disabled>
-        ⏳ 等待阿姨完成签署
-      </button>
+    <!-- 操作按钮区（旧版内联按钮已撤，状态动作统一到底部悬浮条） -->
+    <view class="action-area" wx:if="{{false}}"></view>
+
+    <!-- 底部悬浮状态按钮（按当前合同状态自动切换文案） -->
+    <view wx:if="{{floatingAction}}" class="floating-action-spacer"></view>
+    <view wx:if="{{floatingAction}}" class="floating-action">
+      <view class="floating-action-btn floating-action-btn--{{floatingAction.kind}}" bindtap="onFloatingAction">
+        {{floatingAction.label}}
+      </view>
+    </view>
+
+    <!-- ═══ 用支付宝支付弹窗 ═══ -->
+    <view wx:if="{{alipay.showDialog}}" class="alipay-mask" bindtap="closeAlipayDialog">
+      <view class="alipay-dialog" catchtap="">
+        <view class="alipay-title">💙 用支付宝支付</view>
+        <view class="alipay-amount">¥{{alipay.amountYuan}}</view>
+        <view class="alipay-subject">{{alipay.subject}}</view>
+
+        <!-- 二维码图（云存储 fileID） -->
+        <view wx:if="{{alipay.qrCodeFileId}}" class="alipay-qrcode-wrap">
+          <image class="alipay-qrcode" src="{{alipay.qrCodeFileId}}" mode="aspectFit" />
+          <view class="alipay-qrcode-hint">用支付宝扫一扫</view>
+        </view>
+        <view wx:else class="alipay-qrcode-loading">二维码生成中...</view>
+
+        <!-- 操作按钮组 -->
+        <view class="alipay-actions">
+          <button class="alipay-btn-secondary" bindtap="copyAlipayLink">📋 复制链接</button>
+          <button class="alipay-btn-secondary" bindtap="openAlipayExternally">🌐 浏览器打开</button>
+        </view>
+        <button class="alipay-btn-primary" bindtap="pollAlipayPaid" loading="{{alipay.polling}}" disabled="{{alipay.polling}}">
+          {{alipay.polling ? '查询中...' : '我已支付，刷新状态'}}
+        </button>
+        <view class="alipay-tip">
+          支付完成后点击"我已支付"或重新进入本页面即可看到订单状态更新。
+        </view>
+        <view class="alipay-close" bindtap="closeAlipayDialog">关闭</view>
+      </view>
     </view>
   </block>
 </view>

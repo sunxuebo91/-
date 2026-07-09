@@ -1,7 +1,12 @@
+/* 覆盖全局 page { display:flex } —— 设置页内容少时 flex 会导致滚动卡死 */
+page {
+  display: block;
+}
+
 .page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-bottom: 120rpx;
+  padding-bottom: 200rpx;
 }
 
 .section {
@@ -19,12 +24,11 @@
 }
 
 .info-item {
-	display: flex;
-	align-items: center;
-	/* 标签固定宽度，右侧内容整体靠左，不需要 space-between */
-	justify-content: flex-start;
-	padding: 24rpx 0;
-	border-bottom: 1rpx solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
 }
 
 .info-item:last-child {
@@ -46,7 +50,6 @@
   align-items: center;
   justify-content: flex-start;
   gap: 16rpx;
-  /* 确保内容靠左对齐 */
   text-align: left;
 }
 
@@ -55,6 +58,7 @@
   height: 80rpx;
   border-radius: 40rpx;
   flex-shrink: 0;
+  background: #f0f0f0;
 }
 
 .avatar-btn {
@@ -81,7 +85,6 @@
   opacity: 0.7;
 }
 
-
 .edit-text {
   font-size: 26rpx;
   background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
@@ -102,6 +105,15 @@
   color: #999;
 }
 
+.phone-text-btn {
+  font-size: 30rpx;
+  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 500;
+}
+
 .phone-auth-btn {
   background: transparent;
   border: none;
@@ -113,23 +125,12 @@
   align-items: center;
   justify-content: flex-start;
   text-align: left;
-  /* 强制靠左对齐 */
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
 
 .phone-auth-btn::after {
   border: none;
-}
-
-
-.phone-text-btn {
-  font-size: 30rpx;
-  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 500;
 }
 
 .btn-wrapper {
@@ -152,4 +153,3 @@
 .save-btn::after {
   border: none;
 }
-

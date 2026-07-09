@@ -1,6 +1,6 @@
 <view class="page">
-  <!-- Tab 栏 -->
-  <view class="tab-bar">
+  <!-- Tab 栏：单合同类型不显示 Tab，直接渲染；两类型都有才显示 Tab 切换 -->
+  <view class="tab-bar" wx:if="{{hasHousekeeping && hasTraining}}">
     <view class="tab-item {{activeTab === 'housekeeping' ? 'active' : ''}}"
           bindtap="onTabChange" data-tab="housekeeping">
       <text>家政合同</text>
@@ -10,6 +10,12 @@
       <text>职培订单</text>
       <view class="tab-dot" wx:if="{{trainingBadge}}"></view>
     </view>
+  </view>
+  <view class="tab-bar tab-bar--single" wx:elif="{{hasTraining}}">
+    <view class="tab-item active"><text>职培订单</text></view>
+  </view>
+  <view class="tab-bar tab-bar--single" wx:elif="{{hasHousekeeping}}">
+    <view class="tab-item active"><text>家政合同</text></view>
   </view>
 
   <!-- ═══ 家政合同 Tab ═══ -->
@@ -50,6 +56,7 @@
               <text class="label">开始日期</text>
               <text class="value">{{item.startDateFmt}}</text>
             </view>
+
           </view>
 
           <view class="card-footer">
@@ -112,21 +119,64 @@
             <text class="label">已报课程</text>
             <text class="value">{{item.intendedCourses}}</text>
           </view>
-          <view class="info-row">
-            <text class="label">课程金额</text>
-            <text class="value">¥{{item.courseAmountYuan}} 元</text>
-          </view>
-          <view class="info-row">
-            <text class="label">应付金额</text>
-            <view class="value-row">
-              <text class="value value-strong">¥{{item.amountYuan}} 元</text>
-              <view wx:if="{{item.showPay}}"
-                    class="pay-btn {{paying ? 'pay-btn-disabled' : ''}}"
-                    catchtap="goTrainingPayment"
-                    data-id="{{item.id}}">{{paying ? '支付中...' : '立即支付'}}</view>
-              <view wx:elif="{{item.paid}}" class="paid-tag">✓ 已支付</view>
+
+          <!-- 收款明细（V2 多笔 + 销售开启/已付） -->
+          <block wx:if="{{item.showPay || item.paid}}">
+            <!-- V2 多笔：进度条 + 每笔 -->
+            <view wx:if="{{item.payments && item.payments.length > 1}}">
+              <view class="info-row info-row--amount">
+                <text class="label">应付金额</text>
+                <view class="value-row">
+                  <text class="value value-strong">¥{{item.amountYuan || '—'}}</text>
+                </view>
+              </view>
+              <view class="payment-progress">
+                <view class="payment-progress-bar">
+                  <view class="payment-progress-filled" style="width: {{item.paymentProgressPercent || 0}}%;"></view>
+                </view>
+                <view class="payment-progress-text">
+                  <text class="payment-progress-received">已收 ¥{{item.paymentReceivedYuan || 0}}</text>
+                  <text class="payment-progress-total">/ 共 ¥{{item.amountYuan || '—'}}</text>
+                </view>
+              </view>
+              <view wx:for="{{item.payments}}" wx:key="type" wx:for-item="payItem" class="payment-list-item">
+                <view class="payment-list-left">
+                  <text class="payment-seq">{{payItem.label || payItem.type}}</text>
+                  <text wx:if="{{payItem.paidAtFmt}}" class="payment-meta">已支付：{{payItem.paidAtFmt}}</text>
+                </view>
+                <view class="payment-list-right">
+                  <text class="payment-amount">¥{{payItem.amountYuan || '—'}}</text>
+                  <view wx:if="{{payItem.status === 'paid'}}" class="paid-tag-mini">✓ 已支付</view>
+                  <view wx:elif="{{item.showPay}}"
+                        class="pay-btn-mini {{paying === payItem.type ? 'pay-btn-disabled' : ''}}"
+                        catchtap="goTrainingPayment"
+                        data-id="{{item.id}}"
+                        data-payment-type="{{payItem.type}}"
+                        data-payment-amount="{{payItem.amount}}">{{paying === payItem.type ? '处理中...' : '去支付'}}</view>
+                </view>
+              </view>
             </view>
-          </view>
+            <!-- 单笔：应付金额 + 单个立即支付 -->
+            <view wx:else>
+              <view class="info-row info-row--amount">
+                <text class="label">应付金额</text>
+                <view class="value-row">
+                  <text class="value value-strong">¥{{item.amountYuan || '—'}}</text>
+                  <view wx:if="{{item.showPay}}"
+                        class="pay-btn {{paying ? 'pay-btn-disabled' : ''}}"
+                        catchtap="goTrainingPayment"
+                        data-id="{{item.id}}">{{paying ? '支付中...' : '立即支付'}}</view>
+                  <view wx:elif="{{item.paid}}" class="paid-tag">✓ 已支付</view>
+                </view>
+              </view>
+            </view>
+          </block>
+          <block wx:elif="{{!item.paid}}">
+            <view class="info-row">
+              <text class="label">应付金额</text>
+              <text class="value value-muted">—</text>
+            </view>
+          </block>
           <view class="info-row" wx:if="{{item.paid && item.paidAtFmt}}">
             <text class="label">支付时间</text>
             <text class="value">{{item.paidAtFmt}}</text>

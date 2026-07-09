@@ -1,122 +1,295 @@
-/* 页面容器 */
+/* 覆盖全局 page { display:flex } —— 登录页需要 block 布局防止滚动卡死 */
+page {
+  display: block;
+  background: #4B2DBA;
+}
+
 .page {
+  position: relative;
+  width: 100%;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(165deg, #8766F3 0%, #7355E8 50%, #4B2DBA 100%);
+  overflow: hidden;
+  padding: 0 48rpx 80rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 装饰光斑 ========== */
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60rpx);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-blob-1 {
+  width: 480rpx;
+  height: 480rpx;
+  background: radial-gradient(circle, #C4B5FD 0%, transparent 70%);
+  top: -120rpx;
+  right: -120rpx;
+  opacity: 0.6;
+}
+.bg-blob-2 {
+  width: 360rpx;
+  height: 360rpx;
+  background: radial-gradient(circle, #A694FF 0%, transparent 70%);
+  top: 320rpx;
+  left: -100rpx;
+  opacity: 0.45;
+}
+.bg-blob-3 {
+  width: 520rpx;
+  height: 520rpx;
+  background: radial-gradient(circle, #E0D5FF 0%, transparent 70%);
+  bottom: -180rpx;
+  right: -160rpx;
+  opacity: 0.35;
+}
+
+/* ========== 自定义导航栏 ========== */
+.nav-bar {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  /* 透明背景，透出页面渐变色 */
+  background: transparent;
+}
+
+.nav-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+  position: relative;
+}
+
+.nav-back {
+  width: 64rpx;
+  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48rpx 0;
+  flex-shrink: 0;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.2s ease;
+}
+
+.nav-back:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.nav-back-icon {
+  color: #FFFFFF;
+  font-size: 48rpx;
+  font-weight: 500;
+  line-height: 1;
+  margin-top: -4rpx;
+}
+
+.nav-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.nav-placeholder {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+}
+
+/* ========== 品牌区（绝对定位到屏幕垂直中心）========== */
+.brand {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  top: 50vh;          /* 屏幕正中间 */
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brand-logo {
+  width: 144rpx;
+  height: 144rpx;
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 28rpx rgba(75, 45, 186, 0.15), 0 2rpx 6rpx rgba(75, 45, 186, 0.1);
+  margin-bottom: 28rpx;
+  padding: 12rpx;
   box-sizing: border-box;
 }
 
-/* 内容容器 */
-.content {
+.brand-logo-img {
   width: 100%;
+  height: 100%;
+}
+
+/* 口号：纯白 + 加粗 + 字间距 —— 克制的高级感 */
+.brand-slogan {
+  margin-top: 40rpx;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 6rpx;
+  text-shadow: 0 2rpx 12rpx rgba(75, 45, 186, 0.25);
+  white-space: nowrap;
+}
+
+/* ========== 主体内容（绝对定位到下三分之一中间）========== */
+.main {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  /* 屏幕下三分之一 = 67vh ~ 100vh，中间 ≈ 83vh
+     按钮+提示 高度约 150rpx ≈ 40vh，所以 bottom 留 17vh 让中心落在 83vh */
+  bottom: 17vh;
   padding: 0 48rpx;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
+  align-items: stretch;
 }
 
-/* 表单区域 */
-.form-section {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32rpx;
-  margin-bottom: 32rpx;
-}
-
-/* 表单控件容器：用容器的宽度统一约束 input/button */
-.form-control {
-  width: 364rpx;
-  max-width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 输入框 */
-.form-input {
-  width: 100%;
-  height: 88rpx;
-  background: #ffffff;
-  border: none;
-  border-radius: 16rpx;
-  padding: 0 32rpx;
-  font-size: 28rpx;
-  color: #333;
-  text-align: center;
-  box-sizing: border-box;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-  display: block;
-  margin: 0;
-}
-
-/* 按钮：覆盖微信小程序 button 的所有默认样式 */
-.form-button {
+/* ========== 登录按钮 ========== */
+.login-btn {
+  position: relative;
   width: 100% !important;
-  height: 88rpx !important;
-  min-height: 88rpx !important;
-  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%) !important;
-  color: #fff !important;
-  border-radius: 16rpx !important;
-  font-size: 32rpx !important;
-  font-weight: 600 !important;
+  height: 104rpx !important;
+  min-height: 104rpx !important;
+  background: #FFFFFF !important;
+  border-radius: 52rpx !important;
   border: none !important;
-  box-shadow: 0 4rpx 16rpx rgba(135, 102, 243, 0.3) !important;
-  display: block !important;
-  box-sizing: border-box !important;
+  box-shadow: 0 12rpx 32rpx rgba(75, 45, 186, 0.22) !important;
   padding: 0 !important;
   margin: 0 !important;
-  line-height: 88rpx !important;
-  text-align: center !important;
+  box-sizing: border-box !important;
   overflow: visible !important;
+  display: block !important;
 }
 
-.form-button::after {
+.login-btn::after {
   border: none !important;
 }
 
-/* 协议区域 */
+.login-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 6rpx 16rpx rgba(75, 45, 186, 0.28) !important;
+}
+
+.login-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 16rpx;
+}
+
+.login-btn-icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.login-btn-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #5B40C9;
+  letter-spacing: 2rpx;
+}
+
+.login-tip {
+  margin-top: 24rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  letter-spacing: 1rpx;
+}
+
+/* ========== 底部协议区（绝对定位贴底）========== */
+.footer {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 32rpx 48rpx 60rpx;
+  background: linear-gradient(180deg, transparent 0%, rgba(75, 45, 186, 0.15) 100%);
+}
+
 .agreement {
   display: flex;
   align-items: center;
-  font-size: 24rpx;
-  color: #666;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  padding: 0 20rpx;
 }
 
 .checkbox {
-  margin-right: 8rpx;
-  transform: scale(0.8);
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  margin-right: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.text {
-  color: #666;
+.checkbox.is-checked {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
 }
 
-.link {
-  background: linear-gradient(135deg, #8766F3 0%, #A694FF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  padding: 0 6rpx;
+.checkbox-icon {
+  color: #5B40C9;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.agreement-text {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.agreement-link {
+  color: #FFFFFF;
   text-decoration: underline;
+  font-weight: 500;
+  margin: 0 2rpx;
 }
 
-/* 暂不登录 */
 .skip-login {
-  margin-top: 48rpx;
-  font-size: 28rpx;
-  color: #8766F3;
+  margin-top: 28rpx;
   text-align: center;
-  padding: 20rpx 80rpx;
-  border: 2rpx solid #c4b5fd;
-  border-radius: 48rpx;
-  background: #fff;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 2rpx;
+  padding: 12rpx 0;
+}
+
+.skip-login:active {
+  color: rgba(255, 255, 255, 0.92);
 }

@@ -9,7 +9,7 @@
         <view class="nickname">{{me.nickname || me.phone || '立即登录'}}</view>
       </view>
     </view>
-    <view class="edit-btn" catchtap="onTapSettings">
+    <view class="edit-btn" catchtap="onTapProfileEdit">
       <text class="edit-text">资料修改</text>
     </view>
   </view>
@@ -74,6 +74,15 @@
         <text class="service-label">推荐海报</text>
       </view>
 
+      <!-- 我的合同：仅员工可见，查看自己名下的服务合同 -->
+      <view class="service-item" bindtap="goMyContracts"
+        wx:if="{{me.role === 'staff' || me.role === 'admin' || me.isStaff}}">
+        <view class="service-icon-wrap service-icon-contract">
+          <image class="service-icon-img" src="/images/icons_v4/document.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">我的合同</text>
+      </view>
+
       <view class="service-item" bindtap="goSalaryAssessment">
         <view class="service-icon-wrap service-icon-salary">
           <image class="service-icon-img" src="/images/icons_v4/yuexin.svg" mode="aspectFit"/>
@@ -103,7 +112,7 @@
       <view class="menu-label">帮助</view>
       <view class="menu-arrow">›</view>
     </view>
-    <view class="menu-item" bindtap="onTapSettings">
+    <view class="menu-item" bindtap="goSettings">
       <view class="menu-label">设置</view>
       <view class="menu-arrow">›</view>
     </view>

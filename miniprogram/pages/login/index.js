@@ -1,3 +1,6 @@
+const { generateNickname } = require('../../utils/randomNickname.js');
+const { loadShareLogo } = require('../../utils/shareLogo.js');
+
 Page({
   data: {
     agreed: false,
@@ -5,15 +8,53 @@ Page({
       avatarUrl: "",
       nickname: "",
     },
-    avatarUrl: "", // 新选择的头像
-    nickname: "", // 新输入的昵称
+    shareLogo: '', // 品牌 LOGO URL（云存储临时链接）
+    statusBarHeight: 20, // 状态栏高度（iOS/Android 自适应）
+    navBarHeight: 44,    // 导航栏内容高度
   },
 
   async onLoad() {
     console.log('📱 登录页加载');
 
+    // 自适应状态栏 + 导航栏高度
+    try {
+      const sysInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      // 胶囊按钮位置 → 导航栏内容高度计算
+      const menuRect = wx.getMenuButtonBoundingClientRect
+        ? wx.getMenuButtonBoundingClientRect()
+        : null;
+      if (menuRect && menuRect.top) {
+        // 导航栏内容高度 = (胶囊顶 - 状态栏高) * 2 + 胶囊高
+        const navContentHeight = (menuRect.top - sysInfo.statusBarHeight) * 2 + menuRect.height;
+        this.setData({
+          statusBarHeight: sysInfo.statusBarHeight || 20,
+          navBarHeight: navContentHeight || 44,
+        });
+      } else {
+        this.setData({
+          statusBarHeight: sysInfo.statusBarHeight || 20,
+          navBarHeight: 44,
+        });
+      }
+    } catch (e) {
+      console.warn('读取系统信息失败，使用默认导航栏高度', e);
+    }
+
+    // 加载品牌 LOGO
+    loadShareLogo(this);
+
     // 加载用户信息（用于微信登录）
     this.loadMe();
+  },
+
+  // 自定义导航栏返回按钮
+  onNavBack() {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      wx.navigateBack();
+    } else {
+      wx.switchTab({ url: '/pages/home/index' });
+    }
   },
 
   async loadMe() {
@@ -23,23 +64,10 @@ Page({
         data: { action: "getOrCreateMe" },
       });
       const me = (resp.result && resp.result.data) || {};
-      this.setData({
-        me,
-        nickname: me.nickname || "",
-        avatarUrl: me.avatarUrl || ""
-      });
+      this.setData({ me });
     } catch (e) {
       console.error("加载用户信息失败", e);
     }
-  },
-
-  onChooseAvatar(e) {
-    const { avatarUrl } = e.detail;
-    this.setData({ avatarUrl });
-  },
-
-  onNicknameInput(e) {
-    this.setData({ nickname: e.detail.value });
   },
 
   toggleAgree() {
@@ -47,9 +75,9 @@ Page({
   },
 
   async onGetPhoneNumber(e) {
+    // 未勾选协议时自动勾选（点击登录即视为同意）
     if (!this.data.agreed) {
-      wx.showToast({ title: "请先同意《用户协议》和《隐私政策》", icon: "none" });
-      return;
+      this.setData({ agreed: true });
     }
 
     console.log("手机号授权回调", e);
@@ -62,22 +90,9 @@ Page({
     wx.showLoading({ title: "登录中..." });
 
     try {
-      // 1. 如果有新头像，先上传到云存储
-      let avatarUrl = this.data.avatarUrl;
-      let cloudAvatarUrl = avatarUrl;  // 云存储的头像URL
-
-      if (avatarUrl && avatarUrl.startsWith("http://tmp/")) {
-        try {
-          const uploadRes = await wx.cloud.uploadFile({
-            cloudPath: `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
-            filePath: avatarUrl,
-          });
-          cloudAvatarUrl = uploadRes.fileID;
-        } catch (uploadErr) {
-          console.error("上传头像失败", uploadErr);
-          // 上传失败不影响登录流程
-        }
-      }
+      // 1. 生成随机昵称（用户后续可在设置页修改）
+      const randomNick = generateNickname();
+      console.log('🎲 生成随机昵称:', randomNick);
 
       // 2. 调用云函数解密手机号并保存到云数据库
       const res = await wx.cloud.callFunction({
@@ -85,8 +100,8 @@ Page({
         data: {
           action: "loginByPhone",
           code: e.detail.code,
-          nickname: (this.data.nickname || '').trim() || '用户',
-          avatarUrl: cloudAvatarUrl,
+          nickname: randomNick,
+          avatarUrl: '', // 默认无头像，用户可在设置页自行上传
         },
       });
 
@@ -104,9 +119,9 @@ Page({
           phone,
           openid,
           _openid: openid,
-          nickname: (this.data.nickname || '').trim() || '用户',
-          avatar: cloudAvatarUrl || '',
-          avatarUrl: cloudAvatarUrl || '',
+          nickname: randomNick,
+          avatar: '',
+          avatarUrl: '',
         };
         wx.setStorageSync('crmUserInfo', baseUserInfo);
         const app0 = getApp();
@@ -126,8 +141,8 @@ Page({
               data: {
                 openid: openid,
                 phone: phone,
-                nickname: (this.data.nickname || '').trim() || '用户',
-                avatar: cloudAvatarUrl || '',
+                nickname: randomNick,
+                avatar: '',
                 gender: 0,  // 0未知 1男 2女，可以后续添加性别选择
                 city: '',
                 province: ''
@@ -161,31 +176,33 @@ Page({
               console.log('✅ CRM Token 已保存');
             } else {
               console.warn('⚠️ CRM 注册接口未返回 token，尝试调用 miniprogram-login 获取');
-              // 尝试用 openid + phone 换取 token（兼容不同版本的 CRM 后端）
+              // 用 wx.login code + phone 换 JWT
               try {
-                const loginRes = await new Promise((resolve, reject) => {
+                const freshLogin = await new Promise((resolve, reject) => {
+                  wx.login({ success: resolve, fail: reject });
+                });
+                const tokenRes = await new Promise((resolve, reject) => {
                   wx.request({
-                    url: 'https://crm.andejiazheng.com/api/miniprogram-users/login',
+                    url: 'https://crm.andejiazheng.com/api/auth/miniprogram-login',
                     method: 'POST',
-                    data: { openid, phone },
+                    data: { code: freshLogin.code, phone },
                     header: { 'Content-Type': 'application/json' },
                     success: resolve,
                     fail: reject,
                   });
                 });
-                const loginStatus = loginRes.statusCode;
-                const loginBody = loginRes.data || {};
-                const loginToken = loginBody.access_token || loginBody.token
-                  || loginBody.data?.access_token || loginBody.data?.token;
-                if (loginStatus === 200 && loginToken) {
+                const tokenBody = tokenRes.data || {};
+                const loginToken = tokenBody.access_token || tokenBody.token
+                  || tokenBody.data?.access_token || tokenBody.data?.token;
+                if (loginToken) {
                   wx.setStorageSync('access_token', loginToken);
                   wx.setStorageSync('token', loginToken);
-                  console.log('✅ CRM Token（miniprogram-login）已保存');
+                  console.log('✅ JWT Token（miniprogram-login）已保存');
                 } else {
-                  console.warn('⚠️ miniprogram-login 异常: statusCode=', loginStatus, 'code=', loginBody.code || '');
+                  console.warn('⚠️ miniprogram-login 未返回 token:', tokenBody);
                 }
               } catch (tokenErr) {
-                console.warn('⚠️ 获取 CRM Token 失败（不影响主流程）:', tokenErr);
+                console.warn('⚠️ 获取 JWT Token 失败（不影响主流程）:', tokenErr);
               }
             }
 
@@ -216,9 +233,9 @@ Page({
             const userInfo = {
               ...crmData,
               phone: phone,
-              nickname: (this.data.nickname || '').trim() || '用户',
-              // 小程序上传的头像保留在 avatar 字段（用于小程序内展示）
-              avatar: cloudAvatarUrl || '',
+              nickname: randomNick,
+              // 默认无头像，用户可在设置页自行上传
+              avatar: '',
               // CRM 管理员维护的真实姓名和头像，分享时优先读取，不会被设置页覆盖
               crmName,
               crmAvatar,

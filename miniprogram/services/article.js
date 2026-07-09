@@ -17,14 +17,11 @@ const autoClassifyArticle = async (article) => {
     if (article.tags && Array.isArray(article.tags) && article.tags.length > 0) {
       const hasValidTag = article.tags.some(tag => validTags.includes(tag));
       if (hasValidTag) {
-        console.log('📰 文章已有有效标签，跳过 AI 分类:', article.title, article.tags);
         return article.tags;
       }
     }
 
-    console.log('🤖 开始 AI 分类:', article.title);
-
-    // 调用云函数进行 AI 分类
+    // 调用云函数进行 AI 分类（静默：无日志）
     const res = await wx.cloud.callFunction({
       name: 'articleService',
       data: {
@@ -38,15 +35,12 @@ const autoClassifyArticle = async (article) => {
     });
 
     if (res.result && res.result.success) {
-      const tags = res.result.data.tags || [];
-      console.log('✅ AI 分类成功:', article.title, '→', tags);
-      return tags;
-    } else {
-      console.log('⚠️ AI 分类失败，返回空标签:', res.result?.errMsg);
-      return [];
+      return res.result.data.tags || [];
     }
+    return [];
   } catch (error) {
-    console.error('❌ AI 分类出错:', error);
+    // 异常才打日志
+    console.error('article autoClassify failed:', error.message);
     return [];
   }
 };
@@ -62,26 +56,18 @@ const autoClassifyArticle = async (article) => {
  * @returns {Promise<Object>} 文章列表
  */
 const getArticleList = async (params = {}) => {
-  console.log('📰 获取文章列表（公开接口）:', params);
-
   // 构建查询参数
   const queryParams = [];
-
-  // 分页参数
   const page = params.page || 1;
   const pageSize = params.pageSize || 10;
   queryParams.push(`page=${page}`);
   queryParams.push(`pageSize=${pageSize}`);
-
-  // 搜索关键词（可选）
   if (params.keyword && params.keyword.trim()) {
     queryParams.push(`keyword=${encodeURIComponent(params.keyword.trim())}`);
   }
-
   const queryString = queryParams.join('&');
 
   try {
-    // 获取文章列表
     const result = await publicRequest({
       url: `/articles/miniprogram/list?${queryString}`,
       method: 'GET'
@@ -103,9 +89,6 @@ const getArticleList = async (params = {}) => {
     }
 
     if (autoClassify && articles.length > 0) {
-      console.log(`🤖 开始自动分类 ${articles.length} 篇文章...`);
-
-      // 为每篇文章添加 AI 分类（并发处理，提高速度）
       const classifyPromises = articles.map(async (article) => {
         const tags = await autoClassifyArticle(article);
         if (tags && tags.length > 0) {
@@ -114,11 +97,7 @@ const getArticleList = async (params = {}) => {
         }
         return article;
       });
-
-      // 等待所有分类完成
       const classifiedArticles = await Promise.all(classifyPromises);
-
-      // 更新 result 中的文章数据
       if (Array.isArray(result.data)) {
         result.data = classifiedArticles;
       } else if (result.data.items) {
@@ -126,13 +105,11 @@ const getArticleList = async (params = {}) => {
       } else if (result.data.list) {
         result.data.list = classifiedArticles;
       }
-
-      console.log('✅ 文章自动分类完成');
     }
 
     return result;
   } catch (error) {
-    console.error('❌ 获取文章列表失败:', error);
+    console.error('article list failed:', error.message);
     throw error;
   }
 };
@@ -145,20 +122,16 @@ const getArticleList = async (params = {}) => {
  * @returns {Promise<Object>} 文章详情
  */
 const getArticleDetail = async (id, autoClassify = true) => {
-  console.log('📰 获取文章详情（公开接口）:', id);
-
   if (!id) {
     return Promise.reject(new Error('文章ID不能为空'));
   }
 
   try {
-    // 获取文章详情
     const result = await publicRequest({
       url: `/articles/miniprogram/${id}`,
       method: 'GET'
     });
 
-    // 自动分类
     if (autoClassify && result.data) {
       const tags = await autoClassifyArticle(result.data);
       if (tags && tags.length > 0) {
@@ -169,7 +142,7 @@ const getArticleDetail = async (id, autoClassify = true) => {
 
     return result;
   } catch (error) {
-    console.error('❌ 获取文章详情失败:', error);
+    console.error('article detail failed:', error.message);
     throw error;
   }
 };
@@ -180,8 +153,6 @@ const getArticleDetail = async (id, autoClassify = true) => {
  * @returns {Promise<number>} 新的阅读量
  */
 const incrementViewCount = (articleId) => {
-  console.log('📰 增加文章阅读量:', articleId);
-
   if (!articleId) {
     return Promise.reject(new Error('文章ID不能为空'));
   }
@@ -194,15 +165,13 @@ const incrementViewCount = (articleId) => {
         articleId: articleId
       }
     }).then(res => {
-      const metaVersion = res?.result?.meta?.version;
-      console.log('📰 阅读量增加成功:', res, metaVersion ? `(cloudfn version: ${metaVersion})` : '');
       if (res.result && res.result.success) {
         resolve(res.result.data?.viewCount || 0);
       } else {
         reject(new Error(res.result?.errMsg || res?.errMsg || '增加阅读量失败'));
       }
     }).catch(err => {
-      console.error('📰 增加阅读量失败:', err);
+      console.error('incrementViewCount failed:', err.message);
       reject(err);
     });
   });
@@ -213,8 +182,6 @@ const incrementViewCount = (articleId) => {
  * @returns {Promise<Object>} 初始化结果
  */
 const batchInitializeViewCounts = () => {
-  console.log('📰 批量初始化文章阅读量');
-
   return new Promise((resolve, reject) => {
     wx.cloud.callFunction({
       name: 'articleService',
@@ -222,14 +189,13 @@ const batchInitializeViewCounts = () => {
         action: 'batchInitialize'
       }
     }).then(res => {
-      console.log('📰 批量初始化成功:', res);
       if (res.result && res.result.success) {
         resolve(res.result.data);
       } else {
         reject(new Error(res.result?.errMsg || '批量初始化失败'));
       }
     }).catch(err => {
-      console.error('📰 批量初始化失败:', err);
+      console.error('batchInitialize failed:', err.message);
       reject(err);
     });
   });
@@ -241,8 +207,6 @@ const batchInitializeViewCounts = () => {
  * @returns {Promise<Object>} 阅读量映射 { articleId: viewCount }
  */
 const batchGetViewCounts = (articleIds) => {
-  console.log('📰 批量获取阅读量:', articleIds);
-
   if (!articleIds || articleIds.length === 0) {
     return Promise.resolve({});
   }
@@ -255,15 +219,13 @@ const batchGetViewCounts = (articleIds) => {
         articleIds: articleIds
       }
     }).then(res => {
-      const metaVersion = res?.result?.meta?.version;
-      console.log('📰 批量获取阅读量成功:', res, metaVersion ? `(cloudfn version: ${metaVersion})` : '');
       if (res.result && res.result.success) {
         resolve(res.result.data || {});
       } else {
         reject(new Error(res.result?.errMsg || res?.errMsg || '获取阅读量失败'));
       }
     }).catch(err => {
-      console.error('📰 批量获取阅读量失败:', err);
+      console.error('batchGetViewCounts failed:', err.message);
       reject(err);
     });
   });
@@ -275,6 +237,6 @@ module.exports = {
   incrementViewCount,
   batchInitializeViewCounts,
   batchGetViewCounts,
-  autoClassifyArticle  // 导出供其他地方使用
+  autoClassifyArticle
 };
 

@@ -1,30 +1,52 @@
 <view class="page">
-  <view class="content">
-    <!-- 表单区域 -->
-    <view class="form-section">
-      <!-- 昵称输入框（选填） -->
-      <view class="form-control">
-        <input type="nickname" class="form-input" placeholder="昵称（选填）" value="{{nickname}}" bindinput="onNicknameInput" />
-      </view>
+  <!-- 装饰光斑 -->
+  <view class="bg-blob bg-blob-1"></view>
+  <view class="bg-blob bg-blob-2"></view>
+  <view class="bg-blob bg-blob-3"></view>
 
-      <!-- 登录按钮 -->
-      <view class="form-control">
-        <button class="form-button" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
-          手机号快捷登录
-        </button>
+  <!-- 自定义导航栏（沉浸式，与页面渐变同色）-->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-bar-inner" style="height: {{navBarHeight}}px;">
+      <view class="nav-back" bindtap="onNavBack">
+        <text class="nav-back-icon">‹</text>
       </view>
+      <view class="nav-title">登录</view>
+      <view class="nav-placeholder"></view>
     </view>
+  </view>
 
-    <!-- 协议区域 -->
+  <!-- 顶部品牌区（极简：LOGO + 口号） -->
+  <view class="brand">
+    <view class="brand-logo">
+      <image class="brand-logo-img" src="{{shareLogo}}" mode="aspectFit"></image>
+    </view>
+    <view class="brand-slogan">为爱，全力以赴</view>
+  </view>
+
+  <!-- 主体内容区：手机号快捷登录 -->
+  <view class="main">
+    <!-- 主操作：手机号快捷登录 -->
+    <button class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+      <view class="login-btn-inner">
+        <text class="login-btn-icon">📱</text>
+        <text class="login-btn-text">手机号快捷登录</text>
+      </view>
+    </button>
+
+    <view class="login-tip">授权即享完整服务，系统将自动为您生成专属昵称</view>
+  </view>
+
+  <!-- 底部协议区 -->
+  <view class="footer">
     <view class="agreement">
-      <checkbox class="checkbox" checked="{{agreed}}" bindtap="toggleAgree" />
-      <text class="text">我已阅读并同意</text>
-      <text class="link" bindtap="openUserAgreement">《用户协议》</text>
-      <text class="text">和</text>
-      <text class="link" bindtap="openPrivacyPolicy">《隐私政策》</text>
+      <view class="checkbox {{agreed ? 'is-checked' : ''}}" bindtap="toggleAgree">
+        <text wx:if="{{agreed}}" class="checkbox-icon">✓</text>
+      </view>
+      <text class="agreement-text">已阅读并同意</text>
+      <text class="agreement-link" bindtap="openUserAgreement">《用户协议》</text>
+      <text class="agreement-text">和</text>
+      <text class="agreement-link" bindtap="openPrivacyPolicy">《隐私政策》</text>
     </view>
-
-    <!-- 暂不登录（满足微信登录规范：必须提供可用的取消/跳过选项） -->
-    <view class="skip-login" bindtap="onSkipLogin">暂不登录</view>
+    <view class="skip-login" bindtap="onSkipLogin">暂不登录 ›</view>
   </view>
 </view>

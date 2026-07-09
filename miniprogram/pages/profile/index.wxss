@@ -5,6 +5,8 @@ page {
 .page {
   background: #f5f5f5;
   min-height: 100vh;
+  /* 自定义 tabBar 高约 112rpx + safe-area，加 200rpx 让最底部的「设置/退出登录」不被 tabBar 遮住 */
+  padding-bottom: 200rpx;
 }
 
 /* 员工订阅提醒横幅 */
@@ -302,6 +304,7 @@ page {
 .service-icon-diary   { background: #FFF0E8; }
 .service-icon-referral{ background: #E8F9EE; }
 .service-icon-poster  { background: #EDE8FF; }
+.service-icon-contract{ background: #E8F5FF; }
 .service-icon-salary  { background: #E8F5FF; }
 .service-icon-course  { background: #FFF5E0; }
 .service-icon-img {

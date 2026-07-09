@@ -125,7 +125,27 @@ Page({
   },
 
   goLogin() {
+    // 头部点击：未登录 → 登录页；已登录 → 设置页（修改资料）
+    if (this.isLoggedIn()) {
+      wx.navigateTo({ url: "/pages/settings/index" });
+    } else {
+      wx.navigateTo({ url: "/pages/login/index" });
+    }
+  },
+
+  // 「资料修改」按钮：跳到设置页改头像/昵称/手机号
+  onTapProfileEdit() {
     wx.navigateTo({ url: "/pages/settings/index" });
+  },
+
+  // 「设置」菜单：跳到设置页
+  goSettings() {
+    wx.navigateTo({ url: "/pages/settings/index" });
+  },
+
+  // 我的合同（员工视角）
+  goMyContracts() {
+    wx.navigateTo({ url: "/pages/myContracts/index" });
   },
 
   // 点击联系客服：未登录先去登录；已登录由 open-type="contact" 打开客服
@@ -175,6 +195,7 @@ Page({
 
 
   onTapSettings() {
+    // 兼容保留：默认跳设置页（部分旧逻辑可能仍调用）
     wx.navigateTo({ url: "/pages/settings/index" });
   },
 
