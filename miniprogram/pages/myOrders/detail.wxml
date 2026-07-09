@@ -118,35 +118,6 @@
         {{floatingAction.label}}
       </view>
     </view>
-
-    <!-- ═══ 用支付宝支付弹窗 ═══ -->
-    <view wx:if="{{alipay.showDialog}}" class="alipay-mask" bindtap="closeAlipayDialog">
-      <view class="alipay-dialog" catchtap="">
-        <view class="alipay-title">💙 用支付宝支付</view>
-        <view class="alipay-amount">¥{{alipay.amountYuan}}</view>
-        <view class="alipay-subject">{{alipay.subject}}</view>
-
-        <!-- 二维码图（云存储 fileID） -->
-        <view wx:if="{{alipay.qrCodeFileId}}" class="alipay-qrcode-wrap">
-          <image class="alipay-qrcode" src="{{alipay.qrCodeFileId}}" mode="aspectFit" />
-          <view class="alipay-qrcode-hint">用支付宝扫一扫</view>
-        </view>
-        <view wx:else class="alipay-qrcode-loading">二维码生成中...</view>
-
-        <!-- 操作按钮组 -->
-        <view class="alipay-actions">
-          <button class="alipay-btn-secondary" bindtap="copyAlipayLink">📋 复制链接</button>
-          <button class="alipay-btn-secondary" bindtap="openAlipayExternally">🌐 浏览器打开</button>
-        </view>
-        <button class="alipay-btn-primary" bindtap="pollAlipayPaid" loading="{{alipay.polling}}" disabled="{{alipay.polling}}">
-          {{alipay.polling ? '查询中...' : '我已支付，刷新状态'}}
-        </button>
-        <view class="alipay-tip">
-          支付完成后点击"我已支付"或重新进入本页面即可看到订单状态更新。
-        </view>
-        <view class="alipay-close" bindtap="closeAlipayDialog">关闭</view>
-      </view>
-    </view>
   </block>
 </view>
 

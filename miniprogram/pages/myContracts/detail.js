@@ -9,6 +9,7 @@ const HOUSEKEEPING_STATUS_TEXT = {
   ended: '已结束',
   cancelled: '已取消',
   replaced: '已换人',
+  refunded: '已退款',
 };
 
 const TRAINING_STATUS_TEXT = {
@@ -87,6 +88,18 @@ Page({
     paymentStatusText: PAYMENT_STATUS_TEXT,
     paymentTypeText: PAYMENT_TYPE_TEXT,
     insuranceStatusText: INSURANCE_STATUS_TEXT,
+    // 代客下单弹窗（销售/员工视角）
+    showSalesPreorder: false,        // 是否显示「代客下单」按钮（销售 + 客户已签 + 未付 + 收款金额>0）
+    preorderDialog: {
+      visible: false,
+      preOrderId: '',
+      recordId: '',
+      amountYuan: '',
+      subject: '',
+      qrCodeFileId: '',
+      shareUrl: '',
+      polling: false,
+    },
   },
 
   onLoad(options) {
@@ -324,6 +337,15 @@ Page({
 
       this.setData({ contract });
 
+      // 计算「代客下单」按钮显示条件（销售/员工视角 + 客户已签 + 未付 + 收款金额>0 + channel=alipay 优先）
+      const isSalesView = this.viewMode !== 'client';
+      const signedByCustomerOrStudent = !!(ss2.customerSigned || (orderCategory === 'training' && ss2.nannySigned));
+      const isUnpaid = contract.paymentStatus !== 'paid' && contract.paymentStatus !== 'refunded';
+      const payableAmount = Number(contract.paymentConfigAmount || contract.customerServiceFee || contract.courseAmount || 0);
+      this.setData({
+        showSalesPreorder: isSalesView && signedByCustomerOrStudent && isUnpaid && payableAmount > 0,
+      });
+
       // 分享卡片自动开 cover-view 浮层逻辑已撤除（员工邀请流程统一走分享卡片）
     } catch (e) {
       console.error('load detail failed:', e.message);
@@ -337,6 +359,154 @@ Page({
     const phone = this.data.contract?.customerPhone;
     if (phone) {
       wx.makePhoneCall({ phoneNumber: phone });
+    }
+  },
+
+  // ════════════════════════════════════════════════════════════════
+  // 代客下单（销售/员工触发）：调 SQB 代客下单 + 生成二维码 + 弹窗
+  // ════════════════════════════════════════════════════════════════
+
+  async onSalesPreorder() {
+    if (!this.data.contract) return;
+    const c = this.data.contract;
+    const phone = c.customerPhone || c.phone;
+    if (!phone) {
+      wx.showToast({ title: '合同缺少客户手机号', icon: 'none' });
+      return;
+    }
+
+    // 默认走支付宝（收钱吧微信小店代客下单真支持支付宝）；销售后续可手动选微信
+    const channel = 'alipay';
+
+    // V1 用 paymentConfigAmount；V2 多笔时取 nextPayment 金额
+    let amountCents = Number(c.paymentConfigAmount || c.customerServiceFee || c.courseAmount || 0);
+    let subject = '合同支付';
+    if (c.isV2 && Array.isArray(c.payments) && c.payments.length > 0) {
+      const nextPay = c.payments.find((p) => p.status === 'pending') || c.payments[0];
+      amountCents = Number(nextPay.amount || 0) * 100;  // 元 → 分
+      subject = nextPay.label || subject;
+    } else {
+      amountCents = amountCents * 100;  // 元 → 分
+    }
+
+    if (!amountCents || amountCents <= 0) {
+      wx.showToast({ title: '收款金额为 0', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '生成支付二维码...' });
+    try {
+      // 1) 调 paymentService.createPreOrder（内部：CRM baobei-precreate + SQB createPreOrder）
+      const createRes = await wx.cloud.callFunction({
+        name: 'paymentService',
+        data: {
+          action: 'createPreOrder',
+          contractId: c._id || c.id,
+          phone,
+          orderCategory: c.orderCategory || 'housekeeping',
+          amountCents,
+          subject,
+          channel,
+        },
+      });
+      const created = createRes.result;
+      if (!created?.success) throw new Error(created?.errMsg || '创建预下单失败');
+      const { preOrderId, recordId, clientSn } = created.data;
+
+      // 2) 调 paymentService.generatePreOrderShareUrl 拿 shareUrl + 二维码 fileID
+      const shareRes = await wx.cloud.callFunction({
+        name: 'paymentService',
+        data: { action: 'generatePreOrderShareUrl', preOrderId, imageType: 1 },
+      });
+      const shared = shareRes.result;
+      if (!shared?.success) throw new Error(shared?.errMsg || '生成扫码链接失败');
+      const { shareUrl, qrCodeFileId } = shared.data;
+
+      // 3) 弹窗展示
+      this.setData({
+        preorderDialog: {
+          visible: true,
+          preOrderId,
+          recordId,
+          clientSn,
+          amountYuan: (amountCents / 100).toFixed(2),
+          subject,
+          qrCodeFileId: qrCodeFileId || '',
+          shareUrl: shareUrl || '',
+          polling: false,
+        },
+      });
+
+      console.log('[myContracts/detail] sales preorder ok:', { preOrderId, clientSn, qrCodeFileId: !!qrCodeFileId });
+    } catch (err) {
+      console.error('[myContracts/detail] sales preorder failed:', err);
+      wx.showToast({ title: err.message || '代客下单失败', icon: 'none', duration: 3000 });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  closePreorderDialog() {
+    if (this.data.preorderDialog.polling) return;  // 轮询中不允许关闭
+    this.setData({
+      preorderDialog: {
+        ...this.data.preorderDialog,
+        visible: false,
+      },
+    });
+  },
+
+  async copyPreorderLink() {
+    const { shareUrl } = this.data.preorderDialog;
+    if (!shareUrl) return;
+    try {
+      await wx.setClipboardData({ data: shareUrl });
+      wx.showToast({ title: '链接已复制，发给客户即可', icon: 'none', duration: 2500 });
+    } catch (e) {
+      wx.showToast({ title: '复制失败', icon: 'none' });
+    }
+  },
+
+  async pollPreorderPaid() {
+    const { preOrderId, polling } = this.data.preorderDialog;
+    if (polling || !preOrderId) return;
+    this.setData({ 'preorderDialog.polling': true });
+    wx.showLoading({ title: '查询支付结果...' });
+    try {
+      // 最多 6 次，每次 2s（共 12s）；一般前 2-3 次就能确认
+      let paid = false;
+      for (let i = 0; i < 6; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const res = await wx.cloud.callFunction({
+          name: 'paymentService',
+          data: { action: 'queryPreOrder', preOrderId },
+        });
+        const data = res.result?.data;
+        // SQB 订单状态码：10=已支付 35=已完成 40=已取消
+        const state = data?.orderStateCode || data?.state;
+        if (state === 10 || state === 35) { paid = true; break; }
+      }
+      wx.hideLoading();
+
+      if (paid) {
+        wx.showToast({ title: '收到付款，正在刷新', icon: 'success' });
+        this.setData({ 'preorderDialog.visible': false, 'preorderDialog.polling': false });
+        // 刷新合同详情
+        setTimeout(() => this.loadDetail(), 1200);
+      } else {
+        wx.showModal({
+          title: '暂未收到支付结果',
+          content: '如果客户已完成支付，请稍等几秒再试；如未支付，可继续扫码或复制链接。',
+          confirmText: '我知道了',
+          showCancel: false,
+        });
+        this.setData({ 'preorderDialog.polling': false });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('[myContracts/detail] pollPreorderPaid failed:', err);
+      wx.showToast({ title: '查询失败，请重试', icon: 'none' });
+      this.setData({ 'preorderDialog.polling': false });
     }
   },
 

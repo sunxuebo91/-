@@ -1,0 +1,9 @@
+{
+  "name": "paymentCallback",
+  "version": "1.0.0",
+  "description": "收钱吧「微信小店代客下单」推送回调处理（验签 + 落库 baobei payments + 调 CRM payment-confirm）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

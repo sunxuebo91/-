@@ -32,11 +32,18 @@ const SQB = {
   ACTIVATE_CODE: '76295386',       // 激活码
 };
 
-// 小程序"用支付宝支付"返程 URL（客户付完跳回的 H5 页）
-// 用 example.com 作为占位：客户付完跳过去（不报错），自己切回微信小程序，
-// onShow 会触发轮询检测支付状态。pay-return.html 不是核心链路必须的，
-// 后续想加可以单独部署到静态托管，不阻塞当前支付流程。
-const ALIPAY_RETURN_URL = 'https://example.com/';
+// ─── 收钱吧「微信小店代客下单」独立配置（与 VSI 网关完全独立）───
+// 生产配置由老板找收钱吧技术支持提供，覆盖环境变量
+const SQB_PREORDER = {
+  // 测试域 / 测试凭证（PDF 已给）
+  API_DOMAIN: process.env.SQB_PREORDER_API_DOMAIN || 'https://open-apisix.iwosai.com',
+  MALL_SN:    process.env.SQB_PREORDER_MALL_SN    || '2025120415143873681',
+  SIGNATURE:  process.env.SQB_PREORDER_SIGNATURE  || 'eAjIKdzsNbwVOURrlTnt',
+  APP_ID:     process.env.SQB_PREORDER_APPID      || '2025082700005615',
+  APP_KEY:    process.env.SQB_PREORDER_APPKEY     || '4d5c7647853bba34a0b5af42bc2400e7',
+  // 公钥（PKCS#8，SHA256WithRSA 验签用）— 生产待提供
+  PUBLIC_KEY: process.env.SQB_PREORDER_PUBLIC_KEY || 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3Hlg887xrRWYxPqLDX53oimjsxfd7PDdhQ4zHUYA1eQP6PMyhAo+GU/oq4RQVpW6LrG0PWA6CoD7qva6T0NwsDWn5/fmWhmH+Ad6K5WG5jY9ZVjnys9R+HGeFyE7hSkhqSgiSlEMv9IBJD5p9ZqBZ0FAPotMS/RIBHANVA37J0Zlp9wakvUegcXb3hl9xp+aRsjikhS5h89qiPPXGkWq9dsQrbpDODP8RziqskxzIzu4tYtvLkUZ/Ak9LCRu63SSGX+yAj24mG9Q+4taWGX32AmuVFK9CGDoec0IYx8ouUtiGWVBqZz0dRteKbBbL6MtnPjUxT+wMc6rarPL8zj9vwIDAQAB',
+};
 
 // CRM 通知（支付成功后回写）
 const CRM_HOSTNAME = 'crm.andejiazheng.com';
@@ -88,6 +95,33 @@ async function sqbRequest(apiPath, body, { sn, key }) {
   return httpsRequest('POST', url.hostname, url.pathname, body, {
     Authorization: `${sn} ${sign}`,
   });
+}
+
+/** 向收钱吧「微信小店代客下单」发请求（独立鉴权：MD5(body+appkey)，Authorization: appid sign） */
+async function sqbPreOrderRequest(apiPath, body) {
+  const bodyStr = JSON.stringify(body);
+  const sign = md5Sign(bodyStr, SQB_PREORDER.APP_KEY);
+  const url = new URL(apiPath, SQB_PREORDER.API_DOMAIN);
+  console.log('[sqbPreOrderRequest]', apiPath, 'appid:', SQB_PREORDER.APP_ID, 'sign:', sign.slice(0, 8) + '...');
+  return httpsRequest('POST', url.hostname, url.pathname, body, {
+    Authorization: `${SQB_PREORDER.APP_ID} ${sign}`,
+  });
+}
+
+/** SHA256WithRSA 验签（PKCS#8 公钥，PDF 公开推送验签算法） */
+function verifySqbCallbackSignature(payload, signature) {
+  try {
+    const crypto = require('crypto');
+    const plaintext = `${payload.eventId}${payload.timestamp}${payload.nonce}${payload.content}`;
+    const verify = crypto.createVerify('SHA256');
+    verify.update(plaintext);
+    verify.end();
+    const pubKey = `-----BEGIN PUBLIC KEY-----\n${SQB_PREORDER.PUBLIC_KEY.match(/.{1,64}/g).join('\n')}\n-----END PUBLIC KEY-----`;
+    return verify.verify(pubKey, signature, 'base64');
+  } catch (e) {
+    console.error('[verifySqbCallbackSignature] failed:', e.message);
+    return false;
+  }
 }
 
 /** 生成商户订单号：ADBP-{时间戳}-{随机4位} */
@@ -380,6 +414,238 @@ async function ensureCheckin(terminal) {
     data: { terminal_key: newKey, lastCheckinAt: db.serverDate(), updatedAt: db.serverDate() },
   });
   return { ...terminal, terminal_key: newKey };
+}
+
+// ═══════════════════════════════════════
+// 收钱吧「微信小店代客下单」Actions（独立链路，独立鉴权）
+// ═══════════════════════════════════════
+
+/** 创建代客下单（销售/客户触发，生成 SQB 预订单号 + 落库 CRM payment_records） */
+async function createPreOrder(event) {
+  const { contractId, phone, orderCategory, paymentSequenceNo, amountCents, subject, channel } = event;
+
+  // 1) 入参校验
+  if (!contractId) throw new Error('缺少 contractId');
+  if (!phone) throw new Error('缺少 phone');
+  if (!orderCategory || !['housekeeping', 'training'].includes(orderCategory)) {
+    throw new Error('orderCategory 必须为 housekeeping | training');
+  }
+  if (!Number.isFinite(amountCents) || amountCents <= 0) {
+    throw new Error('amountCents 必须大于 0');
+  }
+  if (!subject) throw new Error('缺少 subject');
+  if (!channel || !['alipay', 'wechat'].includes(channel)) {
+    throw new Error('channel 必须为 alipay | wechat');
+  }
+
+  console.log('[paymentService] createPreOrder:', { contractId, phone, orderCategory, paymentSequenceNo, amountCents, subject, channel });
+
+  // 2) 先调 CRM baobei-precreate，拿 clientSn + recordId
+  //    （CRM 端 clientSn 唯一索引，baobei 不能自传）
+  let crmResp;
+  try {
+    crmResp = await httpsRequest('POST', CRM_HOSTNAME, '/api/payment-records/baobei-precreate', {
+      phone,
+      contractId,
+      orderCategory,
+      ...(paymentSequenceNo ? { paymentSequenceNo } : {}),
+      amountCents,
+      subject,
+      channel,
+    }, {
+      'X-Service-Secret': CRM_SERVICE_SECRET,
+      'X-Client-Type': 'miniprogram',
+    });
+  } catch (e) {
+    console.error('[paymentService] createPreOrder CRM baobei-precreate failed:', e.message);
+    throw new Error('CRM 创建预付记录失败：' + e.message);
+  }
+
+  if (!crmResp || !crmResp.success || !crmResp.data) {
+    throw new Error('CRM 创建预付记录失败：' + (crmResp?.message || '未知错误'));
+  }
+  const { recordId, clientSn } = crmResp.data;
+  console.log('[paymentService] createPreOrder CRM recordId=', recordId, 'clientSn=', clientSn);
+
+  // 3) 调 SQB /preOrder/createPreOrder，out_trade_no = clientSn（让 SQB 跟 CRM 关联）
+  const sqbBody = {
+    appid: SQB_PREORDER.APP_ID,
+    source: 3,                          // 3 = 小程序场景
+    amount: { oriAmount: amountCents }, // oriAmount 是分（PDF 第 7 行 curl 示例是 1 = 1分）
+    checkout: { type: 2 },              // type=2 = H5 收银台（PDF 未列枚举值，按行业惯例）
+    seller: {
+      merchantId: SQB_PREORDER.MALL_SN,  // 注：mallSn 直接用作 merchantId（待 SQB 文档确认字段名）
+      merchantUserId: SQB_PREORDER.APP_ID,
+      role: 'super_admin',
+    },
+    mallID: {
+      mallSn: SQB_PREORDER.MALL_SN,
+      signature: SQB_PREORDER.SIGNATURE,
+    },
+    out_trade_no: clientSn,            // 商户订单号 = CRM clientSn
+  };
+
+  let sqbResp;
+  try {
+    sqbResp = await sqbPreOrderRequest('/optimus/module/open/preOrder/createPreOrder', sqbBody);
+  } catch (e) {
+    console.error('[paymentService] createPreOrder SQB failed:', e.message);
+    throw new Error('收钱吧创建预下单失败：' + e.message + '（CRM 已落 pending ' + recordId + '，需人工或 cron 清理）');
+  }
+
+  // 4) 解析 SQB 响应（PDF 第 9 页出参：preOrderId, preOrderSn）
+  if (sqbResp.code !== 0 || !sqbResp.data) {
+    throw new Error('收钱吧返回错误：' + JSON.stringify(sqbResp));
+  }
+  const { preOrderId, preOrderSn } = sqbResp.data;
+
+  // 5) baobei payments 集合落一条 pending 副本（含 SQB preOrderId）
+  //    注：CRM 端 payment_records 不存 preOrderId，靠 clientSn 关联；webhook 收到推送时按 clientSn 反查 CRM recordId
+  const paymentDoc = {
+    contractId,
+    phone,
+    orderCategory,
+    client_sn: clientSn,
+    crmRecordId: recordId,
+    preOrderId,
+    preOrderSn,
+    sqb_sn: '',
+    amount: amountCents,
+    channel,
+    subject,
+    payMode: 'preorder_' + channel,
+    paymentStatus: 'pending',
+    paidAt: null,
+    createdBy: 'miniprogram',
+    expiresAt: Date.now() + 5 * 60 * 1000,  // 5 分钟过期（PDF 提到）
+    createdAt: db.serverDate(),
+    updatedAt: db.serverDate(),
+  };
+  if (paymentSequenceNo) paymentDoc.paymentSequenceNo = paymentSequenceNo;
+  const addRes = await db.collection('payments').add({ data: paymentDoc });
+  const baobeiPaymentId = addRes._id;
+
+  console.log('[paymentService] createPreOrder OK:', { recordId, clientSn, preOrderId, preOrderSn, baobeiPaymentId });
+
+  return {
+    recordId,
+    clientSn,
+    preOrderId,
+    preOrderSn,
+    baobeiPaymentId,
+    amount: amountCents,
+    subject,
+    expiresAt: paymentDoc.expiresAt,
+  };
+}
+
+/** 查询代客下单状态 */
+async function queryPreOrder(event) {
+  const { preOrderId } = event;
+  if (!preOrderId) throw new Error('缺少 preOrderId');
+  const res = await sqbPreOrderRequest('/optimus/module/open/preOrder/queryPreOrder', {
+    appid: SQB_PREORDER.APP_ID,
+    seller: {
+      merchantId: SQB_PREORDER.MALL_SN,
+      merchantUserId: SQB_PREORDER.APP_ID,
+      role: 'super_admin',
+    },
+    preOrderId,
+  });
+  if (res.code !== 0) throw new Error('查询失败：' + JSON.stringify(res));
+  return res.data;
+}
+
+/** 生成代客下单扫码链接（URL 转二维码图上传云存储） */
+async function generatePreOrderShareUrl(event) {
+  const { preOrderId, imageType } = event;
+  if (!preOrderId) throw new Error('缺少 preOrderId');
+  const res = await sqbPreOrderRequest('/optimus/module/open/preOrder/generatePreOrderShareUrl', {
+    appid: SQB_PREORDER.APP_ID,
+    seller: {
+      merchantId: SQB_PREORDER.MALL_SN,
+      merchantUserId: SQB_PREORDER.APP_ID,
+      role: 'super_admin',
+    },
+    preOrderId,
+    pageType: '5',                // 5 = H5 收银台
+    imageType: imageType || 1,    // 1 = PNG（默认）
+  });
+  if (res.code !== 0) throw new Error('生成扫码链接失败：' + JSON.stringify(res));
+
+  // 把 shareUrl 转二维码图 → 上传云存储（前端用 <image src="cloudFileId"> 展示）
+  const qrCodeFileId = res.data.shareUrl ? await generateQrCodeFile(res.data.shareUrl, preOrderId) : '';
+
+  return {
+    shareUrl: res.data.shareUrl,
+    qrCodeFileId,
+    expiresIn: 5 * 60,  // 5 分钟（PDF 暗示）
+  };
+}
+
+/** 生成代客下单 H5 短链（浏览器打开走微信/支付宝） */
+async function generatePreOrderH5Link(event) {
+  const { preOrderId } = event;
+  if (!preOrderId) throw new Error('缺少 preOrderId');
+  const res = await sqbPreOrderRequest('/optimus/module/open/preOrder/generatePreOrderH5Link', {
+    appid: SQB_PREORDER.APP_ID,
+    seller: {
+      merchantId: SQB_PREORDER.MALL_SN,
+      merchantUserId: SQB_PREORDER.APP_ID,
+      role: 'super_admin',
+    },
+    preOrderId,
+    pageType: '5',
+  });
+  if (res.code !== 0) throw new Error('生成 H5 短链失败：' + JSON.stringify(res));
+  return res.data;
+}
+
+/** 代客下单退款（baobei 调 SQB 退款 + 推 CRM refund-confirm） */
+async function refundPreOrder(event) {
+  const { preOrderId, amountCents, reason, phone, contractId, orderCategory, paymentRecordId } = event;
+  if (!preOrderId) throw new Error('缺少 preOrderId');
+  if (!Number.isFinite(amountCents) || amountCents <= 0) throw new Error('amountCents 必须大于 0');
+
+  // 1) 调 SQB /refund
+  const res = await sqbPreOrderRequest('/optimus/module/open/refund', {
+    appid: SQB_PREORDER.APP_ID,
+    seller: {
+      merchantId: SQB_PREORDER.MALL_SN,
+      merchantUserId: SQB_PREORDER.APP_ID,
+      role: 'super_admin',
+    },
+    orderID: { preOrderId },
+    refundInfo: {
+      amount: amountCents,
+      reason: reason || '客户申请退款',
+    },
+  });
+  if (res.code !== 0) throw new Error('退款失败：' + JSON.stringify(res));
+
+  const sqbRefundSn = res.data?.refundSn || res.data?.ticketSn || '';
+
+  // 2) 推 CRM refund-confirm（housekeeping 或 training；路径按 CRM 实际部署为准）
+  const crmPath = orderCategory === 'training'
+    ? `/api/miniprogram/training-orders/baobei/${contractId}/refund-confirm`
+    : `/api/miniprogram/contracts/${contractId}/refund-confirm`;
+  try {
+    await httpsRequest('POST', CRM_HOSTNAME, crmPath, {
+      phone,
+      paymentRecordId: paymentRecordId || null,
+      sqbRefundSn,
+      refundAmountCents: amountCents,
+      refundedAt: new Date().toISOString(),
+    }, {
+      'X-Service-Secret': CRM_SERVICE_SECRET,
+      'X-Client-Type': 'miniprogram',
+    });
+  } catch (e) {
+    console.error('[paymentService] refundPreOrder CRM refund-confirm failed (SQB 退款已成功):', e.message);
+    // 不抛错 — SQB 退款已成功，CRM 记账失败可重试
+  }
+
+  return { sqbRefundSn, refundAmountCents: amountCents };
 }
 
 // ═══════════════════════════════════════
@@ -1071,6 +1337,16 @@ exports.main = async (event, context) => {
 
         return { success: true, data };
       }
+      case 'createPreOrder':
+        return { success: true, data: await createPreOrder(event) };
+      case 'queryPreOrder':
+        return { success: true, data: await queryPreOrder(event) };
+      case 'generatePreOrderShareUrl':
+        return { success: true, data: await generatePreOrderShareUrl(event) };
+      case 'generatePreOrderH5Link':
+        return { success: true, data: await generatePreOrderH5Link(event) };
+      case 'refundPreOrder':
+        return { success: true, data: await refundPreOrder(event) };
 case 'buildGatewayUrl': {
         // CRM 端调用：生成收钱吧 wap2 聚合收款 URL（payway 不传，按扫码方 UA 自动选渠道）
         // 入参: { contractId, amount, subject, operator, returnUrl, notifyUrl, clientSn? }
@@ -1150,100 +1426,6 @@ case 'buildGatewayUrl': {
             amount: amountInCents,
             gatewayUrl,
             terminalSn: t.terminal_sn,
-            expiresAt,
-          },
-        };
-      }
-      case 'precreateGateway': {
-        // 小程序前端调用：生成 wap2 聚合收款 URL（payway 不传，按扫码方 UA 自选微信/支付宝）
-        // 用于"用支付宝支付"按钮。客户扫码后跳出小程序去支付宝/微信完成支付，
-        // 支付结果通过轮询 queryPayment 检测。
-        // 入参: { contractId, phone, paymentSequenceNo? }
-        // 出参: { paymentId, clientSn, gatewayUrl, qrCodeFileId, amount, subject, expiresAt }
-        const { contractId, phone, paymentSequenceNo } = event;
-        if (!contractId) return { success: false, errMsg: '缺少 contractId' };
-        if (!phone) return { success: false, errMsg: '缺少 phone' };
-        if (!openid) return { success: false, errMsg: '缺少 openid' };
-
-        const isV2 = !!paymentSequenceNo;
-
-        // 1) 获取终端并签到
-        const terminal = await getTerminal();
-        const t = await ensureCheckin(terminal);
-
-        // 2) 防重复 + 同步已有 pending
-        await settleExistingPending({ contractId, paymentSequenceNo, isV2, terminal: t });
-
-        // 3) 拉金额（V2 从 payment-progress 取对应笔次，V1 从合同详情取 serviceFee）
-        const { amountInCents, subject } = await fetchAmountAndSubject({
-          contractId, phone, paymentSequenceNo,
-        });
-
-        // 4) 生成订单号 + 5 分钟过期时间
-        const clientSn = generateClientSn();
-        const expiresAt = Date.now() + 5 * 60 * 1000;
-
-        // 5) 先写一条 pending 支付记录（拿到真实 paymentId，用于 return_url）
-        const paymentDoc = {
-          contractId,
-          phone,
-          openid,
-          orderCategory: 'housekeeping',
-          client_sn: clientSn,
-          sqb_sn: '',
-          amount: amountInCents,
-          paymentStatus: 'pending',
-          paidAt: null,
-          payMode: 'gateway_alipay',  // 区分 CRM 端 buildGatewayUrl（payMode='gateway'）
-          createdBy: 'miniprogram',
-          expiresAt,
-          createdAt: db.serverDate(),
-          updatedAt: db.serverDate(),
-        };
-        if (isV2) paymentDoc.paymentSequenceNo = paymentSequenceNo;
-        const addRes = await db.collection('payments').add({ data: paymentDoc });
-        const paymentId = addRes._id;
-
-        // 6) 拼 wap2 网关 URL 参数（payway 故意不传 → 按扫码方 UA 自动选渠道）
-        // 注意：notify_url 不要传（空字符串会被收钱吧网关当作"参数错误"返回 418）
-        const params = {
-          terminal_sn: t.terminal_sn,
-          client_sn: clientSn,
-          total_amount: String(amountInCents),
-          subject: String(subject).slice(0, 64),
-          operator: 'miniprogram',
-          return_url: ALIPAY_RETURN_URL,  // 简化：去掉 query string，避免网关校验失败
-        };
-
-        // 7) 签名：参数按 ASCII 升序排序，拼 stringA + &key= → MD5 大写
-        const sortedKeys = Object.keys(params).sort();
-        const stringA = sortedKeys.map(k => `${k}=${params[k]}`).join('&');
-        const stringSignTemp = `${stringA}&key=${t.terminal_key}`;
-        const sign = crypto.createHash('md5').update(stringSignTemp, 'utf8').digest('hex').toUpperCase();
-        const gatewayUrl = `https://qr.shouqianba.com/gateway?${stringA}&sign=${sign}`;
-
-        // 8) 生成二维码 PNG → 上传到云存储（失败也不阻塞主流程）
-        const qrCodeFileId = await generateQrCodeFile(gatewayUrl, clientSn);
-
-        // 9) 把 gatewayUrl + qrCodeFileId 回写到 payments 记录
-        await db.collection('payments').doc(paymentId).update({
-          data: { gatewayUrl, qrCodeFileId, updatedAt: db.serverDate() },
-        });
-
-        console.log('[paymentService] precreateGateway:', {
-          paymentId, clientSn, amount: amountInCents, terminalSn: t.terminal_sn,
-          qrCodeFileId: qrCodeFileId || '(生成失败)',
-        });
-
-        return {
-          success: true,
-          data: {
-            paymentId,
-            clientSn,
-            gatewayUrl,
-            qrCodeFileId,  // 前端用 <image src="{{cloudFileId}}"> 直接展示
-            amount: amountInCents,
-            subject,
             expiresAt,
           },
         };

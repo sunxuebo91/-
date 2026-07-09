@@ -6,6 +6,7 @@ const STATUS_MAP = {
   ended:     '已结束',
   cancelled: '已取消',
   replaced:  '已更新',
+  refunded:  '已退款',
 };
 
 // 职培合同生命周期状态：signing → signed → active → graduated / refunded（后两者为终态）

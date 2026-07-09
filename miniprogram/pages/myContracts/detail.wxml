@@ -168,5 +168,42 @@
       data-cid="{{contract.contractNumber || contract._id}}"
       hover-class="none"
     >{{btn.label}}</button>
+
+    <!-- 代客下单按钮（销售/员工视角，客户已签未付时显示） -->
+    <button
+      wx:if="{{showSalesPreorder}}"
+      class="sign-action-btn sign-action-btn--primary"
+      bindtap="onSalesPreorder"
+      hover-class="none"
+    >💙 代客下单</button>
+  </view>
+
+  <!-- 代客下单二维码弹窗（销售/员工触发） -->
+  <view wx:if="{{preorderDialog.visible}}" class="preorder-mask" catchtap="closePreorderDialog">
+    <view class="preorder-dialog" catchtap="">
+      <view class="preorder-title">💙 代客下单 · 让客户扫码支付</view>
+      <view wx:if="{{preorderDialog.amountYuan}}" class="preorder-amount">¥{{preorderDialog.amountYuan}}</view>
+      <view wx:if="{{preorderDialog.subject}}" class="preorder-subject">{{preorderDialog.subject}}</view>
+
+      <view wx:if="{{preorderDialog.qrCodeFileId}}" class="preorder-qrcode-wrap">
+        <image class="preorder-qrcode" src="{{preorderDialog.qrCodeFileId}}" mode="aspectFit" />
+        <view class="preorder-qrcode-hint">客户用微信/支付宝扫码</view>
+      </view>
+      <view wx:else class="preorder-qrcode-loading">二维码生成中...</view>
+
+      <view wx:if="{{preorderDialog.shareUrl}}" class="preorder-shareurl">
+        <view class="preorder-shareurl-label">或复制链接发给客户：</view>
+        <view class="preorder-shareurl-text">{{preorderDialog.shareUrl}}</view>
+        <button class="preorder-btn-secondary" bindtap="copyPreorderLink">📋 复制链接</button>
+      </view>
+
+      <button class="preorder-btn-primary" bindtap="pollPreorderPaid" loading="{{preorderDialog.polling}}" disabled="{{preorderDialog.polling}}">
+        {{preorderDialog.polling ? '查询中...' : '我已收到款，刷新状态'}}
+      </button>
+      <view class="preorder-tip">
+        链接 5 分钟内有效。客户付款后点上方按钮或重新进入本页面，状态会自动更新。
+      </view>
+      <view class="preorder-close" bindtap="closePreorderDialog">关闭</view>
+    </view>
   </view>
 </view>
