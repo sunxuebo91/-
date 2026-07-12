@@ -3,22 +3,35 @@ Page({
     url: '',
     mode: '',
     paymentId: '',
+    navTitle: '加载中...',
+    statusBarHeight: 20,
+    navBarBottom: 64,
   },
 
   onLoad(query) {
-    const { url, title, mode, paymentId } = query;
+    const { url, title, mode, paymentId, contractId, phone } = query;
     const decoded = decodeURIComponent(url || '');
+    const sysInfo = wx.getWindowInfo();
+    const statusBarHeight = sysInfo.statusBarHeight || 20;
+    const navBarBottom = statusBarHeight + 44;
+    const navTitle = title ? decodeURIComponent(title) : (mode === 'checkout' ? '选择支付方式' : '加载中...');
     this.setData({
       url: decoded,
       mode: mode || '',
       paymentId: paymentId || '',
+      navTitle,
+      statusBarHeight,
+      navBarBottom,
     });
-    if (title) {
-      wx.setNavigationBarTitle({ title: decodeURIComponent(title) });
-    }
-    if (mode === 'checkout') {
-      wx.setNavigationBarTitle({ title: '选择支付方式' });
-    }
+    // 签约模式：存 contractId + phone，onShow 时查签约状态
+    this.contractId = contractId || '';
+    this.phone = phone ? decodeURIComponent(phone) : '';
+    this._checkedSign = false;
+  },
+
+  // 签署完成浮层：一键返回详情页（跳过 H5 内部多层 history）
+  goBack() {
+    wx.navigateBack({ delta: 1, fail: () => wx.switchTab({ url: '/pages/myOrders/index' }) });
   },
 
   // web-view 加载失败时提示
@@ -32,10 +45,48 @@ Page({
     console.log('[webview] 收到 H5 消息:', e.detail.data);
   },
 
-  // 用户从收银台切回小程序时触发（关键：此时收银台可能已支付完成）
+  // 用户点返回 / H5 切回小程序时触发
   onShow() {
-    if (this.data.mode !== 'checkout' || !this.data.paymentId) return;
-    this.pollPayment();
+    // 支付收银台模式：轮询支付状态
+    if (this.data.mode === 'checkout' && this.data.paymentId) {
+      this.pollPayment();
+      return;
+    }
+    // 签约模式：查签约状态，签完自动返回详情页（跳过 H5 history）
+    if (this.data.mode === 'sign' && this.contractId && this.phone && !this._checkedSign) {
+      this._checkedSign = true;
+      this.checkSignedAndGoBack();
+    }
+  },
+
+  // 查签约状态：签完就自动 navigateBack 回详情页
+  async checkSignedAndGoBack() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'contractService',
+        data: { action: 'getContractDetail', id: this.contractId, phone: this.phone },
+      });
+      const c = res.result?.data;
+      if (!c) { this._checkedSign = false; return; }
+
+      const ss = c.signerStatuses || {};
+      const customerSigned = ss.customerSigned === true || ss.customerSigned === 'signed';
+      const nannySigned = ss.nannySigned === true || ss.nannySigned === 'signed';
+
+      if (customerSigned || nannySigned) {
+        // 已签完 → 自动返回详情页
+        wx.showToast({ title: '签署完成', icon: 'success', duration: 1500 });
+        setTimeout(() => {
+          wx.navigateBack({ delta: 1, fail: () => wx.switchTab({ url: '/pages/myOrders/index' }) });
+        }, 1000);
+      } else {
+        // 还没签完，重置标记，下次 onShow 再查
+        this._checkedSign = false;
+      }
+    } catch (err) {
+      console.error('[webview] checkSignedAndGoBack error:', err.message);
+      this._checkedSign = false;
+    }
   },
 
   // 轮询支付状态：每 2s 查一次，最多 30 次（约 60s）

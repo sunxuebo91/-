@@ -1,6 +1,5 @@
 {
   "navigationBarTitleText": "加载中...",
-  "navigationBarBackgroundColor": "#8766F3",
-  "navigationBarTextStyle": "white"
+  "navigationStyle": "custom"
 }
 

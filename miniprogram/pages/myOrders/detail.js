@@ -43,12 +43,31 @@ function buildPayConfirmContent(contract) {
   const serviceFee = Number(contract.customerServiceFee || contract.serviceFee || 0);
   const workerSalary = Number(contract.workerSalary || 0);
   const contractType = String(contract.contractType || contract.serviceTypeText || '');
+  // 收费模式（CRM 端 contract.paymentType）：service_fee_only=只收中介费 / service_fee_and_salary=中介费+阿姨首月工资
+  const paymentType = String(contract.paymentType || 'service_fee_only');
+  // V1 单笔的 CRM 配置金额（任何 V1 方案都按这个显示，权威值）
+  const paymentConfigAmount = Number(contract.paymentConfigAmount || 0);
 
   const fmt = n => `¥${n.toFixed(2)}`;
 
-  // 月嫂合同：定金 / 尾款（V1 单笔时默认"定金"，V2 用 nextPayment.label）
+  // ⭐ 金额用 CRM 配置的 paymentConfigAmount（权威值），文案按 paymentType 区分
+  if (paymentConfigAmount > 0) {
+    // service_fee_and_salary：服务费 + 阿姨首月工资
+    if (paymentType === 'service_fee_and_salary' && workerSalary > 0) {
+      return {
+        title: '确认支付服务费 + 阿姨首月工资',
+        content: `确认支付服务费 ${fmt(serviceFee)} + 阿姨首月工资 ${fmt(workerSalary)} ？\n（合计 ${fmt(paymentConfigAmount)}）`,
+      };
+    }
+    // service_fee_only（默认）：只收服务费
+    return {
+      title: '确认支付服务费',
+      content: `确认支付服务费 ${fmt(paymentConfigAmount)} ？`,
+    };
+  }
+
+  // 兜底（CRM 没配 paymentConfigAmount）：按老逻辑推断（仅月嫂合同）
   if (/月嫂/i.test(contractType)) {
-    // 月嫂合同可能带家政员工资（首月工资），优先用 sum 拼接
     if (workerSalary > 0) {
       return {
         title: '确认支付定金 + 首月工资',
@@ -61,15 +80,7 @@ function buildPayConfirmContent(contract) {
     };
   }
 
-  // 非月嫂合同：服务费 + 阿姨首月工资
-  if (workerSalary > 0 && serviceFee > 0) {
-    return {
-      title: '确认支付',
-      content: `确认支付服务费 ${fmt(serviceFee)} + 阿姨首月工资 ${fmt(workerSalary)} ？`,
-    };
-  }
-
-  // 仅服务费
+  // 兜底：仅服务费
   if (serviceFee > 0) {
     return {
       title: '确认支付服务费',
@@ -653,7 +664,7 @@ Page({
         return;
       }
       wx.navigateTo({
-        url: `/pages/webview/index?url=${encodeURIComponent(signingUrl)}&title=${encodeURIComponent('合同签约')}`,
+        url: `/pages/webview/index?url=${encodeURIComponent(signingUrl)}&title=${encodeURIComponent('合同签约')}&mode=sign&contractId=${this.contractId}&phone=${encodeURIComponent(this.phone)}`,
       });
     } catch (e) {
       wx.hideLoading();

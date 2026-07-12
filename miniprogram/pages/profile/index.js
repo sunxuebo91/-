@@ -270,7 +270,7 @@ Page({
           // 清除本地存储的用户信息
           wx.removeStorageSync('crmUserInfo');
           wx.removeStorageSync('token');
-          // 同步清除我的网课的学员 token / 学员信息，避免下次进入时复用旧账号数据
+          // 同步清除我的视频的学员 token / 学员信息，避免下次进入时复用旧账号数据
           wx.removeStorageSync('student_token');
           wx.removeStorageSync('student_info');
 

@@ -284,14 +284,17 @@ async function fetchAmountAndSubject({ contractId, phone, paymentSequenceNo }) {
         'X-Client-Type': 'miniprogram',
       }).catch(() => null);
     const data = contractRes && contractRes.data;
-    // V1 应付金额 = 客户服务费 + 家政员首月工资（住家/月子/育儿嫂合同的常见组合）
-    // 月嫂合同：workerSalary=0，直接用 customerServiceFee（一次性服务费即定金/全款）
+    // V1 应付金额：优先用 CRM paymentConfigAmount 实际配置金额（权威值），不用 csf+ws 推断
+    // 例：全款服务费+部分首月工资 11999 ≠ csf+ws=15999
     const customerServiceFee = Number(data?.customerServiceFee || data?.serviceFee || 0);
     const workerSalary       = Number(data?.workerSalary || 0);
-    const contractType       = String(data?.contractType || '');
-    const totalFee = (/月嫂/i.test(contractType) || workerSalary === 0)
-      ? customerServiceFee
-      : (customerServiceFee + workerSalary);
+    const paymentType        = String(data?.paymentType || 'service_fee_only');
+    const paymentConfigAmount = Number(data?.paymentConfigAmount || 0);
+    const totalFee = paymentConfigAmount > 0
+      ? paymentConfigAmount
+      : (paymentType === 'service_fee_and_salary'
+          ? customerServiceFee + workerSalary
+          : customerServiceFee);
 
     if (!totalFee || totalFee <= 0) throw new Error('合同服务费为 0 或获取失败，无法发起支付');
     amountInCents = Math.round(totalFee * 100);
@@ -802,14 +805,14 @@ async function precreate(event, openid) {
         'X-Client-Type': 'miniprogram',
       }).catch(() => null);
 
-    // V1 应付金额 = 客户服务费 + 家政员首月工资（家政合同常见组合；月嫂除外）
+    // V1 应付金额：按合同 paymentType 区分
     const v1Data = contractRes && contractRes.data;
     const customerServiceFee = Number(v1Data?.customerServiceFee || v1Data?.serviceFee || 0);
     const workerSalary       = Number(v1Data?.workerSalary || 0);
-    const v1ContractType     = String(v1Data?.contractType || '');
-    const totalFee = (/月嫂/i.test(v1ContractType) || workerSalary === 0)
-      ? customerServiceFee
-      : (customerServiceFee + workerSalary);
+    const v1PaymentType      = String(v1Data?.paymentType || 'service_fee_only');
+    const totalFee = v1PaymentType === 'service_fee_and_salary'
+      ? customerServiceFee + workerSalary
+      : customerServiceFee;
 
     if (!totalFee || totalFee <= 0) {
       throw new Error('合同服务费为 0 或获取失败，无法发起支付');

@@ -114,7 +114,7 @@ Page({
         console.log("✅ OpenID:", openid);
 
         // 兜底：CRM 接口未返回成功也保证本地有基础登录态（含 phone/openid），
-        // 否则后续依赖 crmUserInfo.phone 的模块（如我的网课）会判定未登录
+        // 否则后续依赖 crmUserInfo.phone 的模块（如我的视频）会判定未登录
         const baseUserInfo = {
           phone,
           openid,

@@ -1,1 +1,44 @@
-/* pages/webview/index.wxss */
+/* 自定义导航栏（cover-view 浮在 web-view 原生组件之上） */
+.custom-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #8766F3;
+}
+.custom-nav-bar {
+  height: 44px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12rpx;
+}
+.custom-nav-back {
+  width: 80rpx;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.back-arrow {
+  width: 20rpx;
+  height: 20rpx;
+  border-left: 4rpx solid #fff;
+  border-bottom: 4rpx solid #fff;
+  transform: rotate(45deg);
+  margin-left: 8rpx;
+}
+.custom-nav-title {
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  max-width: 400rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.custom-nav-placeholder {
+  width: 80rpx;
+}

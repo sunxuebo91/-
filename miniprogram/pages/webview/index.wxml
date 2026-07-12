@@ -1,2 +1,13 @@
+<!-- 自定义导航栏（cover-view 浮在 web-view 之上，返回箭头直接 navigateBack 跳过 H5 history） -->
+<cover-view class="custom-nav" style="padding-top: {{statusBarHeight}}px;">
+  <cover-view class="custom-nav-bar">
+    <cover-view class="custom-nav-back" bindtap="goBack">
+      <cover-view class="back-arrow"></cover-view>
+    </cover-view>
+    <cover-view class="custom-nav-title">{{navTitle || '加载中...'}}</cover-view>
+    <cover-view class="custom-nav-placeholder"></cover-view>
+  </cover-view>
+</cover-view>
+
 <web-view wx:if="{{url}}" src="{{url}}" binderror="onWebViewError"></web-view>
 
