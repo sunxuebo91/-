@@ -71,6 +71,13 @@ async function confirmOnboard(phone, id) {
   return res.data;
 }
 
+async function requestWorkerChange(phone, id) {
+  if (!id) throw new Error('缺少合同ID');
+  if (!phone) throw new Error('请先绑定手机号');
+  const res = await crmRequest('POST', `/api/miniprogram/contracts/${id}/request-worker-change`, { phone });
+  return res.data;
+}
+
 async function getSigningUrl(phone, id) {
   if (!id) throw new Error('缺少合同ID');
   if (!phone) throw new Error('请先绑定手机号');
@@ -130,6 +137,10 @@ exports.main = async (event) => {
       }
       case 'confirmOnboard': {
         const data = await confirmOnboard(phone, event.id);
+        return { success: true, data };
+      }
+      case 'requestWorkerChange': {
+        const data = await requestWorkerChange(phone, event.id);
         return { success: true, data };
       }
       case 'getSigningUrl': {

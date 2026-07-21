@@ -22,13 +22,23 @@
       <view class="section-title">服务信息</view>
       <view class="row"><text class="label">服务类型</text><text class="value">{{contract.serviceTypeText}}</text></view>
       <view class="row">
-        <text class="label">服务费用</text>
+        <text class="label">{{contract.paymentMode === 'installment' ? '收款总额' : '服务费用'}}</text>
         <view class="value value-inline">
-          <text class="value-amount">¥{{contract.serviceFee}} 元{{contract.isV2 && paymentProgress ? '（分' + paymentProgress.payments.length + '笔收取）' : ''}}</text>
-          <text wx:if="{{contract.paymentStatus === 'paid'}}" class="value-paid-tag">✓ 已支付</text>
+          <text class="value-amount">¥{{contract.paymentMode === 'installment' ? contract.paymentSummary.expectedText : contract.serviceFee}} 元{{contract.isV2 && isMultiPaymentPlan ? '（分' + paymentProgress.payments.length + '笔收取）' : ''}}</text>
+          <text wx:if="{{contract.paymentStatus === 'paid'}}" class="value-paid-tag">✓ 已结清</text>
+          <text wx:elif="{{contract.paymentStatus === 'partial'}}" class="value-partial-tag">部分支付</text>
           <text wx:elif="{{contract.paymentStatus === 'refunded'}}" class="value-refund-tag">已退款</text>
         </view>
       </view>
+      <view wx:for="{{contract.oneTimeExtraPaymentItems}}" wx:key="index" class="row">
+        <text class="label">{{item.displayLabel}}</text>
+        <text class="value">¥{{item.amount}} 元</text>
+      </view>
+      <block wx:if="{{contract.paymentSummary.hasPaymentInfo}}">
+        <view wx:if="{{contract.paymentMode !== 'installment'}}" class="row"><text class="label">应付金额</text><text class="value">¥{{contract.paymentSummary.expectedText}} 元</text></view>
+        <view class="row"><text class="label">已付金额</text><text class="value payment-received">¥{{contract.paymentSummary.receivedText}} 元</text></view>
+        <view class="row" wx:if="{{contract.paymentSummary.status === 'partial'}}"><text class="label">待付金额</text><text class="value payment-remaining">¥{{contract.paymentSummary.remainingText}} 元</text></view>
+      </block>
       <view class="row"><text class="label">开始日期</text><text class="value">{{contract.startDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">结束日期</text><text class="value">{{contract.endDateFmt || '待定'}}</text></view>
       <view class="row"><text class="label">合同期限</text><text class="value">{{contract.contractDuration || '—'}}</text></view>
@@ -40,8 +50,8 @@
       <view class="pay-btn-refresh" bindtap="manualRefreshPayment">我已支付？点此刷新</view>
     </view>
 
-    <!-- V2 支付进度 -->
-    <view class="section" wx:if="{{contract.isV2 && paymentProgress}}">
+    <!-- 仅两笔及以上显示分笔支付进度；单笔服务费不重复展示为“第1笔”。 -->
+    <view class="section" wx:if="{{contract.isV2 && paymentProgress && isMultiPaymentPlan}}">
       <view class="section-title">支付进度</view>
       <!-- 进度条 -->
       <view class="progress-bar-wrap">
@@ -119,5 +129,48 @@
       </view>
     </view>
   </block>
+
+  <!-- 单笔只确认一笔金额；只有多笔计划才展示笔次与付款明细。 -->
+  <view wx:if="{{paymentConfirm}}" class="payment-confirm-mask" bindtap="cancelPaymentConfirm">
+    <view class="payment-confirm-dialog" catchtap="stopPaymentModalTap">
+      <view class="payment-confirm-header">
+        <view class="payment-confirm-mark">¥</view>
+        <view class="payment-confirm-title">确认支付</view>
+      </view>
+      <view class="payment-confirm-summary">
+        <text class="payment-confirm-label">{{paymentConfirm.label}}</text>
+        <text class="payment-confirm-amount">¥{{paymentConfirm.amount}}</text>
+      </view>
+
+      <view wx:if="{{paymentConfirm.isMultiPaymentPlan}}" class="payment-confirm-stage">
+        本次支付第 {{paymentConfirm.sequenceNo}} 笔，共 {{paymentConfirm.totalCount}} 笔
+      </view>
+
+      <view wx:if="{{paymentConfirm.isMultiPaymentPlan}}" class="payment-confirm-list">
+        <view class="payment-confirm-list-title">付款明细</view>
+        <view wx:for="{{paymentConfirm.payments}}" wx:key="sequenceNo" class="payment-confirm-item {{item.sequenceNo === paymentConfirm.sequenceNo ? 'is-current' : ''}}">
+          <view>
+            <text class="payment-confirm-item-label">{{item.label}}</text>
+            <text class="payment-confirm-item-seq">第{{item.sequenceNo}}笔</text>
+          </view>
+          <text class="payment-confirm-item-amount">¥{{item.amount}}</text>
+        </view>
+      </view>
+
+      <view wx:elif="{{paymentConfirm.showPaymentItems}}" class="payment-confirm-list">
+        <view class="payment-confirm-list-title">费用明细</view>
+        <view wx:for="{{paymentConfirm.paymentItems}}" wx:key="index" class="payment-confirm-item">
+          <text class="payment-confirm-item-label">{{item.label}}</text>
+          <text class="payment-confirm-item-amount">¥{{item.amount}}</text>
+        </view>
+      </view>
+
+      <view class="payment-confirm-tip">请核对支付金额，确认后将跳转微信支付</view>
+      <view class="payment-confirm-actions">
+        <view class="payment-confirm-cancel" bindtap="cancelPaymentConfirm">暂不支付</view>
+        <view class="payment-confirm-submit" bindtap="confirmPayment">确认支付</view>
+      </view>
+    </view>
+  </view>
 </view>
 

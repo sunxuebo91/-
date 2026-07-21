@@ -9,20 +9,13 @@ const STATUS_TEXT = {
   refunded:  '已退款',
 };
 
+const { getPaymentSummary, normalizePaymentProgress } = require('../../utils/paymentSummary.js');
+const { getContractDuration } = require('../../utils/contractDuration.js');
+const { getPaymentMode, isInstallmentPayment } = require('../../utils/paymentMode.js');
+
 function formatDate(str) {
   if (!str) return '';
   return str.slice(0, 10);
-}
-
-// 计算两个日期之间的月数差
-function calculateMonths(start, end) {
-  if (!start || !end) return '';
-  const d1 = new Date(start);
-  const d2 = new Date(end);
-  const yearDiff = d2.getFullYear() - d1.getFullYear();
-  const monthDiff = d2.getMonth() - d1.getMonth();
-  const totalMonths = yearDiff * 12 + monthDiff;
-  return totalMonths > 0 ? `${totalMonths}个月` : '—';
 }
 
 function formatDateTime(str) {
@@ -33,69 +26,6 @@ function formatDateTime(str) {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
 }
 
-/**
- * 根据 CRM 合同数据动态拼接支付确认弹窗文案
- * - 月嫂合同 → "定金/尾款" 命名
- * - 其他合同（住家保姆/月子/育儿嫂等）→ 有阿姨工资则展示"服务费+阿姨首月工资"，否则只展示服务费
- * 兜底：纯金额
- */
-function buildPayConfirmContent(contract) {
-  const serviceFee = Number(contract.customerServiceFee || contract.serviceFee || 0);
-  const workerSalary = Number(contract.workerSalary || 0);
-  const contractType = String(contract.contractType || contract.serviceTypeText || '');
-  // 收费模式（CRM 端 contract.paymentType）：service_fee_only=只收中介费 / service_fee_and_salary=中介费+阿姨首月工资
-  const paymentType = String(contract.paymentType || 'service_fee_only');
-  // V1 单笔的 CRM 配置金额（任何 V1 方案都按这个显示，权威值）
-  const paymentConfigAmount = Number(contract.paymentConfigAmount || 0);
-
-  const fmt = n => `¥${n.toFixed(2)}`;
-
-  // ⭐ 金额用 CRM 配置的 paymentConfigAmount（权威值），文案按 paymentType 区分
-  if (paymentConfigAmount > 0) {
-    // service_fee_and_salary：服务费 + 阿姨首月工资
-    if (paymentType === 'service_fee_and_salary' && workerSalary > 0) {
-      return {
-        title: '确认支付服务费 + 阿姨首月工资',
-        content: `确认支付服务费 ${fmt(serviceFee)} + 阿姨首月工资 ${fmt(workerSalary)} ？\n（合计 ${fmt(paymentConfigAmount)}）`,
-      };
-    }
-    // service_fee_only（默认）：只收服务费
-    return {
-      title: '确认支付服务费',
-      content: `确认支付服务费 ${fmt(paymentConfigAmount)} ？`,
-    };
-  }
-
-  // 兜底（CRM 没配 paymentConfigAmount）：按老逻辑推断（仅月嫂合同）
-  if (/月嫂/i.test(contractType)) {
-    if (workerSalary > 0) {
-      return {
-        title: '确认支付定金 + 首月工资',
-        content: `确认支付定金 ${fmt(serviceFee)} + 首月工资 ${fmt(workerSalary)} ？`,
-      };
-    }
-    return {
-      title: '确认支付定金',
-      content: `确认支付定金 ${fmt(serviceFee)} ？`,
-    };
-  }
-
-  // 兜底：仅服务费
-  if (serviceFee > 0) {
-    return {
-      title: '确认支付服务费',
-      content: `确认支付服务费 ${fmt(serviceFee)} ？`,
-    };
-  }
-
-  // 兜底：只有金额
-  const total = serviceFee + workerSalary;
-  return {
-    title: '确认支付',
-    content: `确认支付 ${fmt(total)} ？`,
-  };
-}
-
 Page({
   data: {
     contract: null,
@@ -103,6 +33,8 @@ Page({
     confirming: false,
     paying: false,
     paymentProgress: null,
+    isMultiPaymentPlan: false,
+    paymentConfirm: null,
     checkoutPaying: false,
   },
 
@@ -200,6 +132,23 @@ Page({
       });
       if (!res.result || !res.result.success) throw new Error(res.result?.errMsg || '加载失败');
       const c = res.result.data;
+      const paymentMode = getPaymentMode(c);
+      const paymentItems = Array.isArray(c.paymentItems) ? c.paymentItems : [];
+      const oneTimeExtraPaymentItems = paymentMode === 'one_time'
+        ? paymentItems.filter((item) => {
+          const type = String(item && item.type || '').toLowerCase();
+          const label = String(item && item.label || '');
+          return item && item.amount != null && type !== 'service_fee' && type !== 'service_fee_only' && !/服务费/.test(label);
+        })
+        .map((item) => {
+          const type = String(item.type || '').toLowerCase();
+          const isSalaryItem = ['salary', 'first_month_salary', 'nanny_salary'].includes(type);
+          return {
+            ...item,
+            displayLabel: item.label === '阿姨首月工资' || isSalaryItem ? '首月工资' : (item.label || '其他费用'),
+          };
+        })
+        : [];
 
       // 签约进度 - 支持三态：'signed'已签署 / 'signing'签约中 / 'pending'待签署
       const ss = c.signerStatuses || {};
@@ -251,18 +200,14 @@ Page({
         && ['draft', 'signing', 'signed'].includes(c.contractStatus)
         && !customerSigned;
 
-      // 去支付按钮：客户已签约 + 未支付 + 合同状态在签约流程中（非已结束/已取消）
-      // 兼容 CRM 返回 paymentVersion: 2 / '2' / 'V2' / 'v2'
+      // 收款统一走 V2 分笔模式；未配置 V2 的合同不再显示旧版单笔支付入口。
       const pv = c.paymentVersion != null ? String(c.paymentVersion).toLowerCase().replace(/^v/, '') : '';
       const isV2 = pv === '2';
       // CRM 端可关闭支付（paymentEnabled=false），关闭后小程序不显示支付按钮
       const paymentEnabled = c.paymentEnabled !== false;
-      // 支付状态判断：V2 看 paymentStatus 字段；V1 也加 paymentStatus 判断（之前只看合同状态导致已付款按钮还在）
-      const notPaid = c.paymentStatus !== 'paid' && c.paymentStatus !== 'refunded';
-      const showPay = paymentEnabled && customerSigned && notPaid && Number(c.paymentConfigAmount || 0) > 0 && (
-        isV2 ? true
-             : ['draft', 'signing', 'signed', 'active'].includes(c.contractStatus)
-      );
+      const paymentSummary = getPaymentSummary(c);
+      const notPaid = paymentSummary.status !== 'paid' && paymentSummary.status !== 'refunded';
+      const showPay = paymentEnabled && customerSigned && notPaid && isV2;
 
       // 清除 CRM 返回中可能污染签约状态的冗余字段
       const { customerSigned: _cs, nannySigned: _ns, customerStatus: _cst, nannyStatus: _nst, ...cleanContract } = c;
@@ -270,18 +215,24 @@ Page({
       this.setData({
         contract: {
           ...cleanContract,
+          paymentMode,
+          oneTimeExtraPaymentItems,
           serviceTypeText:  c.contractType || '未知服务',
           nannyName:        c.workerName   || '待定',
           nannyPhone:       c.workerPhone  || '',
           nannySalary:      c.workerSalary || 0,
           serviceFee:       c.customerServiceFee || 0,
+          rawPaymentStatus: c.paymentStatus || 'unpaid',
+          paymentStatus:    paymentSummary.status,
+          paymentSummary,
           startDateFmt:     formatDate(c.startDate),
           endDateFmt:       formatDate(c.endDate),
-          contractDuration: calculateMonths(c.startDate, c.endDate),
+          contractDuration: getContractDuration(c.startDate, c.endDate),
           statusText,
           displayStatus,
           // 确认上户仅在双方都签完后才开放
           onboardConfirmed: c.onboardStatus === 'confirmed',
+          workerChangeNotified: !!c.changeWorkerRequestNotifiedAt,
           showOnboard: nannySigned && c.onboardStatus !== 'confirmed',
           onboardConfirmedAt: formatDateTime(c.onboardConfirmedAt),
           showSign,
@@ -303,6 +254,7 @@ Page({
           customerPaid: !notPaid,
           contractStatus: c.contractStatus,
           onboardConfirmed: c.onboardStatus === 'confirmed',
+          workerChangeNotified: !!c.changeWorkerRequestNotifiedAt,
         }),
       });
     } catch (e) {
@@ -330,14 +282,29 @@ Page({
         data: { action: 'getPaymentProgress', contractId: this.contractId, phone: this.phone },
       });
       if (res.result?.success) {
-        const data = res.result.data;
+        const data = normalizePaymentProgress(res.result.data);
         console.log('[detail] fetchPaymentProgress =>', JSON.stringify({
           nextPayment: data.nextPayment,
           paymentsCount: data.payments?.length,
           totalAmount: data.totalAmount,
           receivedAmount: data.receivedAmount,
         }));
-        this.setData({ paymentProgress: data });
+        const updateData = {
+          paymentProgress: data,
+          isMultiPaymentPlan: isInstallmentPayment(this.data.contract),
+        };
+        if (data.payments.length > 0 && this.data.contract) {
+          const paymentSummary = getPaymentSummary({
+            ...this.data.contract,
+            payments: data.payments,
+            paymentTotalAmount: data.totalAmount,
+            paymentConfigAmount: data.totalAmount,
+            paymentReceivedAmount: data.receivedAmount,
+          });
+          updateData['contract.paymentSummary'] = paymentSummary;
+          updateData['contract.paymentStatus'] = paymentSummary.status;
+        }
+        this.setData(updateData);
         return data;
       }
     } catch (e) { console.warn('[detail] 支付进度加载失败:', e.message); }
@@ -347,7 +314,7 @@ Page({
   // 拨打电话 / 悬浮底部按钮相关
 
   // 悬浮底部按钮：根据当前合同状态计算下一动作（互斥）
-  _buildFloatingAction({ showSign, showPay, showOnboard, showDownload, contractStatus, onboardConfirmed, customerPaid }) {
+  _buildFloatingAction({ showSign, showPay, showOnboard, showDownload, contractStatus, onboardConfirmed, customerPaid, workerChangeNotified }) {
     if (showSign) return { type: 'sign', kind: 'sign', label: '✍️ 去签署' };
     if (showPay) return { type: 'pay', kind: 'pay', label: '去支付' };
     // 客户已签 + 已支付 + 阿姨已签 + 未确认上户 → 「确认上户」
@@ -356,7 +323,11 @@ Page({
     if (showDownload && (contractStatus === 'active' || contractStatus === 'ended' || onboardConfirmed || customerPaid)) {
       return { type: 'download', kind: 'download', label: '📄 下载合同' };
     }
-    if (onboardConfirmed) return { type: 'done', kind: 'done', label: '✓ 全部完成' };
+    if (onboardConfirmed) {
+      return workerChangeNotified
+        ? { type: 'worker-change-notified', kind: 'done', label: '✓ 已通知顾问' }
+        : { type: 'request-worker-change', kind: 'done', label: '申请换人' };
+    }
     return null;
   },
 
@@ -367,6 +338,7 @@ Page({
     if (a.type === 'pay') return this.goPay();
     if (a.type === 'onboard') return this.confirmOnboard();
     if (a.type === 'download') return this.downloadContract();
+    if (a.type === 'request-worker-change') return this.requestWorkerChange();
   },
 
   callNanny() {
@@ -382,18 +354,19 @@ Page({
     if (!contract) return;
 
     const isV2 = contract.isV2;
-
-    // V2 需要先确定 sequenceNo
-    let sequenceNo = null;
-    if (isV2) {
-      let progress = paymentProgress;
-      if (!progress) progress = await this.fetchPaymentProgress();
-      if (!progress || !progress.nextPayment) {
-        wx.showToast({ title: '该合同没有待支付', icon: 'none' });
-        return;
-      }
-      sequenceNo = progress.nextPayment.sequenceNo;
+    if (!isV2) {
+      wx.showToast({ title: '该合同未配置新版分笔收款', icon: 'none' });
+      return;
     }
+
+    let sequenceNo = null;
+    let progress = paymentProgress;
+    if (!progress) progress = await this.fetchPaymentProgress();
+    if (!progress || !progress.nextPayment) {
+      wx.showToast({ title: '该合同没有待支付', icon: 'none' });
+      return;
+    }
+    sequenceNo = progress.nextPayment.sequenceNo;
 
     this.setData({ checkoutPaying: true });
     try {
@@ -431,15 +404,18 @@ Page({
   },
 
   // 去支付（调用云函数发起微信支付）
-  async goPay() {
+  async goPay(skipConfirm = false) {
     if (this.data.paying) return;
     const { contract, paymentProgress } = this.data;
     if (!contract) return;
 
     const isV2 = contract.isV2;
+    if (!isV2) {
+      wx.showToast({ title: '该合同未配置新版分笔收款', icon: 'none' });
+      return;
+    }
 
-    // ═══ V2 多笔支付路径 ═══
-    if (isV2) {
+    {
       // 获取最新进度（如果还没加载）
       let progress = paymentProgress;
       if (!progress) {
@@ -453,17 +429,31 @@ Page({
       const nextPay = progress.nextPayment;
       const amountYuan = Number(nextPay.amount).toFixed(2);
       const label = nextPay.label || '费用';
+      const isMultiPaymentPlan = isInstallmentPayment(contract);
 
-      const { confirm } = await new Promise(resolve =>
-        wx.showModal({
-          title: '确认支付',
-          content: `确认支付 ${label} ¥${amountYuan} 元？\n（第${nextPay.sequenceNo}笔/共${progress.payments.length}笔）`,
-          confirmText: '确认支付',
-          confirmColor: '#8766F3',
-          success: resolve,
-        })
-      );
-      if (!confirm) return;
+      // 一次支付只能对应一笔可支付记录；旧数据若被错误拆笔，禁止只收第一项。
+      if (!isMultiPaymentPlan && Array.isArray(progress.payments) && progress.payments.length !== 1) {
+        wx.showToast({ title: '收款方案正在同步，请稍后再试', icon: 'none' });
+        return;
+      }
+
+      const paymentItems = Array.isArray(contract.paymentItems) ? contract.paymentItems : [];
+
+      if (!skipConfirm) {
+        this.setData({
+          paymentConfirm: {
+            label,
+            amount: amountYuan,
+            sequenceNo: nextPay.sequenceNo,
+            totalCount: progress.payments.length,
+            isMultiPaymentPlan,
+            payments: progress.payments,
+            paymentItems,
+            showPaymentItems: !isMultiPaymentPlan && paymentItems.length > 1,
+          },
+        });
+        return;
+      }
 
       this.setData({ paying: true });
       try {
@@ -538,92 +528,20 @@ Page({
       } finally {
         this.setData({ paying: false });
       }
-      return; // V2 路径结束
+      return;
     }
+  },
 
-    // ═══ V1 原有支付路径（以下代码保持不变）═══
-    // payableAmountCents 单位是"分"，需要除以100；serviceFee 单位已经是"元"
-    const amountCents = Number(contract.payableAmountCents) || 0;
-    let amountYuan;
-    if (amountCents > 0) {
-      amountYuan = (amountCents / 100).toFixed(2);
-    } else {
-      amountYuan = Number(contract.serviceFee || 0).toFixed(2);
-    }
-    const displayAmount = `¥${amountYuan}`;
+  cancelPaymentConfirm() {
+    this.setData({ paymentConfirm: null });
+  },
 
-    // 根据合同类型动态生成支付确认文案（月嫂定金 / 服务费+阿姨工资 / 仅服务费）
-    const confirmInfo = buildPayConfirmContent(contract);
-    const { confirm } = await new Promise(resolve =>
-      wx.showModal({
-        title: confirmInfo.title,
-        content: confirmInfo.content,
-        confirmText: '确认支付',
-        confirmColor: '#8766F3',
-        success: resolve,
-      })
-    );
-    if (!confirm) return;
+  stopPaymentModalTap() {},
 
-    this.setData({ paying: true });
-    try {
-      const res = await wx.cloud.callFunction({
-        name: 'paymentService',
-        data: {
-          action: 'precreate',
-          contractId: contract._id || contract.id,
-          phone: this.phone,
-        },
-      });
-      if (!res.result?.success) throw new Error(res.result?.errMsg || '支付发起失败');
-      const { paymentId, wapPayRequest } = res.result.data;
-      if (!wapPayRequest) throw new Error('获取支付参数失败');
-
-      const payParams = typeof wapPayRequest === 'string' ? JSON.parse(wapPayRequest) : wapPayRequest;
-      await new Promise((resolve, reject) => {
-        wx.requestPayment({
-          timeStamp: payParams.timeStamp,
-          nonceStr:  payParams.nonceStr,
-          package:   payParams.package,
-          signType:  payParams.signType || 'MD5',
-          paySign:   payParams.paySign,
-          success: resolve,
-          fail: reject,
-        });
-      });
-
-      // 轮询确认支付结果
-      wx.showLoading({ title: '确认支付结果...' });
-      let confirmed = false;
-      for (let i = 0; i < 6; i++) {
-        await new Promise(r => setTimeout(r, 2000));
-        const qRes = await wx.cloud.callFunction({
-          name: 'paymentService',
-          data: { action: 'queryPayment', paymentId },
-        });
-        if (qRes.result?.data?.paymentStatus === 'paid') {
-          confirmed = true;
-          break;
-        }
-      }
-      wx.hideLoading();
-
-      if (confirmed) {
-        wx.showToast({ title: '支付成功', icon: 'success' });
-      } else {
-        wx.showToast({ title: '支付处理中，请稍后刷新', icon: 'none', duration: 3000 });
-      }
-      setTimeout(() => this.loadDetail(), 1500);
-    } catch (err) {
-      wx.hideLoading();
-      if (err.errMsg && err.errMsg.includes('cancel')) {
-        wx.showToast({ title: '已取消支付', icon: 'none' });
-      } else {
-        wx.showToast({ title: err.message || '支付失败', icon: 'none', duration: 2500 });
-      }
-    } finally {
-      this.setData({ paying: false });
-    }
+  confirmPayment() {
+    if (!this.data.paymentConfirm || this.data.paying) return;
+    this.setData({ paymentConfirm: null });
+    this.goPay(true);
   },
 
   // 下载并打开合同 PDF
@@ -695,6 +613,39 @@ Page({
           wx.showToast({ title: e.message || '操作失败', icon: 'none' });
         } finally {
           this.setData({ 'contract.confirming': false });
+        }
+      },
+    });
+  },
+
+  requestWorkerChange() {
+    if (this.data.contract?.requestingWorkerChange) return;
+    wx.showModal({
+      title: '申请换人',
+      content: '提交后将立即强提醒您的专属顾问，请保持电话畅通。',
+      confirmText: '通知顾问',
+      confirmColor: '#8766F3',
+      success: async ({ confirm }) => {
+        if (!confirm) return;
+        this.setData({ 'contract.requestingWorkerChange': true });
+        try {
+          const res = await wx.cloud.callFunction({
+            name: 'contractService',
+            data: { action: 'requestWorkerChange', id: this.contractId, phone: this.phone },
+          });
+          const data = res.result?.data;
+          if (!res.result?.success || data?.status !== 'notified') {
+            throw new Error(res.result?.errMsg || '通知顾问失败，请稍后重试');
+          }
+          this.setData({
+            'contract.workerChangeNotified': true,
+            floatingAction: { type: 'worker-change-notified', kind: 'done', label: '✓ 已通知顾问' },
+          });
+          wx.showToast({ title: '已通知顾问', icon: 'success' });
+        } catch (e) {
+          wx.showToast({ title: e.message || '通知顾问失败，请重试', icon: 'none', duration: 2500 });
+        } finally {
+          this.setData({ 'contract.requestingWorkerChange': false });
         }
       },
     });

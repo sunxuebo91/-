@@ -320,6 +320,10 @@
   color: #2ecc71;
   font-weight: 600;
 }
+.value-warning {
+  color: #ff9800;
+  font-weight: 600;
+}
 .value-error {
   color: #e74c3c;
 }

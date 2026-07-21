@@ -1,5 +1,8 @@
 const { publicRequest } = require('../../utils/request.js');
 const { loadShareLogo } = require('../../utils/shareLogo.js');
+const { getPaymentSummary } = require('../../utils/paymentSummary.js');
+const { getContractDuration } = require('../../utils/contractDuration.js');
+const { getPaymentMode, isInstallmentPayment } = require('../../utils/paymentMode.js');
 
 const HOUSEKEEPING_STATUS_TEXT = {
   draft: '待签约',
@@ -35,6 +38,8 @@ const PAYMENT_TYPE_TEXT = {
   installment: '分期付款',
   service_fee_only: '服务费',
   service_fee: '服务费',
+  service_fee_first_month_salary: '服务费 + 阿姨首月工资',
+  full_service_salary: '服务费 + 阿姨首月工资',
   deposit_only: '定金',
   final: '尾款',
   refund: '退款',
@@ -173,6 +178,8 @@ Page({
         }
       }
 
+      const paymentSummary = getPaymentSummary(c);
+      const paymentVersion = c.paymentVersion != null ? String(c.paymentVersion).toLowerCase().replace(/^v/, '') : '';
       const contract = {
         ...c,
         orderCategory: this.orderCategory,
@@ -181,6 +188,7 @@ Page({
           : (c.contractType || '未知服务'),
         startDateFmt: formatDate(c.startDate),
         endDateFmt: formatDate(c.endDate),
+        contractDuration: getContractDuration(c.startDate, c.endDate),
         createdAtFmt: formatDate(c.createdAt),
         paidAtFmt: formatDate(c.paidAt),
         insuranceSyncedAtFmt: formatDate(c.insuranceSyncedAt),
@@ -189,6 +197,10 @@ Page({
         hasSigning: !!c.esignContractNo,
         hasInsurance: !!(c.insurancePolicyNo || c.insuranceSyncStatus || c.insuranceSyncPending),
         insuranceSyncPending: !!c.insuranceSyncPending,
+        rawPaymentStatus: c.paymentStatus || 'unpaid',
+        paymentStatus: paymentSummary.status,
+        paymentSummary,
+        isV2: paymentVersion === '2',
       };
 
       // 职培订单：intendedCourses 可能是数组/字符串/对象，多形兼容
@@ -262,7 +274,7 @@ Page({
       const ss2 = c.signerStatuses || {};
       const customerSigned = !!ss2.customerSigned;
       const nannySigned = !!ss2.nannySigned;
-      const customerPaid = c.paymentStatus === 'paid';
+      const customerPaid = paymentSummary.status === 'paid';
       const actions = [];
 
       if (this.viewMode === 'client') {
@@ -305,8 +317,8 @@ Page({
           const trainingStudentSigned = orderCategory === 'training'
             ? (inferred === 'signed' || c.contractStatus === 'active' || esignCode === '2' || esignCode === '3')
             : customerSigned;
-          const trainingPayAmount = Number(c.paymentConfigAmount || c.courseAmount || 0);
-          if (orderCategory === 'training' && trainingStudentSigned && !customerPaid && trainingPayAmount > 0) {
+          const hasPendingPayment = Array.isArray(c.payments) && c.payments.some((payment) => payment.status === 'pending');
+          if (orderCategory === 'training' && contract.isV2 && trainingStudentSigned && !customerPaid && hasPendingPayment) {
             actions.push({ key: 'invite-student-pay', label: '邀请学员支付', url: '', kind: 'secondary', share: true });
           }
           if (!customerSigned && customerLink && customerLink.signUrl) {
@@ -315,7 +327,7 @@ Page({
           if (!nannySigned && nannyLink && nannyLink.signUrl && nannyLink.mobile !== myPhone) {
             actions.push({ key: 'invite-nanny-sign', label: '邀请阿姨签署', url: nannyLink.signUrl, kind: 'primary', share: true });
           }
-          if (customerSigned && !customerPaid && (c.paymentConfigAmount || c.customerServiceFee || 0) > 0) {
+          if (contract.isV2 && customerSigned && !customerPaid && hasPendingPayment) {
             actions.push({ key: 'invite-customer-pay', label: '邀请客户支付', url: '', kind: 'secondary', share: true });
           }
         }
@@ -334,16 +346,17 @@ Page({
             return { ...p, paidAtFmt: formatDate(p.paidAt), labelText };
           });
       }
+      contract.paymentMode = getPaymentMode(contract);
+      contract.isMultiPaymentPlan = isInstallmentPayment(contract);
 
       this.setData({ contract });
 
-      // 计算「代客下单」按钮显示条件（销售/员工视角 + 客户已签 + 未付 + 收款金额>0 + channel=alipay 优先）
+      // 代客下单仅支持 V2 分笔收款。
       const isSalesView = this.viewMode !== 'client';
       const signedByCustomerOrStudent = !!(ss2.customerSigned || (orderCategory === 'training' && ss2.nannySigned));
       const isUnpaid = contract.paymentStatus !== 'paid' && contract.paymentStatus !== 'refunded';
-      const payableAmount = Number(contract.paymentConfigAmount || contract.customerServiceFee || contract.courseAmount || 0);
       this.setData({
-        showSalesPreorder: isSalesView && signedByCustomerOrStudent && isUnpaid && payableAmount > 0,
+        showSalesPreorder: isSalesView && contract.isV2 && signedByCustomerOrStudent && isUnpaid && Array.isArray(contract.payments) && contract.payments.some((payment) => payment.status === 'pending'),
       });
 
       // 分享卡片自动开 cover-view 浮层逻辑已撤除（员工邀请流程统一走分享卡片）
@@ -369,6 +382,10 @@ Page({
   async onSalesPreorder() {
     if (!this.data.contract) return;
     const c = this.data.contract;
+    if (!c.isV2) {
+      wx.showToast({ title: '该合同未配置新版分笔收款', icon: 'none' });
+      return;
+    }
     const phone = c.customerPhone || c.phone;
     if (!phone) {
       wx.showToast({ title: '合同缺少客户手机号', icon: 'none' });
@@ -378,16 +395,13 @@ Page({
     // 默认走支付宝（收钱吧微信小店代客下单真支持支付宝）；销售后续可手动选微信
     const channel = 'alipay';
 
-    // V1 用 paymentConfigAmount；V2 多笔时取 nextPayment 金额
-    let amountCents = Number(c.paymentConfigAmount || c.customerServiceFee || c.courseAmount || 0);
-    let subject = '合同支付';
-    if (c.isV2 && Array.isArray(c.payments) && c.payments.length > 0) {
-      const nextPay = c.payments.find((p) => p.status === 'pending') || c.payments[0];
-      amountCents = Number(nextPay.amount || 0) * 100;  // 元 → 分
-      subject = nextPay.label || subject;
-    } else {
-      amountCents = amountCents * 100;  // 元 → 分
+    const nextPay = Array.isArray(c.payments) && c.payments.find((payment) => payment.status === 'pending');
+    if (!nextPay) {
+      wx.showToast({ title: '没有待支付款项', icon: 'none' });
+      return;
     }
+    const amountCents = Number(nextPay.amount || 0) * 100;
+    const subject = nextPay.label || '合同支付';
 
     if (!amountCents || amountCents <= 0) {
       wx.showToast({ title: '收款金额为 0', icon: 'none' });
@@ -404,6 +418,7 @@ Page({
           contractId: c._id || c.id,
           phone,
           orderCategory: c.orderCategory || 'housekeeping',
+          paymentSequenceNo: nextPay.sequenceNo,
           amountCents,
           subject,
           channel,

@@ -251,66 +251,8 @@ async function generateQrCodeFile(text, clientSn) {
 }
 
 /**
- * 按合同号+笔次拉取应付金额（单位：分），返回 { amountInCents, subject }
- * isV2=true: 从 CRM payment-progress 接口取对应 sequenceNo 的金额
- * isV2=false: 从 CRM 合同详情取 customerServiceFee/serviceFee
- */
-async function fetchAmountAndSubject({ contractId, phone, paymentSequenceNo }) {
-  const isV2 = !!paymentSequenceNo;
-  let amountInCents;
-  let subject;
-
-  if (isV2) {
-    const progressRes = await httpsRequest('GET', CRM_HOSTNAME,
-      `/api/miniprogram/contracts/${contractId}/payment-progress?phone=${encodeURIComponent(phone)}`, null, {
-        'X-Service-Secret': CRM_SERVICE_SECRET,
-        'X-Client-Type': 'miniprogram',
-      });
-    const payments = progressRes && progressRes.data && progressRes.data.payments;
-    if (!Array.isArray(payments)) throw new Error('获取支付进度失败');
-    const targetPayment = payments.find(p => String(p.sequenceNo) === String(paymentSequenceNo));
-    if (!targetPayment || targetPayment.status !== 'pending') {
-      throw new Error('该笔支付不可用或已支付');
-    }
-    amountInCents = Math.round(Number(targetPayment.amount) * 100);
-    if (amountInCents <= 0 || amountInCents > 10000000) {
-      throw new Error('支付金额异常: ' + targetPayment.amount);
-    }
-    subject = `安得褓贝-合同支付(第${paymentSequenceNo}笔-${targetPayment.label})`;
-  } else {
-    const contractRes = await httpsRequest('GET', CRM_HOSTNAME,
-      `/api/miniprogram/contracts/${contractId}?phone=${encodeURIComponent(phone)}`, null, {
-        'X-Service-Secret': CRM_SERVICE_SECRET,
-        'X-Client-Type': 'miniprogram',
-      }).catch(() => null);
-    const data = contractRes && contractRes.data;
-    // V1 应付金额：优先用 CRM paymentConfigAmount 实际配置金额（权威值），不用 csf+ws 推断
-    // 例：全款服务费+部分首月工资 11999 ≠ csf+ws=15999
-    const customerServiceFee = Number(data?.customerServiceFee || data?.serviceFee || 0);
-    const workerSalary       = Number(data?.workerSalary || 0);
-    const paymentType        = String(data?.paymentType || 'service_fee_only');
-    const paymentConfigAmount = Number(data?.paymentConfigAmount || 0);
-    const totalFee = paymentConfigAmount > 0
-      ? paymentConfigAmount
-      : (paymentType === 'service_fee_and_salary'
-          ? customerServiceFee + workerSalary
-          : customerServiceFee);
-
-    if (!totalFee || totalFee <= 0) throw new Error('合同服务费为 0 或获取失败，无法发起支付');
-    amountInCents = Math.round(totalFee * 100);
-    if (amountInCents <= 0 || amountInCents > 10000000) {
-      throw new Error('支付金额异常: ' + totalFee);
-    }
-    subject = workerSalary > 0
-      ? '安得褓贝-服务费+首月工资'
-      : '安得褓贝-服务费';
-  }
-  return { amountInCents, subject, isV2 };
-}
-
-/**
  * 检测到 PAID 时统一处理：更新本地记录 + 通知 CRM
- * 给 queryPayment 和 settleExistingPending 复用
+ * 给支付结果查询流程复用
  */
 async function markPaidAndNotifyCRM(payment, sqbResponse) {
   const channelInfo = extractChannelInfo(payment, sqbResponse);
@@ -333,53 +275,6 @@ async function markPaidAndNotifyCRM(payment, sqbResponse) {
   payment.sqb_sn = querySn;
   notifyCRMByCategory(payment, new Date().toISOString(), channelInfo);
   return channelInfo;
-}
-
-/**
- * 检查并处理同合同/同笔次的已有支付记录
- * - 已 paid：抛错让前端停止
- * - pending + 已支付：同步状态 + 通知 CRM 后抛错
- * - pending + 未支付：标记 failed，开放新订单
- * 返回 existing（可能是 null）
- */
-async function settleExistingPending({ contractId, paymentSequenceNo, isV2, terminal }) {
-  const dupWhere = { contractId, paymentStatus: _.in(['pending', 'paid']) };
-  if (isV2) dupWhere.paymentSequenceNo = paymentSequenceNo;
-  const existCheck = await db.collection('payments').where(dupWhere).limit(1).get();
-  if (existCheck.data.length === 0) return null;
-
-  const existing = existCheck.data[0];
-  if (existing.paymentStatus === 'paid') {
-    throw new Error(isV2 ? '该笔支付已完成，请勿重复支付' : '该合同已支付，请勿重复支付');
-  }
-  if (existing.paymentStatus === 'pending') {
-    // 有 sqb_sn 用 sn 查；否则用 client_sn 查（wap2 订单只有 client_sn）
-    const t = terminal;
-    const queryBody = { terminal_sn: t.terminal_sn };
-    if (existing.sqb_sn) queryBody.sn = existing.sqb_sn;
-    else if (existing.client_sn) queryBody.client_sn = existing.client_sn;
-    else {
-      // 既没 sqb_sn 也没 client_sn → 没法查收钱吧，按"未支付"放行
-      return existing;
-    }
-    const qr = await sqbRequest('/upay/v2/query', queryBody, {
-      sn: t.terminal_sn, key: t.terminal_key,
-    });
-    const orderStatus = qr?.biz_response?.data?.order_status;
-    if (orderStatus === 'PAID') {
-      // 已支付但本地未同步：更新本地 + 通知 CRM + 抛错
-      await markPaidAndNotifyCRM(existing, qr);
-      throw new Error(isV2 ? '该笔支付已完成，请勿重复支付' : '该合同已支付，请勿重复支付');
-    }
-    if (orderStatus === 'IN_PROG') {
-      throw new Error('上一笔支付正在处理中，请稍候再试');
-    }
-    // CREATED/PAY_CANCELED/其他：标记 failed，开放新订单
-    await db.collection('payments').doc(existing._id).update({
-      data: { paymentStatus: 'failed', updatedAt: db.serverDate() },
-    });
-  }
-  return existing;
 }
 
 // ═══════════════════════════════════════
@@ -430,6 +325,7 @@ async function createPreOrder(event) {
   // 1) 入参校验
   if (!contractId) throw new Error('缺少 contractId');
   if (!phone) throw new Error('缺少 phone');
+  if (!paymentSequenceNo) throw new Error('旧版单笔收款已下线，请选择新版分笔收款项');
   if (!orderCategory || !['housekeeping', 'training'].includes(orderCategory)) {
     throw new Error('orderCategory 必须为 housekeeping | training');
   }
@@ -451,7 +347,7 @@ async function createPreOrder(event) {
       phone,
       contractId,
       orderCategory,
-      ...(paymentSequenceNo ? { paymentSequenceNo } : {}),
+      paymentSequenceNo,
       amountCents,
       subject,
       channel,
@@ -524,7 +420,7 @@ async function createPreOrder(event) {
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
   };
-  if (paymentSequenceNo) paymentDoc.paymentSequenceNo = paymentSequenceNo;
+  paymentDoc.paymentSequenceNo = paymentSequenceNo;
   const addRes = await db.collection('payments').add({ data: paymentDoc });
   const baobeiPaymentId = addRes._id;
 
@@ -704,9 +600,8 @@ async function checkin() {
 
 /**
  * 预下单（小程序支付）
- * event: { contractId, phone, openid, paymentSequenceNo?, useCheckout? }
- * V1: 金额从 CRM 合同 serviceFee 读取，不信任客户端
- * V2: 当 paymentSequenceNo 存在时，从 CRM 支付进度接口获取对应笔次的金额
+ * event: { contractId, phone, openid, paymentSequenceNo, useCheckout? }
+ * 仅支持 V2 分笔收款；金额从 CRM 支付进度接口按笔次读取，不信任客户端。
  * useCheckout=true: 走收银台模式（不传 payway，返回 wap_url 让用户在小程序 webview 里自选渠道）
  */
 async function precreate(event, openid) {
@@ -714,20 +609,20 @@ async function precreate(event, openid) {
   if (!contractId) throw new Error('缺少 contractId');
   if (!phone) throw new Error('缺少 phone');
   if (!openid) throw new Error('缺少 openid');
+  if (!paymentSequenceNo) throw new Error('旧版单笔收款已下线，请使用新版分笔收款');
 
-  const isV2 = !!paymentSequenceNo;
   const isCheckout = !!useCheckout;
 
   // ── 防重复支付：查已有记录 ──
   const dupWhere = { contractId, paymentStatus: _.in(['pending', 'paid']) };
-  if (isV2) dupWhere.paymentSequenceNo = paymentSequenceNo;
+  dupWhere.paymentSequenceNo = paymentSequenceNo;
 
   const existCheck = await db.collection('payments').where(dupWhere).limit(1).get();
 
   if (existCheck.data.length > 0) {
     const existing = existCheck.data[0];
     if (existing.paymentStatus === 'paid') {
-      throw new Error(isV2 ? '该笔支付已完成，请勿重复支付' : '该合同已支付，请勿重复支付');
+      throw new Error('该笔支付已完成，请勿重复支付');
     }
     // pending 状态：先去查一下收钱吧，可能已经支付了
     if (existing.paymentStatus === 'pending' && existing.sqb_sn) {
@@ -755,7 +650,7 @@ async function precreate(event, openid) {
         existing.payway  = channelInfo ? channelInfo.payway  : null;
         notifyCRM(contractId, phone, existing.amount, existing.sqb_sn, new Date().toISOString(), existing.paymentSequenceNo,
           channelInfo ? channelInfo.channel : null, channelInfo ? channelInfo.payway : null);
-        throw new Error(isV2 ? '该笔支付已完成，请勿重复支付' : '该合同已支付，请勿重复支付');
+        throw new Error('该笔支付已完成，请勿重复支付');
       }
       // IN_PROG 是支付真正处理中的短暂状态，有重复扣款风险，必须拦截
       if (orderStatus === 'IN_PROG') {
@@ -772,61 +667,26 @@ async function precreate(event, openid) {
   let amountInCents;
   let subject;
 
-  if (isV2) {
-    // ── V2：从 CRM 支付进度接口获取对应笔次金额 ──
-    const progressRes = await httpsRequest('GET', CRM_HOSTNAME,
-      `/api/miniprogram/contracts/${contractId}/payment-progress?phone=${encodeURIComponent(phone)}`, null, {
-        'X-Service-Secret': CRM_SERVICE_SECRET,
-        'X-Client-Type': 'miniprogram',
-      });
+  // ── V2：从 CRM 支付进度接口获取对应笔次金额 ──
+  const progressRes = await httpsRequest('GET', CRM_HOSTNAME,
+    `/api/miniprogram/contracts/${contractId}/payment-progress?phone=${encodeURIComponent(phone)}`, null, {
+      'X-Service-Secret': CRM_SERVICE_SECRET,
+      'X-Client-Type': 'miniprogram',
+    });
 
-    const payments = progressRes && progressRes.data && progressRes.data.payments;
-    if (!Array.isArray(payments)) {
-      throw new Error('获取支付进度失败');
-    }
-    const targetPayment = payments.find(p => String(p.sequenceNo) === String(paymentSequenceNo));
-    if (!targetPayment) {
-      throw new Error('该笔支付不可用或已支付');
-    }
-    if (targetPayment.status !== 'pending') {
-      throw new Error('该笔支付不可用或已支付');
-    }
-    // CRM 返回金额单位为元，转为分
-    amountInCents = Math.round(Number(targetPayment.amount) * 100);
-    if (amountInCents <= 0 || amountInCents > 10000000) {
-      throw new Error('支付金额异常: ' + targetPayment.amount);
-    }
-    subject = `安得褓贝-合同支付(第${paymentSequenceNo}笔-${targetPayment.label})`;
-  } else {
-    // ── V1：从 CRM 获取合同金额（GET 接口，金额以服务端为准） ──
-    const contractRes = await httpsRequest('GET', CRM_HOSTNAME,
-      `/api/miniprogram/contracts/${contractId}?phone=${encodeURIComponent(phone)}`, null, {
-        'X-Service-Secret': CRM_SERVICE_SECRET,
-        'X-Client-Type': 'miniprogram',
-      }).catch(() => null);
-
-    // V1 应付金额：按合同 paymentType 区分
-    const v1Data = contractRes && contractRes.data;
-    const customerServiceFee = Number(v1Data?.customerServiceFee || v1Data?.serviceFee || 0);
-    const workerSalary       = Number(v1Data?.workerSalary || 0);
-    const v1PaymentType      = String(v1Data?.paymentType || 'service_fee_only');
-    const totalFee = v1PaymentType === 'service_fee_and_salary'
-      ? customerServiceFee + workerSalary
-      : customerServiceFee;
-
-    if (!totalFee || totalFee <= 0) {
-      throw new Error('合同服务费为 0 或获取失败，无法发起支付');
-    }
-
-    // 金额转为分
-    amountInCents = Math.round(totalFee * 100);
-    if (amountInCents <= 0 || amountInCents > 10000000) {
-      throw new Error('支付金额异常: ' + totalFee);
-    }
-    subject = workerSalary > 0
-      ? '安得褓贝-服务费+首月工资'
-      : '安得褓贝-服务费';
+  const payments = progressRes && progressRes.data && progressRes.data.payments;
+  if (!Array.isArray(payments)) {
+    throw new Error('获取支付进度失败');
   }
+  const targetPayment = payments.find(p => String(p.sequenceNo) === String(paymentSequenceNo));
+  if (!targetPayment || targetPayment.status !== 'pending') {
+    throw new Error('该笔支付不可用或已支付');
+  }
+  amountInCents = Math.round(Number(targetPayment.amount) * 100);
+  if (amountInCents <= 0 || amountInCents > 10000000) {
+    throw new Error('支付金额异常: ' + targetPayment.amount);
+  }
+  subject = `安得褓贝-合同支付(第${paymentSequenceNo}笔-${targetPayment.label})`;
 
   // ── 获取终端并确保签到 ──
   const terminal = await getTerminal();
@@ -844,7 +704,7 @@ async function precreate(event, openid) {
     createdAt: db.serverDate(),
     updatedAt: db.serverDate(),
   };
-  if (isV2) paymentDoc.paymentSequenceNo = paymentSequenceNo;
+  paymentDoc.paymentSequenceNo = paymentSequenceNo;
 
   const addRes = await db.collection('payments').add({ data: paymentDoc });
   const paymentId = addRes._id;
@@ -975,7 +835,7 @@ async function queryPayment(event) {
   const orderStatus = res?.biz_response?.data?.order_status;
 
   if (orderStatus === 'PAID') {
-    // 检测到 PAID：更新本地 + 通知 CRM（抽成共享函数，settleExistingPending 也复用）
+    // 检测到 PAID：更新本地并通知 CRM。
     const channelInfo = await markPaidAndNotifyCRM(payment, res);
     return { paymentStatus: 'paid', paidAt: new Date().toISOString(), channel: channelInfo ? channelInfo.channel : null };
   }

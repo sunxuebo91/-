@@ -87,6 +87,15 @@
   border-radius: 16rpx;
   font-weight: 500;
 }
+.value-partial-tag {
+  flex-shrink: 0;
+  padding: 4rpx 14rpx;
+  font-size: 22rpx;
+  color: #e65100;
+  background: #fff3e0;
+  border-radius: 16rpx;
+  font-weight: 500;
+}
 .value-refund-tag {
   flex-shrink: 0;
   padding: 4rpx 14rpx;
@@ -96,6 +105,8 @@
   border-radius: 16rpx;
   font-weight: 500;
 }
+.payment-received { color: #2e7d32; font-weight: 600; }
+.payment-remaining { color: #e65100; font-weight: 600; }
 .value-row { display: flex; align-items: center; flex: 1; justify-content: space-between; }
 .call-btn {
   font-size: 26rpx; color: #8766F3;
@@ -383,5 +394,148 @@
   text-align: center;
   padding: 16rpx 0 0;
   text-decoration: underline;
+}
+
+/* ═══ 支付确认弹窗 ═══ */
+.payment-confirm-mask {
+  position: fixed;
+  z-index: 200;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  box-sizing: border-box;
+  background: rgba(20, 14, 40, 0.62);
+}
+.payment-confirm-dialog {
+  width: 100%;
+  max-height: 82vh;
+  overflow: hidden;
+  border-radius: 32rpx;
+  background: #fff;
+  box-shadow: 0 24rpx 64rpx rgba(0, 0, 0, 0.22);
+}
+.payment-confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 40rpx 24rpx;
+}
+.payment-confirm-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 14rpx;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #9d7bff 0%, #6b4fc7 100%);
+  font-size: 32rpx;
+  font-weight: 700;
+}
+.payment-confirm-title {
+  color: #25203a;
+  font-size: 36rpx;
+  font-weight: 700;
+  text-align: center;
+}
+.payment-confirm-summary {
+  margin: 0 32rpx;
+  padding: 28rpx 32rpx 30rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #f7f4ff 0%, #f0ebff 100%);
+  text-align: center;
+}
+.payment-confirm-label {
+  display: block;
+  color: #5d566b;
+  font-size: 27rpx;
+}
+.payment-confirm-amount {
+  display: block;
+  margin-top: 12rpx;
+  color: #ff6d4a;
+  font-size: 56rpx;
+  font-weight: 700;
+}
+.payment-confirm-stage {
+  width: fit-content;
+  margin: 20rpx auto 0;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  color: #7655d7;
+  background: #f1edff;
+  font-size: 24rpx;
+}
+.payment-confirm-list {
+  max-height: 260rpx;
+  margin: 20rpx 32rpx 0;
+  padding: 20rpx 24rpx;
+  overflow-y: auto;
+  border-radius: 16rpx;
+  background: #f8f7fc;
+}
+.payment-confirm-list-title {
+  margin-bottom: 12rpx;
+  color: #7d758d;
+  font-size: 24rpx;
+}
+.payment-confirm-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #ebe8f2;
+}
+.payment-confirm-item:last-child { border-bottom: none; }
+.payment-confirm-item.is-current { color: #7655d7; }
+.payment-confirm-item-label {
+  margin-right: 12rpx;
+  color: #393344;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+.payment-confirm-item-seq {
+  color: #a49ead;
+  font-size: 22rpx;
+}
+.payment-confirm-item-amount {
+  color: #393344;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+.payment-confirm-tip {
+  padding: 28rpx 40rpx 24rpx;
+  color: #918a9d;
+  font-size: 24rpx;
+  text-align: center;
+}
+.payment-confirm-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 0 32rpx 28rpx;
+}
+.payment-confirm-cancel,
+.payment-confirm-submit {
+  flex: 1;
+  padding: 24rpx 0;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  text-align: center;
+}
+.payment-confirm-cancel {
+  color: #6f687c;
+  background: #f4f2f7;
+}
+.payment-confirm-submit {
+  color: #fff;
+  background: linear-gradient(135deg, #8d6af5 0%, #6b4fc7 100%);
+  box-shadow: 0 10rpx 20rpx rgba(107, 79, 199, 0.24);
 }
 

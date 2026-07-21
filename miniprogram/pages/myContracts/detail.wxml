@@ -70,23 +70,20 @@
         <text class="label">{{contract.orderCategory === 'training' ? '课程费用' : '服务费用'}}</text>
         <text class="value-amount">¥{{contract.customerServiceFee}} 元</text>
       </view>
-      <view class="row" wx:if="{{contract.paymentTotalAmount}}">
-        <text class="label">应收总额</text><text class="value">¥{{contract.paymentTotalAmount}} 元</text></view>
-      <view class="row" wx:if="{{contract.paymentReceivedAmount !== undefined}}">
-        <text class="label">已收金额</text>
-        <view class="value-row">
-          <text class="value">¥{{contract.paymentReceivedAmount}} 元</text>
-          <view class="status-mini {{contract.paymentStatus}}">{{paymentStatusText[contract.paymentStatus] || contract.paymentStatus}}</view>
-        </view>
-      </view>
+      <block wx:if="{{contract.paymentSummary.hasPaymentInfo}}">
+        <view class="row"><text class="label">应收金额</text><text class="value">¥{{contract.paymentSummary.expectedText}} 元</text></view>
+        <view class="row"><text class="label">已收金额</text><text class="value value-success">¥{{contract.paymentSummary.receivedText}} 元</text></view>
+        <view class="row" wx:if="{{contract.paymentSummary.status === 'partial'}}"><text class="label">待收金额</text><text class="value value-warning">¥{{contract.paymentSummary.remainingText}} 元</text></view>
+        <view class="row"><text class="label">付款状态</text><view class="status-mini {{contract.paymentStatus}}">{{paymentStatusText[contract.paymentStatus] || contract.paymentStatus}}</view></view>
+      </block>
       <view class="row" wx:if="{{contract.paymentType}}">
         <text class="label">支付方式</text><text class="value">{{paymentTypeText[contract.paymentTypeResolved] || contract.paymentTypeResolved || contract.paymentType || '—'}}</text></view>
       <view class="row" wx:if="{{contract.paidAtFmt}}">
         <text class="label">支付时间</text><text class="value">{{contract.paidAtFmt}}</text></view>
     </view>
 
-    <!-- 分期收款明细 -->
-    <view class="section" wx:if="{{contract.payments && contract.payments.length > 0}}">
+    <!-- 单笔服务费只在上方收款配置展示；两笔及以上才显示分期明细。 -->
+    <view class="section" wx:if="{{contract.isMultiPaymentPlan}}">
       <view class="section-title">分期收款明细</view>
       <view wx:for="{{contract.payments}}" wx:key="sequenceNo" wx:for-item="payItem" class="payment-item {{payItem.status === 'paid' ? 'paid' : 'pending'}}">
         <view class="payment-item-main">
