@@ -322,10 +322,10 @@ Page({
             actions.push({ key: 'invite-student-pay', label: '邀请学员支付', url: '', kind: 'secondary', share: true });
           }
           if (!customerSigned && customerLink && customerLink.signUrl) {
-            actions.push({ key: 'invite-customer-sign', label: '邀请客户签署', url: customerLink.signUrl, kind: 'primary', share: true });
+            actions.push({ key: 'invite-customer-sign', label: '分享给客户', url: customerLink.signUrl, kind: 'primary', share: true });
           }
           if (!nannySigned && nannyLink && nannyLink.signUrl && nannyLink.mobile !== myPhone) {
-            actions.push({ key: 'invite-nanny-sign', label: '邀请阿姨签署', url: nannyLink.signUrl, kind: 'primary', share: true });
+            actions.push({ key: 'invite-nanny-sign', label: '分享给阿姨', url: nannyLink.signUrl, kind: 'primary', share: true });
           }
           if (contract.isV2 && customerSigned && !customerPaid && hasPendingPayment) {
             actions.push({ key: 'invite-customer-pay', label: '邀请客户支付', url: '', kind: 'secondary', share: true });
@@ -541,7 +541,7 @@ Page({
       if (key === 'invite-customer-sign') {
         const name = (customerLink && customerLink.name) || c.customerName || '客户';
         return {
-          title: `${name}，您的家政合同已经准备好啦，点击一下就能签署~`,
+          title: `尊敬的${name}，您的合同已生成，请您点击链接完成签约`,
           path: basePath,
           imageUrl: logo,
         };
@@ -549,7 +549,7 @@ Page({
       if (key === 'invite-nanny-sign') {
         const name = (nannyLink && nannyLink.name) || c.workerName || '阿姨';
         return {
-          title: `${name}，咱家的服务合同好了，点击一下就签好~`,
+          title: `尊敬的${name}，您的合同已生成，请您点击链接完成签约`,
           path: basePath,
           imageUrl: logo,
         };

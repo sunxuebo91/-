@@ -3,35 +3,22 @@ Page({
     url: '',
     mode: '',
     paymentId: '',
-    navTitle: '加载中...',
-    statusBarHeight: 20,
-    navBarBottom: 64,
   },
 
   onLoad(query) {
     const { url, title, mode, paymentId, contractId, phone } = query;
     const decoded = decodeURIComponent(url || '');
-    const sysInfo = wx.getWindowInfo();
-    const statusBarHeight = sysInfo.statusBarHeight || 20;
-    const navBarBottom = statusBarHeight + 44;
     const navTitle = title ? decodeURIComponent(title) : (mode === 'checkout' ? '选择支付方式' : '加载中...');
+    wx.setNavigationBarTitle({ title: navTitle });
     this.setData({
       url: decoded,
       mode: mode || '',
       paymentId: paymentId || '',
-      navTitle,
-      statusBarHeight,
-      navBarBottom,
     });
     // 签约模式：存 contractId + phone，onShow 时查签约状态
     this.contractId = contractId || '';
     this.phone = phone ? decodeURIComponent(phone) : '';
     this._checkedSign = false;
-  },
-
-  // 签署完成浮层：一键返回详情页（跳过 H5 内部多层 history）
-  goBack() {
-    wx.navigateBack({ delta: 1, fail: () => wx.switchTab({ url: '/pages/myOrders/index' }) });
   },
 
   // web-view 加载失败时提示
