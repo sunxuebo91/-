@@ -235,8 +235,8 @@ Page({
     }
   },
 
-  goPoster() {
-    wx.navigateTo({ url: '/pages/poster/index' });
+  goAiMatch() {
+    wx.navigateTo({ url: '/pages/aiMatch/index' });
   },
 
   goBabyDiary() {

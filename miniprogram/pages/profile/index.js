@@ -233,6 +233,11 @@ Page({
     wx.navigateTo({ url: "/pages/posterCustomerList/index" });
   },
 
+  // 女性力量·每日海报（原首页入口，迁移至"我的"页面，所有用户可见）
+  goDailyPoster() {
+    wx.navigateTo({ url: "/pages/poster/index" });
+  },
+
 
   // 跳转到测试页面
   goTestPage() {

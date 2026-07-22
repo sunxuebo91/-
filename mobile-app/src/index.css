@@ -1,0 +1,400 @@
+:root {
+  --adm-color-primary: #158F82;
+  --adm-color-success: #00B96B;
+  --adm-color-warning: #FF8F1F;
+  --adm-color-danger: #FF3141;
+}
+
+/* 安得家政 CRM 移动端 - 全局 reset */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: #f5f7fa;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body { overscroll-behavior-y: none; }
+
+input, button, textarea, select { font-family: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* 全局操作反馈：以品牌卡片替代 antd-mobile 默认的深色原生 Toast。 */
+.adm-toast-mask {
+  --adm-mask-z-index: 2000;
+}
+
+.adm-toast-mask .adm-toast-main {
+  max-width: calc(100vw - 48px);
+  min-width: 136px;
+  padding: 16px 18px;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid rgba(21, 143, 130, 0.10);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(21, 143, 130, 0.16);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.adm-toast-mask .adm-toast-main-text {
+  padding: 0;
+}
+
+.adm-toast-mask .adm-toast-main-icon {
+  min-width: 150px;
+  padding: 16px 18px;
+}
+
+.adm-toast-mask .adm-toast-main-icon .adm-toast-icon {
+  margin-bottom: 10px;
+  font-size: 32px;
+}
+
+.adm-toast-mask .adm-toast-icon-success {
+  color: #158F82;
+}
+
+.adm-toast-mask .adm-toast-icon-fail {
+  color: #ff3141;
+}
+
+.adm-toast-mask .adm-toast-main:has(.adm-toast-icon-success),
+.adm-toast-mask .adm-toast-main:has(.adm-toast-loading) {
+  background: #f2fbf9;
+  border-color: rgba(21, 143, 130, 0.20);
+}
+
+.adm-toast-mask .adm-toast-main:has(.adm-toast-icon-fail) {
+  background: #fff5f5;
+  border-color: rgba(255, 49, 65, 0.18);
+}
+
+.adm-toast-mask .adm-toast-loading {
+  --size: 32px;
+  margin-bottom: 10px;
+}
+
+/* 重点消息：使用品牌弹窗替代 antd-mobile 默认 Dialog，避免系统确认框的生硬纵向按钮。 */
+.priority-notification-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+  background: rgba(15, 23, 42, 0.58);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: priority-notification-fade-in 180ms ease-out;
+}
+
+.priority-notification-dialog {
+  position: relative;
+  width: min(100%, 360px);
+  overflow: hidden;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24), 0 4px 16px rgba(21, 143, 130, 0.12);
+  animation: priority-notification-pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.priority-notification-accent {
+  height: 5px;
+  background: linear-gradient(90deg, #158f82 0%, #28b39f 52%, #ff9f43 100%);
+}
+
+.priority-notification-close {
+  position: absolute;
+  top: 15px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #98a2b3;
+  background: rgba(15, 23, 42, 0.05);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.priority-notification-close:active {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.priority-notification-body {
+  padding: 22px 20px 18px;
+}
+
+.priority-notification-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.priority-notification-icon {
+  display: flex;
+  flex: 0 0 46px;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #158f82, #27b29f);
+  box-shadow: 0 8px 18px rgba(21, 143, 130, 0.22);
+  font-size: 24px;
+}
+
+.priority-notification-heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.priority-notification-eyebrow {
+  color: #167e73;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.priority-notification-subtitle {
+  margin-top: 4px;
+  color: #98a2b3;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.priority-notification-count {
+  align-self: flex-start;
+  padding: 5px 8px;
+  border-radius: 20px;
+  color: #158f82;
+  background: rgba(21, 143, 130, 0.08);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.priority-notification-copy {
+  margin-top: 22px;
+}
+
+.priority-notification-copy h2 {
+  margin: 0 0 10px;
+  color: #1a1a1a;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.priority-notification-content {
+  max-height: 132px;
+  overflow: auto;
+  padding: 12px 13px;
+  border-radius: 12px;
+  color: #667085;
+  background: #f7f9fa;
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.priority-notification-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+
+.priority-notification-button {
+  flex: 1;
+  height: 46px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+}
+
+.priority-notification-button:active {
+  transform: scale(0.97);
+}
+
+.priority-notification-button.secondary {
+  color: #667085;
+  background: #f2f4f7;
+}
+
+.priority-notification-button.primary {
+  color: #fff;
+  background: #158f82;
+  box-shadow: 0 6px 14px rgba(21, 143, 130, 0.22);
+}
+
+/* 消息中心：标题保持居中，批量操作固定在导航栏最右侧。 */
+.notifications-navbar {
+  position: relative !important;
+}
+
+.notifications-navbar .adm-nav-bar-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.notifications-navbar .adm-nav-bar-right {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 1;
+  margin-left: 0;
+}
+
+.notifications-mark-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.notifications-mark-all[aria-disabled='true'] {
+  color: #bbb;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@keyframes priority-notification-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes priority-notification-pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 推荐审核卡片操作按钮：弱化边框，改为轻量胶囊，避免默认方角 outline。 */
+.referral-action-button {
+  --border-radius: 18px;
+  --border-width: 0px;
+  --border-color: transparent;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.referral-action-button.primary {
+  --background-color: #158f82;
+  --text-color: #fff;
+  box-shadow: 0 4px 10px rgba(21, 143, 130, 0.18);
+}
+
+.referral-action-button.neutral {
+  --background-color: #eaf7f4;
+  --text-color: #158f82;
+}
+
+.referral-action-button.danger {
+  --background-color: #fff0f1;
+  --text-color: #d9363e;
+}
+
+/* 审批模块：卡片、状态胶囊和轻量操作按钮。 */
+.approval-list-card { padding: 16px; background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); cursor: pointer; }
+.approval-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.approval-card-type { color: #158f82; font-size: 12px; font-weight: 600; }
+.approval-card-title { margin-top: 4px; color: #1a1a1a; font-size: 16px; font-weight: 600; line-height: 1.45; word-break: break-word; }
+.approval-card-summary { margin-top: 12px; color: #ff8f1f; font-size: 14px; font-weight: 600; }
+.approval-card-meta { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; color: #666; font-size: 12px; line-height: 1.4; }
+.approval-card-footer { display: flex; justify-content: flex-end; margin-top: 12px; }
+.approval-status-pill { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: 24px; padding: 3px 10px; border-radius: 24px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.approval-status-warning { color: #ad6500; background: #fff4df; }
+.approval-status-success { color: #087a5f; background: #e7f8f1; }
+.approval-status-danger { color: #c5303a; background: #fff0f1; }
+.approval-status-default { color: #667085; background: #f2f4f7; }
+.approval-info-row { display: flex; gap: 16px; min-height: 40px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14px; line-height: 1.45; }
+.approval-info-row:last-child { border-bottom: 0; }
+.approval-info-label { flex: 0 0 72px; color: #999; }
+.approval-info-value { min-width: 0; flex: 1; color: #555; text-align: right; word-break: break-word; }
+.approval-section-title, .approval-panel-title { padding: 16px 16px 10px; color: #1a1a1a; font-size: 15px; font-weight: 600; }
+.approval-money { color: #ff8f1f; }
+.approval-action-panel { margin-bottom: 16px; padding: 0 16px 16px; background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+.approval-comment-box { padding: 8px 12px; border-radius: 8px; background: #f7f8fa; }
+.approval-action-row { display: flex; gap: 12px; margin-top: 16px; }
+.approval-action-button { --border-width: 0px; min-height: 44px; border: 0; border-radius: 24px; font-weight: 600; }
+.approval-action-button-primary { --background-color: #158f82; --text-color: #fff; box-shadow: 0 4px 12px rgba(21,143,130,0.18); }
+.approval-action-button-danger { --background-color: #fff0f1; --text-color: #d9363e; }
+.approval-cancel-button { --border-width: 0px; --background-color: #fff0f1; --text-color: #d9363e; min-height: 36px; padding: 0 16px; border: 0; border-radius: 24px; font-size: 13px; font-weight: 600; }
+
+/* 客户创建页：高频优先、低频折叠，统一字段行和选择器尺寸。 */
+.customer-form-intro { display: flex; flex-direction: column; gap: 4px; margin: 12px 16px 0; padding: 14px 16px; border-radius: 16px; color: #267167; background: linear-gradient(135deg, #eaf7f4, #f8fbfb); }
+.customer-form-intro strong { font-size: 15px; font-weight: 700; }
+.customer-form-intro span { font-size: 12px; line-height: 1.5; }
+.customer-form { padding: 12px 10px 0; }
+.customer-form-tabs-shell { overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+.customer-form-tabs-shell .adm-tabs-header { background: #fff; }
+.customer-form-tab-title { display: flex; flex-direction: column; align-items: center; gap: 3px; line-height: 1.2; }
+.customer-form-tab-title strong { font-size: 13px; font-weight: 600; }
+.customer-form-tab-title small { color: #9aa5b1; font-size: 10px; font-weight: 400; }
+.customer-form-tab-body { padding: 12px 10px 4px; background: #f5f7fa; }
+.customer-form-card { margin-bottom: 12px; overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+.customer-form-card:last-child { margin-bottom: 0; }
+.customer-form-card-header { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 62px; padding: 12px 16px; border: 0; color: #1a1a1a; background: #fff; text-align: left; cursor: pointer; }
+.customer-form-card-header:active { background: #f8fbfb; }
+.customer-form-card-heading { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.customer-form-card-heading strong { font-size: 15px; font-weight: 700; }
+.customer-form-card-heading small { overflow: hidden; color: #8a94a3; font-size: 12px; font-weight: 400; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.customer-form-card-action { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; margin-left: 12px; color: #158f82; font-size: 12px; }
+.customer-form-card-action em { padding: 3px 8px; border-radius: 20px; color: #158f82; background: #eaf7f4; font-size: 11px; font-style: normal; }
+.customer-form-card-body { padding: 0 16px 8px; }
+.customer-form-field-row { display: flex; align-items: flex-start; min-height: 56px; padding: 7px 0; border-bottom: 1px solid #f0f2f4; }
+.customer-form-field-row:last-child { border-bottom: 0; }
+.customer-form-field-label { display: flex; flex: 0 0 86px; align-items: center; min-height: 42px; color: #596273; font-size: 14px; line-height: 1.35; }
+.customer-form-required { margin-right: 2px; color: #ff3141; }
+.customer-form-field-control { min-width: 0; flex: 1; }
+.customer-form-choice-row { display: flex; flex-direction: column; gap: 7px; padding: 9px 0 11px; border-bottom: 1px solid #f0f2f4; }
+.customer-form-choice-row:last-child { border-bottom: 0; }
+.customer-form-choice-label { display: flex; align-items: center; min-height: 20px; color: #596273; font-size: 13px; line-height: 1.35; }
+.customer-form-choice-control { min-width: 0; }
+.customer-form-field-control .adm-form-item { min-width: 0; padding: 0; }
+.customer-form-field-control .adm-form-item-child { min-width: 0; }
+.customer-form-choice-control .adm-form-item { min-width: 0; padding: 0; }
+.customer-form-choice-control .adm-form-item-child { min-width: 0; }
+.customer-form-field-control .adm-list-item-content-main,
+.customer-form-choice-control .adm-list-item-content-main { padding: 0; }
+.customer-form-field-control .adm-list-item-content,
+.customer-form-choice-control .adm-list-item-content { padding-right: 0; }
+.customer-form-field-control .adm-input { min-height: 42px; padding: 0 10px; border-radius: 8px; background: #f7f8fa; }
+.customer-form-field-control .adm-input-element { min-width: 0; font-size: 14px; }
+.customer-form-field-control .adm-text-area { overflow: hidden; border-radius: 8px; background: #f7f8fa; }
+.customer-form-field-control .adm-text-area-element { padding: 10px; font-size: 14px; line-height: 1.5; }
+.customer-form-date { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 10px; border-radius: 8px; color: #999; background: #f7f8fa; font-size: 14px; cursor: pointer; }
+.customer-form-date.has-value { color: #333; }
+.customer-form-selector.adm-selector { --color: #f5f6f7; --checked-color: #e8f7f4; --text-color: #374151; --checked-text-color: #158f82; --border: 1px solid transparent; --checked-border: 1px solid rgba(21,143,130,0.24); --border-radius: 8px; --padding: 0 6px; --gap-horizontal: 6px; --gap-vertical: 6px; font-size: 13px; }
+.customer-form-selector .adm-selector-item { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 38px; box-sizing: border-box; line-height: 1.35; word-break: break-all; }
+.customer-form-selector-nowrap .adm-selector-item { padding: 0 4px; white-space: nowrap; word-break: keep-all; font-size: 12px; }
+.customer-form-empty { padding: 12px 0; color: #9aa5b1; font-size: 13px; text-align: center; }
+.customer-form-footer { position: sticky; bottom: 0; z-index: 5; display: flex; gap: 12px; padding: 14px 4px calc(14px + env(safe-area-inset-bottom)); background: rgba(245,247,250,0.96); }
+.customer-form-footer .adm-button { min-height: 46px; border-radius: 24px; font-size: 15px; font-weight: 600; }
+.customer-form-footer .adm-button-primary { box-shadow: 0 4px 12px rgba(21,143,130,0.2); }

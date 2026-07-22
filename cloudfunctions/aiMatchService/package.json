@@ -1,0 +1,9 @@
+{
+  "name": "aiMatchService",
+  "version": "1.0.0",
+  "description": "AI心动匹配：语音/文字需求解析云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

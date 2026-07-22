@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>安得家政CRM · 内部安装页</title>
+  <style>
+    :root {
+      --brand: #5DBFB3;
+      --brand-dark: #3a9d92;
+      --ink: #1f2d2b;
+      --muted: #6b7d7a;
+      --bg: #f2f6f5;
+      --card: #ffffff;
+      --line: #e2ebe9;
+      --warn-bg: #fff7e6;
+      --warn-line: #ffd591;
+      --warn-ink: #ad6800;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+
+    /* 顶部品牌区 */
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color: #fff;
+      border-radius: 18px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(58, 157, 146, 0.28);
+    }
+    .hero .logo {
+      width: 64px; height: 64px; margin: 0 auto 14px;
+      border-radius: 16px; background: rgba(255, 255, 255, 0.18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 700;
+    }
+    .hero h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    .hero .ver {
+      display: inline-block; margin-top: 8px; padding: 2px 12px;
+      font-size: 13px; border-radius: 999px; background: rgba(255, 255, 255, 0.2);
+    }
+    .hero p { margin-top: 12px; font-size: 13px; opacity: 0.92; }
+
+    /* 通用卡片 */
+    section {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 16px; padding: 20px; margin-top: 16px;
+    }
+    section h2 {
+      font-size: 16px; font-weight: 700; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    section h2::before {
+      content: ""; width: 4px; height: 16px; border-radius: 3px; background: var(--brand);
+    }
+
+    /* 下载按钮 */
+    .download { text-align: center; }
+    .btn-download {
+      display: block; width: 100%; padding: 16px;
+      background: var(--brand); color: #fff; text-decoration: none;
+      font-size: 18px; font-weight: 700; border-radius: 14px;
+      box-shadow: 0 6px 16px rgba(93, 191, 179, 0.4);
+      transition: transform 0.1s ease;
+    }
+    .btn-download:active { transform: scale(0.98); }
+    .meta { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .meta code {
+      background: var(--bg); padding: 1px 6px; border-radius: 6px;
+      font-size: 12px; color: var(--ink);
+    }
+
+    /* 系统要求 / 列表 */
+    .req { font-size: 14px; color: var(--ink); }
+    .req strong { color: var(--brand-dark); }
+
+    ol.steps { list-style: none; counter-reset: step; }
+    ol.steps > li {
+      position: relative; padding: 0 0 16px 40px; counter-increment: step;
+    }
+    ol.steps > li:last-child { padding-bottom: 0; }
+    ol.steps > li::before {
+      content: counter(step); position: absolute; left: 0; top: 0;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    ol.steps > li::after {
+      content: ""; position: absolute; left: 12px; top: 28px; bottom: 4px;
+      width: 2px; background: var(--line);
+    }
+    ol.steps > li:last-child::after { display: none; }
+    ol.steps .t { font-weight: 600; font-size: 15px; }
+    ol.steps .d { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* 提示框 */
+    .note {
+      background: var(--warn-bg); border: 1px solid var(--warn-line);
+      color: var(--warn-ink); border-radius: 12px; padding: 12px 14px;
+      font-size: 13px; margin-top: 12px;
+    }
+    .update-list { font-size: 14px; padding-left: 18px; }
+    .update-list li { margin-top: 4px; }
+
+    /* 应用介绍 - 功能网格 */
+    .intro-lead { font-size: 14px; color: var(--ink); margin-bottom: 16px; }
+    .features {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .feature {
+      background: var(--bg); border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px 12px;
+    }
+    .feature .ico { font-size: 22px; line-height: 1; }
+    .feature .ft { font-size: 14px; font-weight: 700; margin-top: 8px; }
+    .feature .fd { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* 更新内容 - 版本徽标 + 条目 */
+    .rel-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .rel-tag {
+      font-size: 12px; font-weight: 700; color: #fff; background: var(--brand);
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .rel-date { font-size: 12px; color: var(--muted); }
+    .changelog { list-style: none; }
+    .changelog > li {
+      position: relative; padding: 6px 0 6px 22px; font-size: 14px;
+      border-bottom: 1px dashed var(--line);
+    }
+    .changelog > li:last-child { border-bottom: none; }
+    .changelog > li::before {
+      content: "✓"; position: absolute; left: 0; top: 6px;
+      color: var(--brand-dark); font-weight: 700;
+    }
+
+    footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- 顶部品牌 -->
+    <header class="hero">
+      <div class="logo" aria-hidden="true">安</div>
+      <h1>安得家政CRM</h1>
+      <span class="ver" id="hero-ver">版本 v1.4.10</span>
+      <p>企业内部使用 · 自签名安装包<br />仅供公司员工在授权设备上安装使用</p>
+    </header>
+
+    <!-- 下载 -->
+    <section class="download" aria-label="下载安装包">
+      <h2>下载安装包</h2>
+      <a class="btn-download" id="btn-dl" href="app-release.apk" download>⬇ 下载 APK 安装包（v1.4.10）</a>
+      <p class="meta">
+        文件大小约 <strong>10&nbsp;MB</strong> · 应用包名 <code>com.andejiazheng.crm</code>
+      </p>
+    </section>
+
+    <!-- 应用介绍 -->
+    <section aria-label="应用介绍">
+      <h2>应用介绍</h2>
+      <p class="intro-lead">安得家政 CRM 移动端，把日常业务装进手机。随时随地处理客户、简历、合同与收款，让一线同事在门店、家访、外出途中也能高效协作。</p>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">📝</div>
+          <div class="ft">签署合同</div>
+          <div class="fd">生成 / 补发签署链接，实时同步 e 签宝签署状态。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">💰</div>
+          <div class="ft">在线收钱</div>
+          <div class="fd">一键生成收款码，随时查看合同收款流水。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">👥</div>
+          <div class="ft">客户跟进</div>
+          <div class="fd">查看与新增客户跟进记录，客户动态不遗漏。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">📄</div>
+          <div class="ft">简历跟进</div>
+          <div class="fd">阿姨简历跟进记录随手记，人才进度一目了然。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">⭐</div>
+          <div class="ft">员工评价</div>
+          <div class="fd">对阿姨进行服务评价，沉淀真实口碑数据。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🔔</div>
+          <div class="ft">通知中心</div>
+          <div class="fd">未读提醒、消息列表、一键标记已读。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">📊</div>
+          <div class="ft">财务流水</div>
+          <div class="fd">查看收支流水与汇总，账目清晰透明。</div>
+        </div>
+        <div class="feature">
+          <div class="ico">🔄</div>
+          <div class="ft">应用内更新</div>
+          <div class="fd">发现新版本自动提示，一键下载安装。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 更新内容 -->
+    <section aria-label="更新内容">
+      <h2>更新内容</h2>
+      <div class="rel-head">
+      <span class="rel-tag" id="rel-tag">v1.4.10</span>
+        <span class="rel-date">当前最新版本</span>
+      </div>
+      <ul class="changelog" id="changelog">
+        <li>增加微信签约卡片分享失败的脱敏诊断参数提示，便于定位微信 OpenSDK 拒绝原因。</li>
+      </ul>
+    </section>
+
+    <!-- 系统要求 -->
+    <section aria-label="系统要求">
+      <h2>系统要求</h2>
+      <p class="req">支持 <strong>Android 7.0（API 24）及以上</strong> 系统的手机 / 平板。iOS 设备暂不支持。</p>
+    </section>
+
+    <!-- 安装引导 -->
+    <section aria-label="安装步骤">
+      <h2>安装步骤</h2>
+      <ol class="steps">
+        <li>
+          <div class="t">点击上方按钮下载 APK</div>
+          <div class="d">下载完成后可在浏览器下载列表或「文件管理器 → Download」中找到安装包。</div>
+        </li>
+        <li>
+          <div class="t">允许「安装未知应用 / 未知来源」</div>
+          <div class="d">首次安装系统会弹窗提示。若未自动弹出，可到：<br />
+            设置 → 应用 → 特殊访问权限 → 安装未知应用 → 选择你使用的「浏览器 / 文件管理器」→ 打开「允许来自此来源」。<br />
+            （不同品牌与 Android 版本入口措辞略有差异，思路一致。）</div>
+        </li>
+        <li>
+          <div class="t">打开 APK 完成安装</div>
+          <div class="d">点击下载好的安装包，按提示点「安装」，完成后点「打开」。</div>
+        </li>
+        <li>
+          <div class="t">首次打开并登录</div>
+          <div class="d">使用你现有的 CRM 员工账号登录即可，无需额外注册。</div>
+        </li>
+      </ol>
+      <div class="note">如安装被系统或安全软件拦截，请确认安装来源为「公司内部分发页」（本页面）后再继续；请勿从非官方渠道下载安装包。</div>
+    </section>
+
+    <!-- 更新方式说明 -->
+    <section aria-label="更新方式">
+      <h2>如何获取更新</h2>
+      <ul class="update-list">
+        <li>App 会在启动或「我的 → 关于 → 检查更新」时自动检测新版本。</li>
+        <li>发现新版本时按提示「下载并安装」，App 会在内部下载更新包并唤起系统安装，登录状态与数据不受影响。</li>
+      </ul>
+    </section>
+
+    <footer>
+      © 安得家政 · CRM 内部分发页 · 请勿对外传播
+    </footer>
+
+  </div>
+
+  <script>
+    // 从 version.json 动态读取版本信息，填充页面中所有版本相关展示
+    fetch('version.json?_=' + Date.now())
+      .then(function(r) { return r.json(); })
+      .then(function(v) {
+        var ver = 'v' + v.versionName;
+        var url = v.url || 'app-release.apk';
+
+        // 顶部版本号
+        var heroVer = document.getElementById('hero-ver');
+        if (heroVer) heroVer.textContent = '版本 ' + ver;
+
+        // 下载按钮文字 + href（支持绝对路径 APK 地址）
+        var btn = document.getElementById('btn-dl');
+        if (btn) {
+          btn.textContent = '⬇ 下载 APK 安装包（' + ver + '）';
+          // 为下载链接增加版本后缀，防止手机浏览器缓存旧包
+          var dlUrl = url + (url.indexOf('?') > -1 ? '&' : '?') + 'v=' + v.versionCode;
+          btn.href = dlUrl;
+          // 绝对 URL 时移除 download 属性，让浏览器直接触发下载
+          if (url.startsWith('http')) btn.removeAttribute('download');
+        }
+
+        // 更新内容版本徽标
+        var relTag = document.getElementById('rel-tag');
+        if (relTag) relTag.textContent = ver;
+
+        // 更新内容条目（notes 支持字符串或字符串数组）
+        var changelog = document.getElementById('changelog');
+        if (changelog && v.notes) {
+          var items = Array.isArray(v.notes) ? v.notes : v.notes.split(/[。；;]/).filter(function(s) { return s.trim(); });
+          changelog.innerHTML = items.map(function(s) {
+            return '<li>' + s.trim() + (s.trim().slice(-1) === '。' ? '' : '。') + '</li>';
+          }).join('');
+        }
+      })
+      .catch(function() { /* 静默失败，保留 HTML 中的默认值 */ });
+  </script>
+</body>
+</html>

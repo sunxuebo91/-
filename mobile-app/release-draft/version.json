@@ -1,0 +1,6 @@
+{
+  "versionCode": 123,
+  "versionName": "1.4.10",
+  "url": "https://crm.andejiazheng.com/app/app-release.apk",
+  "notes": "1. 增加微信签约卡片分享失败的脱敏诊断参数提示，便于定位微信 OpenSDK 拒绝原因。"
+}

@@ -99,6 +99,18 @@
     </view>
   </view>
 
+  <!-- 女性力量海报入口 -->
+  <view class="daily-poster-card" bindtap="goDailyPoster">
+    <view class="daily-poster-left">
+      <text class="daily-poster-icon">💫</text>
+      <view class="daily-poster-info">
+        <view class="daily-poster-title">女性力量 · 每日海报</view>
+        <view class="daily-poster-sub">情感 / 事业 / 创业 / 经济独立</view>
+      </view>
+    </view>
+    <text class="daily-poster-arrow">›</text>
+  </view>
+
   <view class="section">
 
     <view class="menu-item contact-menu-item">

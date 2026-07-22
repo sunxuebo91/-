@@ -92,16 +92,16 @@
       </view>
     </view>
 
-    <!-- 女性力量海报入口 -->
-    <view class="poster-entry-card" bindtap="goPoster">
-      <view class="poster-entry-left">
-        <text class="poster-entry-icon">💫</text>
-        <view class="poster-entry-info">
-          <view class="poster-entry-title">女性力量 · 每日海报</view>
-          <view class="poster-entry-sub">情感 / 事业 / 创业 / 经济独立</view>
+    <!-- AI智能匹配入口 -->
+    <view class="ai-match-entry-card" bindtap="goAiMatch">
+      <view class="ai-match-entry-left">
+        <text class="ai-match-entry-icon">✨</text>
+        <view class="ai-match-entry-info">
+          <view class="ai-match-entry-title">AI智能匹配</view>
+          <view class="ai-match-entry-sub">一句话描述需求 · AI精准匹配优质服务人员</view>
         </view>
       </view>
-      <text class="poster-entry-arrow">›</text>
+      <text class="ai-match-entry-arrow">›</text>
     </view>
 
     <!-- 褓贝分享模块 -->

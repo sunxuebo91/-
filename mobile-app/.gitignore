@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Capacitor / Android
+# 签名密钥(切勿提交)
+*.keystore
+*.jks
+# 签名口令配置(切勿提交)
+android/keystore.properties
+# 本机 SDK 路径
+android/local.properties
+# Android 构建产物
+android/.gradle
+android/build
+android/app/build
+android/capacitor-cordova-android-plugins/build
+# Capacitor 同步生成的 web 资源(由 cap sync 从 dist 生成)
+android/app/src/main/assets/public

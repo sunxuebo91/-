@@ -1,0 +1,124 @@
+<!--pages/aiMatch/index.wxml-->
+<view class="page">
+
+  <!-- 自定义导航栏（沉浸式，与页面渐变同色） -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-bar-inner" style="height: {{navBarHeight}}px;">
+      <view class="nav-back" bindtap="onNavBack">
+        <text class="nav-back-icon">‹</text>
+      </view>
+      <view class="nav-title">AI智能匹配</view>
+      <view class="nav-placeholder"></view>
+    </view>
+  </view>
+
+  <!-- 输入阶段：文字+语音输入需求 -->
+  <view class="input-stage" wx:if="{{!resultReady}}">
+    <view class="hero">
+      <view class="hero-icon-wrap">
+        <text class="hero-icon">✨</text>
+      </view>
+      <view class="hero-title">AI智能匹配</view>
+      <view class="hero-sub">描述您的家政需求，智能为您推荐合适的服务人员</view>
+    </view>
+
+    <view class="tips-row">
+      <view class="tip-chip">月嫂</view>
+      <view class="tip-chip">育儿嫂</view>
+      <view class="tip-chip">保姆</view>
+      <view class="tip-chip">护老</view>
+    </view>
+
+    <view class="input-card">
+      <view class="input-label">需求描述</view>
+      <textarea
+        class="need-input"
+        placeholder="例如：想找一位山东籍、擅长辅食制作的月嫂，预算8000元以内，最好有新生儿护理经验"
+        placeholder-class="need-placeholder"
+        value="{{inputText}}"
+        bindinput="onInputText"
+        maxlength="300"
+        auto-height
+      ></textarea>
+
+      <view class="input-toolbar">
+        <view class="input-count">{{inputText.length || 0}}/300</view>
+        <view
+          class="voice-btn {{recording ? 'voice-btn-active' : ''}}"
+          bindtouchstart="onVoiceStart"
+          bindtouchend="onVoiceEnd"
+        >
+          <text class="voice-icon">{{recording ? '⏹' : '🎙'}}</text>
+          <text class="voice-text">{{recording ? '松开结束' : '按住说话'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <button class="match-btn" bindtap="matchNow" loading="{{matching}}" disabled="{{matching}}">
+      {{matching ? '正在智能匹配...' : '开始智能匹配'}}
+    </button>
+
+    <view class="footer-hint">支持语音/文字 · 按匹配度推荐 · 左右滑动查看</view>
+  </view>
+
+  <!-- 结果阶段：探探式滑动卡片 -->
+  <view class="result-stage" wx:if="{{resultReady}}">
+    <view class="result-header">
+      <view class="result-summary">{{needs.summary || inputText}}</view>
+      <view class="result-reset" bindtap="resetMatch">重新描述</view>
+    </view>
+
+    <view class="card-stack" wx:if="{{currentIndex < cards.length}}">
+      <view
+        wx:for="{{stackCards}}"
+        wx:key="_id"
+        wx:for-index="idx"
+        class="swipe-card"
+        data-index="{{idx}}"
+        data-id="{{item._id}}"
+        style="{{idx === 0 ? cardStyle : item.stackStyle}}"
+        bindtouchstart="onTouchStart"
+        bindtouchmove="onTouchMove"
+        bindtouchend="onTouchEnd"
+        catchtap="tapDetail"
+      >
+        <image class="card-photo" src="{{item.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+
+        <view class="card-badge like-badge" wx:if="{{idx === 0 && swipeDirection === 'like'}}">合适</view>
+        <view class="card-badge nope-badge" wx:if="{{idx === 0 && swipeDirection === 'nope'}}">略过</view>
+
+        <view class="card-info-mask">
+          <view class="card-top-row">
+            <text class="card-name">{{item.name}}</text>
+            <view class="card-job-tag" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</view>
+          </view>
+          <view class="card-info-line" wx:if="{{item.infoLine}}">{{item.infoLine}}</view>
+          <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
+            <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+          <view class="card-price" wx:if="{{item.priceMonth}}">¥{{item.priceMonth}}<text class="card-price-unit">{{item.priceUnit}}</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-stage" wx:else>
+      <text class="empty-icon">✨</text>
+      <view class="empty-text">已经看完全部推荐啦</view>
+      <button class="match-btn" bindtap="resetMatch">重新提需求</button>
+    </view>
+
+    <view class="action-row" wx:if="{{currentIndex < cards.length}}">
+      <view class="action-btn dislike-btn" bindtap="tapDislike">
+        <text class="action-icon">✕</text>
+        <text class="action-label">略过</text>
+      </view>
+      <view class="action-btn detail-btn" bindtap="tapDetail">
+        <text class="action-icon">详情</text>
+      </view>
+      <view class="action-btn like-btn" bindtap="tapLike">
+        <text class="action-icon">✓</text>
+        <text class="action-label">合适</text>
+      </view>
+    </view>
+  </view>
+</view>

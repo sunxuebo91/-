@@ -50,6 +50,7 @@
 
     "pages/poster/index",
     "pages/posterCustomerList/index",
+    "pages/aiMatch/index",
     "pages/qaService/index",
     "pages/companyIntro/index",
     "pages/houseRules/index",
@@ -119,6 +120,17 @@
         "text": "我的"
       }
     ]
+  },
+  "plugins": {
+    "WechatSI": {
+      "version": "0.3.5",
+      "provider": "wx069ba97219f66d99"
+    }
+  },
+  "permission": {
+    "scope.record": {
+      "desc": "用于AI心动匹配的语音识别，将您说的需求转成文字"
+    }
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",

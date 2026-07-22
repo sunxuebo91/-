@@ -1,0 +1,1 @@
+import"./rolldown-runtime-BUR9erT_.js";import{Dt as e}from"./antd-mobile-DyzDV-q4.js";import{t}from"./react-vendor-D993_dPu.js";e();var n=t();function r({items:e,renderItem:t,getKey:r}){return(0,n.jsx)(`div`,{style:{display:`flex`,flexDirection:`column`,gap:12},children:e.map((e,i)=>(0,n.jsx)(`div`,{children:t(e,i)},r?r(e,i):i))})}export{r as t};

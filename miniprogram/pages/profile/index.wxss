@@ -343,6 +343,25 @@ page {
 
 
 
+/* 女性力量·每日海报入口（从首页迁移过来） */
+.daily-poster-card {
+  margin: 24rpx;
+  border-radius: 24rpx;
+  padding: 22rpx 24rpx;
+  background: linear-gradient(135deg, #2d1b69 0%, #1a0a2e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 16rpx 36rpx rgba(45, 27, 105, 0.4);
+  border: 2rpx solid rgba(255, 255, 255, 0.25);
+}
+.daily-poster-card:active { transform: translateY(2rpx) scale(0.99); }
+.daily-poster-left { display: flex; align-items: center; gap: 20rpx; }
+.daily-poster-icon { font-size: 48rpx; }
+.daily-poster-title { font-size: 30rpx; font-weight: 800; color: #fff; }
+.daily-poster-sub { margin-top: 6rpx; font-size: 22rpx; color: rgba(255,255,255,0.6); }
+.daily-poster-arrow { font-size: 46rpx; color: rgba(255,255,255,0.4); font-weight: 300; }
+
 /* 微信头像昵称授权按钮 */
 .wx-profile-btn {
   margin-top: 14rpx;
