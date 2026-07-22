@@ -16,6 +16,38 @@ const JOB_TYPE_LABEL_MAP = {
   hugong: '护工',
 };
 
+// 技能 code -> 中文标签（与 mobile-app/src/pages/Resumes.tsx 中 SKILLS_MAP 保持一致）
+const SKILLS_LABEL_MAP = {
+  chanhou: '产后修复师',
+  'teshu-yinger': '特殊婴儿护理',
+  yiliaobackground: '医疗背景',
+  yuying: '高级育婴师',
+  zaojiao: '早教师',
+  fushi: '辅食营养师',
+  ertui: '小儿推拿师',
+  waiyu: '外语',
+  zhongcan: '中餐',
+  xican: '西餐',
+  mianshi: '面食',
+  jiashi: '驾驶',
+  shouyi: '整理收纳',
+  muying: '母婴护理师',
+  cuiru: '高级催乳师',
+  yuezican: '月子餐营养师',
+  yingyang: '营养师',
+  'liliao-kangfu': '理疗康复',
+  'shuangtai-huli': '双胎护理',
+  'yanglao-huli': '养老护理',
+};
+
+function translateSkill(code) {
+  if (!code) return '';
+  const s = String(code);
+  // 已经是中文（不包含连字符的纯中文 / 长度>=2 中文）就直接返回
+  if (/[\u4e00-\u9fa5]/.test(s) && !s.includes('-')) return s;
+  return SKILLS_LABEL_MAP[s] || s;
+}
+
 Page({
   data: {
     // 自定义导航栏
@@ -37,6 +69,7 @@ Page({
     cardStyle: 'z-index: 20;',
     swipeDirection: '',
     animating: false,
+    resultEntered: false,  // 结果页是否已入场（控制按钮动画）
   },
 
   manager: null,
@@ -188,7 +221,7 @@ Page({
     scored.sort((a, b) => b.score - a.score);
     const matchedCards = scored.slice(0, 20).map((s) => this._formatCard(s.item, s.score));
 
-    this.setData({ cards: matchedCards, currentIndex: 0, resultReady: true });
+    this.setData({ cards: matchedCards, currentIndex: 0, resultReady: true, resultEntered: true });
     this._refreshStack();
 
     if (matchedCards.length === 0) {
@@ -270,7 +303,14 @@ Page({
       coverFileId: uniformPhotoUrl || photos[0] || item.avatarUrl || '',
       jobTypeLabel,
       infoLine,
-      tags: (item.skills || []).slice(0, 4),
+      // 把销售归属信息带出去，方便"面试"按钮直接拿来通知对应的专属顾问
+      sharerInfo: item.sharerInfo
+        ? {
+            phone: item.sharerInfo.phone || '',
+            name: item.sharerInfo.name || '',
+          }
+        : null,
+      tags: (item.skills || []).slice(0, 3).map(translateSkill),
       intro: item.selfIntroduction ? String(item.selfIntroduction).slice(0, 50) : '',
       priceMonth: item.expectedSalary || '',
       priceUnit,
@@ -283,7 +323,10 @@ Page({
     const { cards, currentIndex } = this.data;
     const stackCards = cards.slice(currentIndex, currentIndex + 3).map((c, i) => ({
       ...c,
-      stackStyle: i === 0 ? '' : `transform: translateY(${i * 16}rpx) scale(${1 - i * 0.05}); z-index:${10 - i}; opacity:${i === 2 ? 0.7 : 1};`,
+      // 关键：每张卡片堆叠时给 transition 字段，让切卡时下一张"放大顶上来"有动画
+      stackStyle: i === 0
+        ? 'transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s ease;'
+        : `transform: translateY(${i * 20}rpx) scale(${1 - i * 0.06}); z-index:${10 - i}; opacity:${i === 2 ? 0.65 : 1}; transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;`,
     }));
     this.setData({ stackCards });
   },
@@ -325,11 +368,75 @@ Page({
   },
 
   tapLike() {
-    this._triggerSwipe('like');
+    // 合适 → 跳转去简历详情页（让用户看完整简历后再决定）
+    if (this.data.animating) return;
+    const cur = this.data.cards[this.data.currentIndex];
+    if (!cur || !cur._id) return;
+    wx.navigateTo({ url: `/pages/resumeDetail/index?id=${cur._id}` });
   },
 
   tapDislike() {
     this._triggerSwipe('nope');
+  },
+
+  // 撤销：回到上一张（探探同名按钮）
+  tapUndo() {
+    if (this.data.animating || this.data.currentIndex <= 0) return;
+    this.setData({
+      currentIndex: this.data.currentIndex - 1,
+      cardStyle: 'z-index: 20;',
+      swipeDirection: '',
+    }, () => {
+      this._refreshStack();
+      wx.showToast({ title: '已撤销', icon: 'none', duration: 800 });
+    });
+  },
+
+  // 面试申请：通知销售/管理员（沿用 notificationService 通道）
+  tapSuper() {
+    if (this.data.animating) return;
+    const cur = this.data.cards[this.data.currentIndex];
+    if (!cur || !cur._id) return;
+
+    // 兜底：万一首页拦截被绕过 / 缓存被清，这里再检查一次
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    if (!crmUserInfo.phone) {
+      wx.showModal({
+        title: '请先登录',
+        content: '申请面试需要先登录，方便顾问与您取得联系',
+        confirmText: '去登录',
+        confirmColor: '#7B5BF5',
+        success: (r) => { if (r.confirm) wx.navigateTo({ url: '/pages/login/index' }); },
+      });
+      return;
+    }
+
+    wx.showLoading({ title: '提交中...', mask: true });
+    wx.cloud.callFunction({
+      name: 'notificationService',
+      data: {
+        action: 'sendInterviewRequest',
+        customerPhone: crmUserInfo.phone,
+        customerName: crmUserInfo.nickname || crmUserInfo.name || '小程序客户',
+        nurseName: cur.name || '',
+        resumeId: cur._id,
+        // 优先用简历的"分享人/销售"——有就走专属顾问通知
+        // 没有（公海/无归属简历）走管理员通知
+        sharerPhone: (cur.sharerInfo && cur.sharerInfo.phone) || '',
+      },
+    }).then((res) => {
+      wx.hideLoading();
+      if (res && res.result && res.result.success) {
+        const target = (res.result.data && res.result.data.notifyTarget) || '顾问';
+        wx.showToast({ title: `已通知${target}`, icon: 'success' });
+      } else {
+        wx.showToast({ title: (res.result && res.result.errMsg) || '通知失败，请重试', icon: 'none' });
+      }
+    }).catch((err) => {
+      wx.hideLoading();
+      console.warn('[aiMatch] 面试通知失败:', err);
+      wx.showToast({ title: '网络异常，请重试', icon: 'none' });
+    });
   },
 
   _triggerSwipe(direction) {
@@ -346,7 +453,15 @@ Page({
 
   _afterSwipe() {
     const nextIndex = this.data.currentIndex + 1;
-    this.setData({ currentIndex: nextIndex, cardStyle: 'z-index: 20;', swipeDirection: '', animating: false }, () => {
+    // 第一张（也就是被飞走的那张的"接替者"）必须有 transition，否则 scale 1→1 看着卡
+    // 同时保持 resultEntered=true，让按钮不再重播入场动画
+    this.setData({
+      currentIndex: nextIndex,
+      cardStyle: 'z-index: 20; transform: translate(0,0) rotate(0deg); transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);',
+      swipeDirection: '',
+      animating: false,
+      resultEntered: true,
+    }, () => {
       this._refreshStack();
     });
   },

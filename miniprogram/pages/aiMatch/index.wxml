@@ -1,13 +1,13 @@
 <!--pages/aiMatch/index.wxml-->
 <view class="page">
 
-  <!-- 自定义导航栏（沉浸式，与页面渐变同色） -->
+  <!-- 自定义导航栏 -->
   <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
     <view class="nav-bar-inner" style="height: {{navBarHeight}}px;">
       <view class="nav-back" bindtap="onNavBack">
         <text class="nav-back-icon">‹</text>
       </view>
-      <view class="nav-title">AI智能匹配</view>
+      <view class="nav-title">AI 智能匹配</view>
       <view class="nav-placeholder"></view>
     </view>
   </view>
@@ -18,7 +18,7 @@
       <view class="hero-icon-wrap">
         <text class="hero-icon">✨</text>
       </view>
-      <view class="hero-title">AI智能匹配</view>
+      <view class="hero-title">AI 智能匹配</view>
       <view class="hero-sub">描述您的家政需求，智能为您推荐合适的服务人员</view>
     </view>
 
@@ -33,7 +33,7 @@
       <view class="input-label">需求描述</view>
       <textarea
         class="need-input"
-        placeholder="例如：想找一位山东籍、擅长辅食制作的月嫂，预算8000元以内，最好有新生儿护理经验"
+        placeholder="例如：想找一位山东籍、擅长辅食制作的月嫂，预算 8000 元以内，最好有新生儿护理经验"
         placeholder-class="need-placeholder"
         value="{{inputText}}"
         bindinput="onInputText"
@@ -61,63 +61,99 @@
     <view class="footer-hint">支持语音/文字 · 按匹配度推荐 · 左右滑动查看</view>
   </view>
 
-  <!-- 结果阶段：探探式滑动卡片 -->
+  <!-- 结果阶段：探探骨架 + 家政血肉 -->
   <view class="result-stage" wx:if="{{resultReady}}">
     <view class="result-header">
       <view class="result-summary">{{needs.summary || inputText}}</view>
       <view class="result-reset" bindtap="resetMatch">重新描述</view>
     </view>
 
-    <view class="card-stack" wx:if="{{currentIndex < cards.length}}">
-      <view
-        wx:for="{{stackCards}}"
-        wx:key="_id"
-        wx:for-index="idx"
-        class="swipe-card"
-        data-index="{{idx}}"
-        data-id="{{item._id}}"
-        style="{{idx === 0 ? cardStyle : item.stackStyle}}"
-        bindtouchstart="onTouchStart"
-        bindtouchmove="onTouchMove"
-        bindtouchend="onTouchEnd"
-        catchtap="tapDetail"
-      >
-        <image class="card-photo" src="{{item.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+    <view class="card-area">
+      <view class="card-stack" wx:if="{{currentIndex < cards.length}}">
+        <view
+          wx:for="{{stackCards}}"
+          wx:key="_id"
+          wx:for-index="idx"
+          class="swipe-card"
+          data-index="{{idx}}"
+          data-id="{{item._id}}"
+          style="{{idx === 0 ? cardStyle : item.stackStyle}}"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          catchtap="tapDetail"
+        >
+          <!-- 整张卡 = 一张图 -->
+          <image class="card-photo" src="{{item.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
 
-        <view class="card-badge like-badge" wx:if="{{idx === 0 && swipeDirection === 'like'}}">合适</view>
-        <view class="card-badge nope-badge" wx:if="{{idx === 0 && swipeDirection === 'nope'}}">略过</view>
+          <!-- 顶部：岗位 + 评分 -->
+          <view class="card-top">
+            <view class="card-job-pill" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</view>
+            <view class="card-score" wx:if="{{item.score}}">
+              <text class="card-score-icon">★</text>
+              <text>{{item.score}}</text>
+            </view>
+          </view>
 
-        <view class="card-info-mask">
-          <view class="card-top-row">
-            <text class="card-name">{{item.name}}</text>
-            <view class="card-job-tag" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</view>
+          <!-- 底部：黑色渐变 + 信息浮层（名字/年龄/价格/自我描述/技能） -->
+          <view class="card-bottom">
+            <view class="card-name-row">
+              <text class="card-name">{{item.name}}</text>
+              <text class="card-info-line" wx:if="{{item.infoLine}}">· {{item.infoLine}}</text>
+            </view>
+
+            <view class="card-intro" wx:if="{{item.intro}}">"{{item.intro}}"</view>
+
+            <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
+              <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+            </view>
+
+            <view class="card-price-row">
+              <view class="card-price">
+                <text class="card-price-num">¥{{item.priceMonth}}</text>
+                <text class="card-price-unit">{{item.priceUnit}}</text>
+              </view>
+              <view class="card-detail" catchtap="tapDetail">详情 ›</view>
+            </view>
           </view>
-          <view class="card-info-line" wx:if="{{item.infoLine}}">{{item.infoLine}}</view>
-          <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
-            <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
-          </view>
-          <view class="card-price" wx:if="{{item.priceMonth}}">¥{{item.priceMonth}}<text class="card-price-unit">{{item.priceUnit}}</text></view>
+
+          <!-- 滑动反馈角标 -->
+          <view class="card-badge like-badge" wx:if="{{idx === 0 && swipeDirection === 'like'}}">合适</view>
+          <view class="card-badge nope-badge" wx:if="{{idx === 0 && swipeDirection === 'nope'}}">略过</view>
         </view>
       </view>
-    </view>
 
-    <view class="empty-stage" wx:else>
-      <text class="empty-icon">✨</text>
-      <view class="empty-text">已经看完全部推荐啦</view>
-      <button class="match-btn" bindtap="resetMatch">重新提需求</button>
-    </view>
+      <view class="empty-stage" wx:else>
+        <text class="empty-icon">✨</text>
+        <view class="empty-text">已经看完全部推荐啦</view>
+        <button class="match-btn" bindtap="resetMatch">重新提需求</button>
+      </view>
 
-    <view class="action-row" wx:if="{{currentIndex < cards.length}}">
-      <view class="action-btn dislike-btn" bindtap="tapDislike">
-        <text class="action-icon">✕</text>
-        <text class="action-label">略过</text>
-      </view>
-      <view class="action-btn detail-btn" bindtap="tapDetail">
-        <text class="action-icon">详情</text>
-      </view>
-      <view class="action-btn like-btn" bindtap="tapLike">
-        <text class="action-icon">✓</text>
-        <text class="action-label">合适</text>
+      <!-- 4 个圆形按钮，浮在卡片底部之上 -->
+      <view class="action-row {{resultEntered ? 'entered' : ''}}" wx:if="{{currentIndex < cards.length}}">
+        <view class="action-btn undo-btn" bindtap="tapUndo">
+          <view class="action-icon-circle undo-circle">
+            <text class="action-icon">↺</text>
+          </view>
+        </view>
+        <view class="action-btn dislike-btn" bindtap="tapDislike">
+          <view class="action-icon-circle dislike-circle">
+            <text class="action-icon">✕</text>
+          </view>
+          <text class="action-label">略过</text>
+        </view>
+        <view class="action-btn like-btn" bindtap="tapLike">
+          <view class="action-icon-circle like-circle">
+            <text class="action-icon">♥</text>
+          </view>
+          <text class="action-label">合适</text>
+        </view>
+        <view class="action-btn super-btn" bindtap="tapSuper">
+          <view class="action-icon-circle super-circle">
+            <text class="action-icon">★</text>
+          </view>
+          <text class="action-label">面试</text>
+        </view>
       </view>
     </view>
   </view>

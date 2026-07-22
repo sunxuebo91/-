@@ -236,6 +236,21 @@ Page({
   },
 
   goAiMatch() {
+    // AI 智能匹配需要手机号（用于查 CRM 客户归属 / 通知销售），
+    // 未登录直接拦截，避免进入匹配页后处处拿不到 phone 走不下去
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    if (!crmUserInfo.phone) {
+      wx.showModal({
+        title: '请先登录',
+        content: 'AI 智能匹配需要您先登录，匹配到合适阿姨后我们会第一时间通知您的专属顾问',
+        confirmText: '去登录',
+        confirmColor: '#7B5BF5',
+        success: (r) => {
+          if (r.confirm) wx.navigateTo({ url: '/pages/login/index' });
+        },
+      });
+      return;
+    }
     wx.navigateTo({ url: '/pages/aiMatch/index' });
   },
 
