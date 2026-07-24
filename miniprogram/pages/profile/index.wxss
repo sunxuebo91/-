@@ -302,14 +302,17 @@ page {
 }
 .service-icon-order   { background: #EDE8FF; }
 .service-icon-diary   { background: #FFF0E8; }
+.service-icon-likes   { background: #FFE9F2; }
 .service-icon-referral{ background: #E8F9EE; }
 .service-icon-poster  { background: #EDE8FF; }
 .service-icon-contract{ background: #E8F5FF; }
 .service-icon-salary  { background: #E8F5FF; }
 .service-icon-course  { background: #FFF5E0; }
 .service-icon-img {
-  width: 112rpx;
-  height: 112rpx;
+  /* 1:1 正方形内嵌在 112rpx 容器里：配合 aspectFit 彻底杜绝拉伸变形，
+     新图标自带圆角色块，四周留出 8rpx 衬底边距视觉更整齐 */
+  width: 96rpx;
+  height: 96rpx;
 }
 .service-label {
   font-size: 24rpx;

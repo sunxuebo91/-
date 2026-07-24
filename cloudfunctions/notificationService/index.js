@@ -94,6 +94,215 @@ async function sendResumeViewNotify(event) {
   }
 }
 
+/**
+ * 发送"面试申请"通知（任务 1.10 重写版）
+ *
+ * 三分支路由（先调 CRM 内部接口 GET customer-match 查客户归属）：
+ *   分支A：客户已建档 且 有在值专属顾问 → 只通知该顾问
+ *   分支B：客户已建档 但 无归属 / 在公海 / 顾问已停用 → 通知所有销售管理员
+ *   分支C：客户未建档 → 先 POST customer-match/create 自动建档（同号幂等，进公海），再通知所有销售管理员
+ *
+ * 24h 去重：同 customerPhone + resumeId 在 24 小时内只发一次，
+ *           命中直接返回 duplicated:true，不发任何通知。
+ *
+ * 诚实返回：CRM 站内信全部写失败 → delivery:'failed'（success:false）；
+ *           至少一条成功 → delivery:'ok'。不再有无主通知假成功。
+ *
+ * TODO(后续迭代，本轮不做)：
+ *  - 客户回执订阅消息（给客户本人发"顾问将联系您"）：
+ *    需要前端先调 wx.requestSubscribeMessage 取得客户订阅授权，
+ *    否则云函数发送必报 43101，故本轮只通知顾问/管理员。
+ *  - 30 分钟未读升级提醒：
+ *    需要在云控制台为本函数配置定时触发器轮询未读通知，本轮无定时器配置。
+ *
+ * @param {Object} event
+ * @param {string} event.customerPhone  客户手机号（必填）
+ * @param {string} event.customerName   客户称呼
+ * @param {string} event.nurseName      想面试的阿姨姓名（必填）
+ * @param {string} event.resumeId       简历 ID（去重键之一）
+ * @param {string} [event.needsSummary] 需求摘要（前端后续会传，兼容 undefined）
+ */
+async function sendInterviewRequestNotify(event) {
+  const { customerPhone, customerName, nurseName, resumeId, needsSummary } = event;
+
+  if (!customerPhone) return { success: false, errMsg: '缺少 customerPhone' };
+  if (!nurseName)     return { success: false, errMsg: '缺少 nurseName' };
+
+  const viewTime = formatViewTime(new Date());
+  const safeCustomerName = (customerName || '小程序客户').slice(0, 20);
+  const safeNurseName = String(nurseName).slice(0, 20);
+  // needsSummary 可选：未传时文案统一落 "未填写"
+  const safeNeedsSummary = (needsSummary ? String(needsSummary) : '未填写').slice(0, 50);
+  const resumeKey = resumeId ? String(resumeId) : '';
+  const page = resumeId
+    ? `pages/resumeDetail/index?id=${encodeURIComponent(resumeId)}`
+    : 'pages/resumeList/index';
+
+  // ── 0. 24h 去重：同客户同简历一天内只通知一次 ──
+  const dup = await findRecentInterviewRequest(customerPhone, resumeKey);
+  if (dup) {
+    console.log('[sendInterviewRequest] 24h 内已通知过，去重跳过, recordId:', dup._id);
+    return { success: true, data: { notifyTarget: '顾问', delivery: 'ok', duplicated: true } };
+  }
+
+  // ── 1. 查客户归属，决定路由分支 ──
+  const match = await crmRequest('GET', `/api/miniprogram/customer-match?phone=${encodeURIComponent(customerPhone)}`);
+  const matchData = (match && match.data) || {};
+
+  let branch;          // 'A' | 'B' | 'C'
+  let targets = [];    // [{ name, phone }]
+  let notifyTarget;
+  let title;
+  let content;
+  let notifyType;
+
+  const staff = matchData.assignedStaff;
+  if (matchData.exists && staff && staff.active && staff.phone) {
+    // ── 分支A：有在值专属顾问 ──
+    branch = 'A';
+    targets = [{ name: staff.name, phone: staff.phone }];
+    notifyTarget = `专属顾问-${staff.name}`;
+    notifyType = 'interview_request';
+    title = '客户面试申请';
+    content = `您的客户 ${safeCustomerName}（${customerPhone}）想面试阿姨 ${safeNurseName}。需求摘要：${safeNeedsSummary}。请尽快联系客户安排面试`;
+  } else {
+    if (!matchData.exists) {
+      // ── 分支C：新客，先自动建档（同号幂等），再走管理员 ──
+      branch = 'C';
+      try {
+        const created = await crmRequest('POST', '/api/miniprogram/customer-match/create', {
+          phone: String(customerPhone),
+          name: customerName || undefined,
+          source: 'AI智能匹配',
+          note: `AI智能匹配新客，需求：${safeNeedsSummary}，想面试：${safeNurseName}`,
+        });
+        console.log('[sendInterviewRequest] 新客自动建档成功, customerId:', created && created.data && created.data.customerId);
+      } catch (e) {
+        // 建档失败不阻断通知流程：管理员仍可从通知内容拿到客户手机号人工跟进
+        console.error('[sendInterviewRequest] 新客自动建档失败（继续通知管理员）:', e.message);
+      }
+    } else {
+      // ── 分支B：已建档但无归属 / 在公海 / 顾问已停用 ──
+      branch = 'B';
+      console.log('[sendInterviewRequest] 客户已建档但无可用顾问, inPublicPool:', matchData.inPublicPool, 'assignedStaff:', staff || null);
+    }
+
+    // 管理员分支（B / C 共用）
+    const staffsRes = await crmRequest('GET', '/api/miniprogram/staffs?role=admin&active=1');
+    const adminList = (staffsRes && staffsRes.data && staffsRes.data.list) || [];
+    targets = (Array.isArray(adminList) ? adminList : []).filter((s) => s && s.phone);
+    notifyTarget = '销售管理员';
+
+    if (!targets.length) {
+      // 无可用管理员 → 诚实失败，不再写"无主通知"假成功
+      console.error('[sendInterviewRequest] CRM 无可用销售管理员，面试申请通知失败');
+      return {
+        success: false,
+        errMsg: 'CRM 无可用销售管理员，无法派送面试申请通知',
+        data: { notifyTarget, delivery: 'failed' },
+      };
+    }
+
+    notifyType = 'interview_request_unassigned';
+    title = branch === 'C' ? '【新客·无归属】客户预约面试' : '【无归属客户预约面试】';
+    content = `客户 ${safeCustomerName}（${customerPhone}）想面试阿姨 ${safeNurseName}。需求摘要：${safeNeedsSummary}。先到先得，请联系后及时在 CRM 认领该客户`;
+  }
+
+  console.log('[sendInterviewRequest] 分支:', branch, '目标数:', targets.length, 'notifyTarget:', notifyTarget);
+
+  // ── 2. 逐个目标发送：CRM 站内信（计入成败）+ 订阅消息（尽力而为）──
+  let okCount = 0;
+  for (const target of targets) {
+    // 2.1 CRM 站内信：writeCrmNotification 返回 boolean，全部失败则 delivery=failed
+    const written = await writeCrmNotification({
+      phone: target.phone,
+      type: notifyType,
+      title,
+      content,
+      page,
+    });
+    if (written) okCount++;
+
+    // 2.2 微信订阅消息（能找到 openid 才发；单个失败不影响整体判定）
+    const touser = await getOpenidByPhone(target.phone);
+    if (!touser) {
+      console.warn('[sendInterviewRequest] 未找到员工 openid，仅写站内信, phone:', target.phone);
+      continue;
+    }
+    try {
+      await cloud.openapi.subscribeMessage.send({
+        touser,
+        template_id: RESUME_VIEW_TEMPLATE_ID,   // 复用简历查看模板
+        page,
+        data: {
+          thing6: { value: safeCustomerName },   // 预约人
+          thing8: { value: safeNurseName },      // 服务人员
+          thing7: {
+            value: branch === 'A'
+              ? '客户想面试此阿姨，请尽快联系'
+              : '无归属客户想面试阿姨，请认领跟进',
+          },
+          time4: { value: viewTime },            // 申请时间
+        },
+        miniprogram_state: 'formal',
+      });
+    } catch (err) {
+      console.error('[sendInterviewRequest] 订阅消息发送失败:', err.errCode, err.errMsg, 'phone:', target.phone);
+    }
+  }
+
+  // ── 3. 诚实返回 + 写去重记录 ──
+  if (okCount === 0) {
+    console.error('[sendInterviewRequest] 站内信写入全部失败, targets:', targets.map((t) => t.phone));
+    return {
+      success: false,
+      errMsg: 'CRM 站内信写入全部失败，请稍后重试',
+      data: { notifyTarget, delivery: 'failed' },
+    };
+  }
+
+  // 至少一条成功才写去重记录（失败时不写，允许前端/用户重试）
+  try {
+    await db.collection('interview_requests').add({
+      data: {
+        customerPhone: String(customerPhone),
+        resumeId: resumeKey,
+        customerName: safeCustomerName,
+        nurseName: safeNurseName,
+        branch,
+        targetPhones: targets.map((t) => String(t.phone)),
+        needsSummary: safeNeedsSummary,
+        createdAt: new Date(),
+      },
+    });
+  } catch (e) {
+    // 去重记录写失败不阻断主流程（最坏情况：24h 内可能重复通知一次）
+    console.error('[sendInterviewRequest] 去重记录写入失败:', e.message);
+  }
+
+  return { success: true, data: { notifyTarget, delivery: 'ok', targetCount: targets.length } };
+}
+
+// 查 24h 内是否已有同 customerPhone + resumeId 的面试申请通知记录
+// 集合 interview_requests 不存在时首次 add 会自动创建；查询异常按"未发送过"处理，不阻断主流程
+async function findRecentInterviewRequest(customerPhone, resumeId) {
+  try {
+    const since = new Date(Date.now() - 24 * 3600 * 1000);
+    const r = await db.collection('interview_requests')
+      .where({
+        customerPhone: String(customerPhone),
+        resumeId: String(resumeId || ''),
+        createdAt: db.command.gt(since),
+      })
+      .limit(1)
+      .get();
+    return (r.data && r.data[0]) || null;
+  } catch (e) {
+    console.warn('[sendInterviewRequest] 去重查询失败（按未发送处理）:', e.message);
+    return null;
+  }
+}
+
 // 发送"抢单成功"订阅通知给订单发布人（员工）
 async function sendOrderGrabNotify(event) {
   const { publisherPhone, auntieName, serviceTypeLabel, orderId } = event;
@@ -145,24 +354,34 @@ async function sendOrderGrabNotify(event) {
 
 /**
  * 写入 CRM 站内通知
+ * @returns {Promise<boolean>} true=写入成功；false=失败（已记日志，不抛错，调用方统计成败）
  */
 async function writeCrmNotification({ phone, type, title, content, page }) {
   console.log('[writeCrmNotification] 准备写入 CRM:', { phone, type, title, content, page });
   try {
-    await crmRequest('POST', '/api/miniprogram/notifications', {
+    const res = await crmRequest('POST', '/api/miniprogram/notifications', {
       phone,
       type,
       title,
       content,
       page
     });
+    if (res && res.success === false) {
+      console.warn('[writeCrmNotification] ❌ CRM 返回 success=false');
+      return false;
+    }
     console.log('[writeCrmNotification] ✅ CRM 写入成功');
+    return true;
   } catch (err) {
     console.warn('[writeCrmNotification] ❌ CRM 写入失败:', err.message);
+    return false;
   }
 }
 
 const CRM_SERVICE_SECRET = process.env.CRM_SERVICE_SECRET || '270a1997eeebe6bfca45e9cb9bc2e602ed708a1b3663119cfe6fcb2112976093';
+// CRM 内部接口令牌（48 位 hex），敏感内部接口（员工列表/客户归属/建档/创建通知）必带
+// ⚠️ 必须与 CRM ecosystem.config.js 的 MINIPROGRAM_INTERNAL_TOKEN 保持一致
+const CRM_INTERNAL_TOKEN = process.env.CRM_INTERNAL_TOKEN || '455dc3b0cf6d45d0e30345d03a2fb04f826606a1588fc3ce';
 const CRM_HOSTNAME = 'crm.andejiazheng.com';
 
 function crmRequest(method, path, body) {
@@ -176,6 +395,9 @@ function crmRequest(method, path, body) {
         'Content-Type': 'application/json',
         'X-Service-Secret': CRM_SERVICE_SECRET,
         'X-Client-Type': 'miniprogram',
+        // 内部接口令牌：notifications POST 路由在 ServiceSecretGuard 之上还叠加了 InternalTokenGuard；
+        // staffs / customer-match 等内部接口也校验此头。GET 请求多带无害。
+        'x-internal-token': CRM_INTERNAL_TOKEN,
       },
     };
     if (bodyStr) options.headers['Content-Length'] = Buffer.byteLength(bodyStr);
@@ -281,6 +503,10 @@ exports.main = async (event) => {
       // 新增：发送简历查看通知给员工
       case 'sendResumeViewNotify':
         return await sendResumeViewNotify(event);
+
+      // 新增：AI 智能匹配页"面试"按钮 → 通知销售/管理员
+      case 'sendInterviewRequest':
+        return await sendInterviewRequestNotify(event);
 
       case 'sendOrderGrabNotify':
         return await sendOrderGrabNotify(event);

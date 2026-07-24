@@ -207,6 +207,18 @@ Page({
     wx.navigateTo({ url: "/pages/babyDiary/list/index" });
   },
 
+  // 我的心动阿姨：未登录先跳登录（登录成功后自动跳回 myLikes）
+  goMyLikes() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    if (!crmUserInfo.phone) {
+      wx.navigateTo({
+        url: `/pages/login/index?redirect=${encodeURIComponent('/pages/myLikes/index')}`,
+      });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/myLikes/index' });
+  },
+
   goMyOrders() {
     wx.navigateTo({ url: "/pages/myOrders/index" });
   },

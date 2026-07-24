@@ -2,7 +2,6 @@
 .page {
   min-height: 100vh;
   background: linear-gradient(180deg, #5A3DD8 0%, #6A4AE8 220rpx, #7B5BF5 420rpx, #9B7BF8 580rpx, #F5F2FB 720rpx, #F5F2FB 100%);
-  padding-bottom: 60rpx;
   box-sizing: border-box;
   overflow-x: hidden;
 }
@@ -63,7 +62,7 @@
 
 /* ────────────── 输入阶段 ────────────── */
 .input-stage {
-  padding: 40rpx 32rpx 40rpx;
+  padding: 40rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   width: 100%;
   background: transparent;
@@ -102,6 +101,7 @@
   border-radius: 999rpx;
   font-weight: 500;
 }
+.tip-chip:active { background: rgba(255, 255, 255, 0.42); }
 
 .input-card {
   background: #fff;
@@ -181,8 +181,12 @@
 }
 
 /* ────────────── 结果阶段：探探骨架 ────────────── */
+/* flex 纵向三段：需求摘要行（自然高）→ 卡片区（flex:1 填满）→ 按钮区（自然高贴底） */
 .result-stage {
+  display: flex;
+  flex-direction: column;
   padding: 16rpx 24rpx 0;
+  box-sizing: border-box;
 }
 
 .result-header {
@@ -190,6 +194,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8rpx 12rpx 16rpx;
+  flex-shrink: 0;
 }
 .result-summary {
   flex: 1;
@@ -209,24 +214,53 @@
   white-space: nowrap;
 }
 
-/* 卡片区：留出底部 200rpx 给按钮，按钮浮在卡片下方 */
+/* 结果头部的"已选 N 位"入口：紫色 chip，跳"我的心动阿姨" */
+.likes-chip {
+  font-size: 24rpx;
+  color: #fff;
+  background: #7B5BF5;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+/* 放宽提示条：没有完全符合条件时的说明，浅紫低调、自然高不遮挡卡片 */
+.relax-note {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #5A3DD8;
+  background: rgba(245, 242, 251, 0.95);
+  border-radius: 16rpx;
+  padding: 14rpx 20rpx;
+  margin: 0 12rpx 12rpx;
+  line-height: 1.5;
+}
+
+/* 卡片区：flex:1 填满剩余空间，卡片顶到需求摘要行下、按钮区之上，无死空间 */
 .card-area {
   position: relative;
-  padding-bottom: 220rpx;
+  flex: 1;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-stack {
   position: relative;
-  height: 980rpx;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   margin: 0 auto;
   max-width: 700rpx;
 }
 
-/* 探探风卡片：圆角 24px（不是 32px），明显的堆叠纵深 */
+/* 探探风卡片：圆角 24rpx（不是 32rpx），明显的堆叠纵深；整卡一张照片 */
 .swipe-card {
   position: absolute;
   top: 0; left: 12rpx; right: 12rpx;
-  height: 980rpx;
+  height: 100%;
   border-radius: 24rpx;
   overflow: hidden;
   background: #000;
@@ -234,11 +268,14 @@
   will-change: transform;
 }
 
-/* 整张卡 = 一张图 */
+/* 整卡一张照片：背景图 cover + 居中定位（能看到脸和上半身） */
 .card-photo {
   width: 100%;
   height: 100%;
-  display: block;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #2D1B69;
 }
 
 /* 顶部 chip */
@@ -277,14 +314,37 @@
 }
 .card-score-icon { font-size: 22rpx; }
 
-/* 底部信息浮层：黑色渐变 + 内容（探探感的"水印"） */
-.card-bottom {
+/* 诚实匹配：未满足条件小标签，挂在 pill/角标一行下方，琥珀色低调不抢主视觉 */
+.card-unmet {
+  position: absolute;
+  top: 80rpx;
+  left: 24rpx;
+  right: 24rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  z-index: 2;
+}
+.card-unmet-tag {
+  font-size: 20rpx;
+  color: #FFE9A8;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* 底部信息带：绝对定位 + 短渐变蒙版，只占底部约 1/3，不压脸 */
+.card-info {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 60rpx 32rpx 32rpx;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.88) 100%);
+  max-height: 35%;
+  padding: 80rpx 28rpx 28rpx;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.85) 100%);
+  overflow: hidden;
   z-index: 2;
 }
 
@@ -294,7 +354,7 @@
   gap: 8rpx;
   color: #fff;
   flex-wrap: wrap;
-  margin-bottom: 14rpx;
+  margin-bottom: 10rpx;
 }
 .card-name {
   font-size: 48rpx;
@@ -311,21 +371,26 @@
   text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.4);
 }
 
-.card-intro {
-  font-size: 26rpx;
-  color: rgba(255,255,255,0.92);
-  line-height: 1.55;
-  margin-bottom: 16rpx;
-  font-style: italic;
+/* 服务端给的推荐理由：暖金色与角标呼应，限制 1 行省略 */
+.card-reason {
+  font-size: 24rpx;
+  color: #FFE9A8;
+  line-height: 1.5;
+  margin-bottom: 10rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-shadow: 0 2rpx 6rpx rgba(0,0,0,0.4);
 }
 
+/* 技能标签：最多一行（js 里已 slice(0,3)），不换行、溢出隐藏 */
 .card-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10rpx;
-  margin-bottom: 14rpx;
+  margin-bottom: 10rpx;
   max-width: 100%;
+  overflow: hidden;
 }
 .card-tag {
   font-size: 22rpx;
@@ -389,7 +454,8 @@
 .nope-badge { right: 50rpx; color: #FF3141; border-color: #FF3141; transform: rotate(15deg); }
 
 .empty-stage {
-  height: 600rpx;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -397,17 +463,32 @@
 }
 .empty-icon { font-size: 88rpx; }
 .empty-text { margin: 16rpx 0 32rpx; font-size: 28rpx; color: #6B5FA5; }
+/* "看完了"空态的上一张入口：低调文字按钮，跟在主按钮下方 */
+.empty-undo {
+  margin-top: 28rpx;
+  font-size: 26rpx;
+  color: #9B8FC4;
+  padding: 8rpx 24rpx;
+}
+/* "看完了"空态的"查看我的心动阿姨"入口：品牌紫文字链接 */
+.empty-likes {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #7B5BF5;
+  font-weight: 600;
+  padding: 8rpx 24rpx;
+}
 
-/* 4 个按钮：浮在卡片底部，圆形胶囊（探探风格） */
+/* 操作区：三个等大次级圆钮 + 全宽面试 CTA（贴卡片下方，flex-shrink:0 自然高） */
+.action-panel {
+  flex-shrink: 0;
+  padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+}
+
 .action-row {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
-  padding: 0 24rpx;
 }
 
 .action-btn {
@@ -415,9 +496,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.action-btn:active { transform: scale(0.88); }
 
 /* 入场动画：仅在结果页首次进入时播一次（用 resultEntered class 控制） */
 @keyframes btnPulse {
@@ -427,102 +506,90 @@
 }
 
 /* resultEntered=false 时入场；=true 后不再播 */
-.action-row:not(.entered) .action-icon-circle {
+.action-panel:not(.entered) .action-icon-circle,
+.action-panel:not(.entered) .interview-cta {
   animation: btnPulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
-.action-row.entered .action-icon-circle {
+.action-panel.entered .interview-cta {
   animation: none;
 }
 
+/* ♥ 呼吸心跳：idle 每 2.4s 一次轻微脉动（只 icon-circle，不联动整行） */
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  8% { transform: scale(1.08); }
+  16% { transform: scale(1); }
+}
+
+/* 三个次级钮：88rpx 马卡龙软糖风——底色区分语义，不要边框，同色系有色投影 */
 .action-icon-circle {
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 50%;
-  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(45, 27, 105, 0.22);
-  margin-bottom: 8rpx;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 10rpx;
+  transition: transform 0.25s cubic-bezier(0.34, 1.8, 0.64, 1), box-shadow 0.18s ease;
 }
+/* 果冻按压：scale(0.8) + overshoot 回弹 */
 .action-btn:active .action-icon-circle {
-  transform: scale(0.92);
-  box-shadow: 0 4rpx 12rpx rgba(45, 27, 105, 0.18);
+  transform: scale(0.8);
 }
 
-.action-icon {
-  font-weight: 700;
-  color: #6B5FA5;
-  transition: transform 0.18s ease;
+.action-icon-img {
+  width: 40rpx;
+  height: 40rpx;
 }
 
-/* 4 个按钮的尺寸 + 颜色（按你的需求：
-   撤销(灰小) → 略过(红中) → 合适(紫大) → 面试(橙大主推)） */
-
-/* 撤销 ↺：灰小，弱化 */
-.undo-btn .action-icon-circle {
-  width: 88rpx;
-  height: 88rpx;
-  margin-bottom: 0;
-  animation-delay: 0.15s;
+/* 上一张：奶灰蓝 */
+.undo-circle {
+  background: #EEF1F8;
+  box-shadow: 0 8rpx 20rpx rgba(138, 147, 184, 0.25);
 }
-.undo-btn .action-icon { font-size: 40rpx; color: #B8AED4; line-height: 1; }
-.undo-circle { border: 2rpx solid #E5DEF7; background: #fff; }
-
-/* 略过 ✕：红色，中等（"否定"语义） */
-.dislike-btn .action-icon-circle {
-  width: 108rpx;
-  height: 108rpx;
-  animation-delay: 0.05s;
-}
-.dislike-btn .action-icon {
-  font-size: 48rpx;
-  color: #FF3141;
-  line-height: 1;
-}
+/* 略过：奶粉红 */
 .dislike-circle {
-  border: 3rpx solid #FFD9DC;
-  box-shadow: 0 8rpx 24rpx rgba(255, 49, 65, 0.22);
-  background: #fff;
+  background: #FFE9EB;
+  box-shadow: 0 8rpx 20rpx rgba(255, 90, 110, 0.28);
 }
-
-/* 合适 ♥：紫色，最大（"肯定"语义 + 跳详情） */
-.like-btn .action-icon-circle {
-  width: 128rpx;
-  height: 128rpx;
-  animation-delay: 0.1s;
-}
-.like-btn .action-icon {
-  font-size: 64rpx;
-  color: #7B5BF5;
-  line-height: 1;
-}
+/* 合适：粉紫 + 呼吸心跳（entered 后由入场动画切到心跳） */
 .like-circle {
-  border: 4rpx solid #7B5BF5;
-  box-shadow: 0 12rpx 32rpx rgba(123, 91, 245, 0.35);
-  background: linear-gradient(135deg, #fff 0%, #F5F2FB 100%);
+  background: #F1EAFE;
+  box-shadow: 0 8rpx 20rpx rgba(123, 91, 245, 0.30);
+  animation: heartBeat 2.4s ease-in-out infinite;
 }
-
-/* 面试 ★：橙色高亮，主推（变现入口） */
-.super-btn .action-icon-circle {
-  width: 128rpx;
-  height: 128rpx;
-  animation-delay: 0.2s;
-}
-.super-btn .action-icon {
-  font-size: 64rpx;
-  color: #fff;
-  line-height: 1;
-}
-.super-circle {
-  border: 4rpx solid #FF8F1F;
-  background: linear-gradient(135deg, #FFB24F 0%, #FF8F1F 100%);
-  box-shadow: 0 12rpx 32rpx rgba(255, 143, 31, 0.4);
+/* 心跳动画会覆盖 transform，按压反馈改用收影 */
+.like-btn:active .like-circle {
+  box-shadow: 0 2rpx 8rpx rgba(123, 91, 245, 0.20);
 }
 
 .action-label {
   font-size: 24rpx;
-  color: #6B5FA5;
   font-weight: 500;
-  margin-top: 6rpx;
 }
-.super-btn .action-label { color: #FF8F1F; font-weight: 600; }
+.undo-label { color: #8A93B8; }
+.dislike-label { color: #FF5A6E; }
+.like-label { color: #7B5BF5; }
+
+/* 面试 CTA：全宽橙色胶囊主按钮（变现入口） */
+.interview-cta {
+  margin-top: 28rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #FFB24F 0%, #FF8F1F 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+.interview-cta:active { opacity: 0.88; }
+.interview-cta-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+.interview-cta-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2rpx;
+}

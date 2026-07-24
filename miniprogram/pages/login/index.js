@@ -13,8 +13,16 @@ Page({
     navBarHeight: 44,    // 导航栏内容高度
   },
 
-  async onLoad() {
+  async onLoad(options) {
     console.log('📱 登录页加载');
+
+    // 登录成功后要跳回的目标页（如 /pages/aiMatch/index），由来源页通过 url 参数传入
+    // 注意：微信框架已对 options 做过一次 decode，这里直接取值，异常兜底为 null
+    try {
+      this._redirect = (options && options.redirect) || null;
+    } catch (e) {
+      this._redirect = null;
+    }
 
     // 自适应状态栏 + 导航栏高度
     try {
@@ -273,7 +281,16 @@ Page({
         // 4. 登录成功提示与跳转：CRM 账号冲突（409）时跳过，留在登录页让用户处理
         if (!crmConflict) {
           wx.showToast({ title: "登录成功" });
-          setTimeout(() => {
+          // 存句柄：用户在 1.5s 内退出登录页时 onUnload 里清掉，避免跳转打到已销毁页面
+          this._loginJumpTimer = setTimeout(() => {
+            // 来源页带了 redirect（如 AI 匹配）时优先跳回目标页
+            if (this._redirect) {
+              wx.redirectTo({
+                url: this._redirect,
+                fail: () => { wx.switchTab({ url: '/pages/home/index' }); },
+              });
+              return;
+            }
             const pages = getCurrentPages();
             if (pages.length > 1) {
               wx.navigateBack();
@@ -308,6 +325,14 @@ Page({
       wx.navigateBack();
     } else {
       wx.switchTab({ url: '/pages/home/index' });
+    }
+  },
+
+  onUnload() {
+    // 清掉登录成功后的延时跳转，避免打到已销毁页面
+    if (this._loginJumpTimer) {
+      clearTimeout(this._loginJumpTimer);
+      this._loginJumpTimer = null;
     }
   },
 });

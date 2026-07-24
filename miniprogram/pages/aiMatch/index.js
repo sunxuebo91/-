@@ -1,6 +1,8 @@
 // pages/aiMatch/index.js
 // AI 心动匹配：语音/文字识别客户需求，AI 智能推荐10位阿姨，探探式滑动浏览
-const resumeService = require('../../services/resume.js');
+const { publicRequest } = require('../../utils/request.js');
+// needs 白名单规范化（含省份→籍贯纠正兜底），实现见同目录 needs-sanitize.js
+const { sanitizeNeeds } = require('./needs-sanitize.js');
 
 const JOB_TYPE_LABEL_MAP = {
   yuexin: '月嫂',
@@ -14,6 +16,8 @@ const JOB_TYPE_LABEL_MAP = {
   xiaoshi: '小时工',
   'zhujia-hulao': '住家护老',
   hugong: '护工',
+  peiban: '陪伴师',
+  jiajiao: '家教',
 };
 
 // 技能 code -> 中文标签（与 mobile-app/src/pages/Resumes.tsx 中 SKILLS_MAP 保持一致）
@@ -48,6 +52,21 @@ function translateSkill(code) {
   return SKILLS_LABEL_MAP[s] || s;
 }
 
+// 诚实匹配：未满足条件 code -> 卡片小标签文案（nativePlace 特殊处理，见 _unmetLabels）
+const UNMET_NEED_LABELS = {
+  jobType: '工种不符',
+  city: '非常驻城市',
+  priceMax: '超预算',
+  ageRange: '年龄不符',
+  level: '等级不符',
+};
+
+// 按钮图标：base64 SVG（小程序不支持内联 SVG 标签），viewBox 24x24，胖圆头软糖风
+const ICON_UNDO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEE5M0I4IiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIzIDUgMyAxMSA5IDExIi8+PHBhdGggZD0iTTQuOSAxNS41YTkgOSAwIDEgMCAyLjEtOS4zTDMgMTEiLz48L3N2Zz4=';
+const ICON_NOPE = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY1QTZFIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bGluZSB4MT0iMTciIHkxPSI3IiB4Mj0iNyIgeTI9IjE3Ii8+PGxpbmUgeDE9IjciIHkxPSI3IiB4Mj0iMTciIHkyPSIxNyIvPjwvc3ZnPg==';
+const ICON_LIKE = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzdCNUJGNSI+PHBhdGggZD0iTTIwLjg0IDQuNjFhNS41IDUuNSAwIDAgMC03Ljc4IDBMMTIgNS42N2wtMS4wNi0xLjA2YTUuNSA1LjUgMCAwIDAtNy43OCA3Ljc4bDEuMDYgMS4wNkwxMiAyMS4yM2w3Ljc4LTcuNzggMS4wNi0xLjA2YTUuNSA1LjUgMCAwIDAgMC03Ljc4eiIvPjwvc3ZnPg==';
+const ICON_STAR = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGRkZGRiIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMS4wMiAxMiAxNy43NyA1LjgyIDIxLjAyIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIi8+PC9zdmc+';
+
 Page({
   data: {
     // 自定义导航栏
@@ -57,6 +76,7 @@ Page({
     // 输入阶段
     inputText: '',
     recording: false,
+    recordSeconds: 60,   // 录音倒计时（从 60 倒数）
     matching: false,
     isStaff: false,
 
@@ -70,6 +90,15 @@ Page({
     swipeDirection: '',
     animating: false,
     resultEntered: false,  // 结果页是否已入场（控制按钮动画）
+    emptyReason: '',       // 空态类型：'no-match'=没匹配到，'finished'=看完了全部推荐
+    likeCount: 0,          // 本次会话内"标记合适"的数量（结果头部 chip 用）
+    relaxNote: '',         // 放宽提示（strictCount=0 时后端给的说明文案，空串不显示）
+
+    // 操作按钮图标（base64 SVG）
+    iconUndo: ICON_UNDO,
+    iconNope: ICON_NOPE,
+    iconLike: ICON_LIKE,
+    iconStar: ICON_STAR,
   },
 
   manager: null,
@@ -77,6 +106,11 @@ Page({
   onLoad() {
     const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
     this.setData({ isStaff: crmUserInfo.isStaff === true });
+    // 恢复登录前未提交的需求草稿，避免跳登录页回来后输入丢失
+    const draft = wx.getStorageSync('aiMatch_draft');
+    if (draft) {
+      this.setData({ inputText: draft });
+    }
     this._initNavBar();
     this._initVoicePlugin();
   },
@@ -118,17 +152,24 @@ Page({
       const plugin = requirePlugin('WechatSI');
       this.manager = plugin.getRecordRecognitionManager();
       this.manager.onStop = (res) => {
+        this._clearRecordTimer();
         const result = (res && res.result) || '';
         if (result) {
-          const merged = `${this.data.inputText}${result}`.slice(0, 300);
+          // 原有文本非空且不以空格/标点结尾时，中间补一个空格再拼
+          const prev = this.data.inputText || '';
+          const sep = prev && !/[\s，。,.、；;！!？?]$/.test(prev) ? ' ' : '';
+          const merged = `${prev}${sep}${result}`.slice(0, 300);
           this.setData({ inputText: merged });
+          // 语音输入同样同步草稿
+          wx.setStorageSync('aiMatch_draft', merged);
         }
-        this.setData({ recording: false });
+        this.setData({ recording: false, recordSeconds: 60 });
       };
       this.manager.onError = (res) => {
+        this._clearRecordTimer();
         console.warn('[aiMatch] 语音识别错误', res);
         wx.showToast({ title: '语音识别失败，请重试', icon: 'none' });
-        this.setData({ recording: false });
+        this.setData({ recording: false, recordSeconds: 60 });
       };
     } catch (e) {
       console.warn('[aiMatch] WechatSI 插件加载失败', e);
@@ -137,6 +178,16 @@ Page({
 
   onInputText(e) {
     this.setData({ inputText: e.detail.value });
+    // 同步草稿到本地，跳登录页回来后不丢
+    wx.setStorageSync('aiMatch_draft', e.detail.value);
+  },
+
+  // 工种 chips：点击把对应示例文案填入输入框
+  tapTipChip(e) {
+    const text = (e && e.currentTarget && e.currentTarget.dataset.text) || '';
+    if (!text) return;
+    this.setData({ inputText: text });
+    wx.setStorageSync('aiMatch_draft', text);
   },
 
   onVoiceStart() {
@@ -148,7 +199,8 @@ Page({
       scope: 'scope.record',
       success: () => {
         this.manager.start({ duration: 60000, lang: 'zh_CN' });
-        this.setData({ recording: true });
+        this.setData({ recording: true, recordSeconds: 60 });
+        this._startRecordTimer();
       },
       fail: () => {
         wx.showModal({
@@ -164,13 +216,40 @@ Page({
   },
 
   onVoiceEnd() {
+    this._clearRecordTimer();
     if (this.manager && this.data.recording) {
       this.manager.stop();
     }
   },
 
+  // 录音倒计时：从 60 每秒倒数，归零自动结束（与 manager 的 60s duration 对齐）
+  _startRecordTimer() {
+    this._clearRecordTimer();
+    this._recordTimer = setInterval(() => {
+      const next = (this.data.recordSeconds || 60) - 1;
+      if (next <= 0) {
+        this.setData({ recordSeconds: 0 });
+        this.onVoiceEnd();
+        return;
+      }
+      this.setData({ recordSeconds: next });
+    }, 1000);
+  },
+
+  _clearRecordTimer() {
+    if (this._recordTimer) {
+      clearInterval(this._recordTimer);
+      this._recordTimer = null;
+    }
+  },
+
   // ────────────────────────────── AI 匹配 ──────────────────────────────
   async matchNow() {
+    // 录音中先收尾再继续匹配，避免录音回调和匹配流程打架
+    if (this.data.recording) {
+      this.onVoiceEnd();
+    }
+
     const text = (this.data.inputText || '').trim();
     if (!text) {
       wx.showToast({ title: '请输入或说出您的需求', icon: 'none' });
@@ -186,9 +265,12 @@ Page({
       const result = parseRes.result || {};
       if (!result.success) throw new Error(result.errMsg || '需求解析失败');
 
-      const needs = result.data || {};
+      // 白名单规范化：字段漂移归一 + 非法字段剔除，防止条件静默丢失
+      const needs = sanitizeNeeds(result.data || {});
       this.setData({ needs });
-      await this._fetchAndScoreResumes(needs);
+      await this._matchResumes(needs);
+      // 匹配成功，需求已消费，清掉草稿
+      wx.removeStorageSync('aiMatch_draft');
     } catch (e) {
       console.error('[aiMatch] 匹配失败:', e);
       wx.showToast({ title: e.message || '匹配失败，请重试', icon: 'none' });
@@ -197,74 +279,78 @@ Page({
     }
   },
 
-  async _fetchAndScoreResumes(needs) {
-    // 逐步放宽筛选条件，确保总能凑够候选简历
-    const attempts = [
-      { page: 1, pageSize: 50, jobType: needs.jobType || '', maternityNurseLevel: needs.level || '', keyword: needs.city || '' },
-      { page: 1, pageSize: 50, jobType: needs.jobType || '', maternityNurseLevel: needs.level || '' },
-      { page: 1, pageSize: 50, jobType: needs.jobType || '' },
-      { page: 1, pageSize: 50 },
-    ];
+  // 服务端匹配：POST /api/resumes/match，返回已按 matchScore 降序的脱敏简历
+  async _matchResumes(needs) {
+    // 带上客户手机号，后端可用于"略过降权"等个性化；未登录不带
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const body = { needs, limit: 20 };
+    if (crmUserInfo.phone) body.customerPhone = crmUserInfo.phone;
 
-    let list = [];
-    for (const params of attempts) {
-      try {
-        const resp = await resumeService.getResumeList(params);
-        list = (resp.success && resp.data && resp.data.items) || [];
-      } catch (e) {
-        list = [];
-      }
-      if (list.length >= 5) break;
+    const resp = await publicRequest({
+      url: '/resumes/match',
+      method: 'POST',
+      data: body,
+    });
+
+    // 后端明确失败（success === false）不是"未匹配到"：抛错走 matchNow 的 catch 提示
+    if (!resp || resp.success === false) {
+      throw new Error((resp && (resp.errMsg || resp.message)) || '匹配失败');
     }
 
-    const scored = list.map((item) => ({ item, score: this._scoreResume(item, needs) }));
-    scored.sort((a, b) => b.score - a.score);
-    const matchedCards = scored.slice(0, 20).map((s) => this._formatCard(s.item, s.score));
+    const data = resp.data || {};
+    const items = data.items || [];
 
-    this.setData({ cards: matchedCards, currentIndex: 0, resultReady: true, resultEntered: true });
+    // 诚实匹配：strictCount=0 时后端给放宽说明；旧数据无 meta 则不显示
+    const meta = data.meta || {};
+    const relaxNote = (meta.strictCount === 0 && meta.relaxNote) ? String(meta.relaxNote) : '';
+
+    // 曝光/操作/已选去重表随新一轮匹配重置
+    this._impressedIds = {};
+    this._actedIds = {};
+    this._likedIds = {};
+
+    if (!items.length) {
+      // 未匹配到：走独立的"未匹配到"空态（与"看完了"区分）
+      this.setData({
+        cards: [],
+        stackCards: [],
+        currentIndex: 0,
+        resultReady: true,
+        resultEntered: true,
+        emptyReason: 'no-match',
+        likeCount: 0,
+        relaxNote: '',
+      });
+      return;
+    }
+
+    const matchedCards = items.map((item) => this._formatCard(item));
+    this.setData({
+      cards: matchedCards,
+      currentIndex: 0,
+      resultReady: true,
+      resultEntered: true,
+      emptyReason: '',
+      likeCount: 0,
+      relaxNote,
+    });
     this._refreshStack();
-
-    if (matchedCards.length === 0) {
-      wx.showToast({ title: '暂无匹配的阿姨，换个说法试试', icon: 'none' });
-    }
   },
 
-  _scoreResume(item, needs) {
-    let score = 0;
-    if (needs.jobType && item.jobType === needs.jobType) score += 40;
-    if (needs.level && item.maternityNurseLevel === needs.level) score += 20;
-
-    if (needs.city) {
-      const addr = `${item.nativePlace || ''}${item.currentAddress || ''}`;
-      if (addr.includes(needs.city)) score += 15;
-    }
-
-    if (needs.priceMax && item.expectedSalary) {
-      score += Number(item.expectedSalary) <= Number(needs.priceMax) ? 15 : -10;
-    }
-
-    if (needs.ageMin || needs.ageMax) {
-      const age = Number(item.age) || 0;
-      const okMin = !needs.ageMin || age >= needs.ageMin;
-      const okMax = !needs.ageMax || age <= needs.ageMax;
-      if (okMin && okMax) score += 10;
-    }
-
-    if (needs.skills && needs.skills.length) {
-      const skillsText = `${(item.skills || []).join(' ')} ${item.selfIntroduction || ''}`;
-      score += needs.skills.filter((s) => skillsText.includes(s)).length * 8;
-    }
-
-    if (needs.keywords && needs.keywords.length) {
-      const text = `${item.name || ''} ${item.nativePlace || ''} ${item.currentAddress || ''} ${item.selfIntroduction || ''}`;
-      score += needs.keywords.filter((k) => text.includes(k)).length * 5;
-    }
-
-    score += Math.min(Number(item.experienceYears) || 0, 10);
-    return score;
+  // 诚实匹配：未满足条件 code -> 卡片小标签文案（向后兼容：无 unmetNeeds 返回空数组）
+  _unmetLabels(unmetNeeds) {
+    if (!Array.isArray(unmetNeeds) || !unmetNeeds.length) return [];
+    const nativePlace = String((this.data.needs && this.data.needs.nativePlace) || '')
+      .replace(/(省|市|人)$/, '');
+    return unmetNeeds.map((code) => {
+      if (code === 'nativePlace') {
+        return nativePlace ? `非${nativePlace}籍` : '非本地籍贯';
+      }
+      return UNMET_NEED_LABELS[code] || '';
+    }).filter(Boolean);
   },
 
-  _formatCard(item, score) {
+  _formatCard(item) {
     const isStaff = this.data.isStaff;
     const name = isStaff ? item.name : (item.name ? `${item.name.charAt(0)}阿姨` : '阿姨');
 
@@ -295,7 +381,10 @@ Page({
     if (item.experienceYears) infoParts.push(`${item.experienceYears}年经验`);
     const infoLine = infoParts.join(' · ');
 
-    const priceUnit = item.jobType === 'yuexin' ? '/26天' : '/月';
+    // 月嫂（含旧 code yuexin）按 26 天计价，小时工的 expectedSalary 是时薪，其余按月
+    const priceUnit = ['yuesao', 'yuexin'].includes(item.jobType)
+      ? '/26天'
+      : (item.jobType === 'xiaoshi' ? '/小时' : '/月');
 
     return {
       _id: item._id,
@@ -314,7 +403,11 @@ Page({
       intro: item.selfIntroduction ? String(item.selfIntroduction).slice(0, 50) : '',
       priceMonth: item.expectedSalary || '',
       priceUnit,
-      score,
+      // 服务端匹配分（0-100）与推荐理由，直接透传到卡片
+      matchScore: Number(item.matchScore) || 0,
+      matchReason: item.matchReason || '',
+      // 诚实匹配：该候选人未满足的显式条件小标签（旧数据无此字段则为空，不显示）
+      unmetLabels: this._unmetLabels(item.unmetNeeds),
     };
   },
 
@@ -329,6 +422,30 @@ Page({
         : `transform: translateY(${i * 20}rpx) scale(${1 - i * 0.06}); z-index:${10 - i}; opacity:${i === 2 ? 0.65 : 1}; transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;`,
     }));
     this.setData({ stackCards });
+
+    // 曝光上报：顶部卡片每张只报一次（去重表在 _matchResumes / resetMatch 里重置）
+    const top = stackCards[0];
+    this._impressedIds = this._impressedIds || {};
+    if (top && top._id && !this._impressedIds[top._id]) {
+      this._impressedIds[top._id] = true;
+      this._track('impression', top._id);
+    }
+  },
+
+  // 匹配事件上报：POST /api/resumes/match/event，静默失败不影响主流程
+  _track(event, resumeId) {
+    if (!resumeId) return;
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    const body = { resumeId, event };
+    if (crmUserInfo.phone) body.customerPhone = crmUserInfo.phone;
+    if (this.data.needs && this.data.needs.summary) body.needsSummary = this.data.needs.summary;
+    publicRequest({
+      url: '/resumes/match/event',
+      method: 'POST',
+      data: body,
+    }).catch((e) => {
+      console.warn('[aiMatch] 事件上报失败(忽略):', event, e);
+    });
   },
 
   onTouchStart(e) {
@@ -357,22 +474,27 @@ Page({
   onTouchEnd(e) {
     if (Number(e.currentTarget.dataset.index) !== 0 || this.data.animating) return;
     const dx = this._dx || 0;
-    if (Math.abs(dx) > 100) {
+    const adx = Math.abs(dx);
+    if (adx > 100) {
+      // 飞卡后同样抑制紧随的 tap，防止误跳详情（tapDetail 开头检查该标志）
+      this._suppressTap = true;
+      setTimeout(() => { this._suppressTap = false; }, 300);
       this._triggerSwipe(dx > 0 ? 'like' : 'nope');
-    } else {
+    } else if (adx > 10) {
+      // 拖动后回弹：抑制紧随其后的 tap，防止误跳详情（tapDetail 开头检查该标志）
+      this._suppressTap = true;
+      setTimeout(() => { this._suppressTap = false; }, 300);
       this.setData({
         cardStyle: 'z-index: 20; transform: translate(0,0) rotate(0deg); transition: transform 0.25s ease-out;',
         swipeDirection: '',
       });
     }
+    // adx ≤ 10 视为轻点（tap），直接放行给卡片的 catchtap 处理，不拦截也不回弹
   },
 
   tapLike() {
-    // 合适 → 跳转去简历详情页（让用户看完整简历后再决定）
-    if (this.data.animating) return;
-    const cur = this.data.cards[this.data.currentIndex];
-    if (!cur || !cur._id) return;
-    wx.navigateTo({ url: `/pages/resumeDetail/index?id=${cur._id}` });
+    // 合适 = 右滑语义：上报 like + 卡片飞出；看详情走卡片上的"详情›"
+    this._triggerSwipe('like');
   },
 
   tapDislike() {
@@ -382,6 +504,13 @@ Page({
   // 撤销：回到上一张（探探同名按钮）
   tapUndo() {
     if (this.data.animating || this.data.currentIndex <= 0) return;
+    // 撤销把已"合适"的卡拿回来：已选计数相应减，并允许再次上报/计数
+    const prev = this.data.cards[this.data.currentIndex - 1];
+    if (prev && prev._id && this._likedIds && this._likedIds[prev._id]) {
+      delete this._likedIds[prev._id];
+      if (this._actedIds) delete this._actedIds[`like_${prev._id}`];
+      this.setData({ likeCount: Math.max(0, this.data.likeCount - 1) });
+    }
     this.setData({
       currentIndex: this.data.currentIndex - 1,
       cardStyle: 'z-index: 20;',
@@ -395,6 +524,8 @@ Page({
   // 面试申请：通知销售/管理员（沿用 notificationService 通道）
   tapSuper() {
     if (this.data.animating) return;
+    // 提交锁：防止用户连点导致重复通知
+    if (this._superSubmitting) return;
     const cur = this.data.cards[this.data.currentIndex];
     if (!cur || !cur._id) return;
 
@@ -411,6 +542,7 @@ Page({
       return;
     }
 
+    this._superSubmitting = true;
     wx.showLoading({ title: '提交中...', mask: true });
     wx.cloud.callFunction({
       name: 'notificationService',
@@ -423,24 +555,61 @@ Page({
         // 优先用简历的"分享人/销售"——有就走专属顾问通知
         // 没有（公海/无归属简历）走管理员通知
         sharerPhone: (cur.sharerInfo && cur.sharerInfo.phone) || '',
+        // 带上需求摘要，顾问看到通知时知道客户要什么
+        needsSummary: this.data.needs.summary || '',
       },
     }).then((res) => {
       wx.hideLoading();
-      if (res && res.result && res.result.success) {
-        const target = (res.result.data && res.result.data.notifyTarget) || '顾问';
-        wx.showToast({ title: `已通知${target}`, icon: 'success' });
+      const result = (res && res.result) || {};
+      const data = result.data || {};
+      if (result.success === true && data.delivery !== 'failed') {
+        if (data.duplicated === true) {
+          // 重复申请：顾问已在跟进，不再重复打扰
+          wx.showToast({ title: '顾问正在跟进中，请稍候', icon: 'none' });
+        } else {
+          const target = data.notifyTarget || '顾问';
+          wx.showToast({ title: `已通知${target}`, icon: 'success' });
+          this._track('interview', cur._id);
+        }
+      } else if (result.success === true && data.delivery === 'failed') {
+        // 云函数承认投递失败，如实提示，不再假成功
+        wx.showToast({ title: '通知失败，请稍后重试', icon: 'none' });
       } else {
-        wx.showToast({ title: (res.result && res.result.errMsg) || '通知失败，请重试', icon: 'none' });
+        wx.showToast({ title: result.errMsg || '通知失败，请重试', icon: 'none' });
       }
     }).catch((err) => {
       wx.hideLoading();
       console.warn('[aiMatch] 面试通知失败:', err);
       wx.showToast({ title: '网络异常，请重试', icon: 'none' });
+    }).finally(() => {
+      this._superSubmitting = false;
     });
   },
 
   _triggerSwipe(direction) {
     if (this.data.animating || this.data.currentIndex >= this.data.cards.length) return;
+    const cur = this.data.cards[this.data.currentIndex];
+    // 同一张卡同一事件按会话去重：报过就跳过 _track，但飞卡动画照常
+    if (cur && cur._id) {
+      this._actedIds = this._actedIds || {};
+      const actKey = `${direction}_${cur._id}`;
+      if (!this._actedIds[actKey]) {
+        this._actedIds[actKey] = true;
+        this._track(direction, cur._id);
+      }
+      // "已选 N 位"计数：同一张卡只计一次（撤销时相应减）
+      if (direction === 'like') {
+        this._likedIds = this._likedIds || {};
+        if (!this._likedIds[cur._id]) {
+          this._likedIds[cur._id] = true;
+          this.setData({ likeCount: this.data.likeCount + 1 });
+        }
+      }
+    }
+    if (direction === 'like') {
+      // 右滑 = 标记合适：提示（详情走卡片上的"详情›"）
+      wx.showToast({ title: '已标记合适', icon: 'none', duration: 800 });
+    }
     const flyX = direction === 'like' ? 700 : -700;
     const rotate = direction === 'like' ? 25 : -25;
     this.setData({
@@ -448,10 +617,13 @@ Page({
       cardStyle: `z-index: 20; transform: translate(${flyX}px, -40px) rotate(${rotate}deg); transition: transform 0.35s ease-out; opacity: 0;`,
       swipeDirection: direction,
     });
-    setTimeout(() => this._afterSwipe(), 350);
+    // 存句柄：resetMatch / onUnload 里可清掉，配合 _afterSwipe 的 resultReady 兜底
+    this._swipeTimer = setTimeout(() => this._afterSwipe(), 350);
   },
 
   _afterSwipe() {
+    // 兜底：动画途中已退出结果阶段（如点了重新描述/页面卸载）则不再推进
+    if (!this.data.resultReady) return;
     const nextIndex = this.data.currentIndex + 1;
     // 第一张（也就是被飞走的那张的"接替者"）必须有 transition，否则 scale 1→1 看着卡
     // 同时保持 resultEntered=true，让按钮不再重播入场动画
@@ -461,15 +633,45 @@ Page({
       swipeDirection: '',
       animating: false,
       resultEntered: true,
+      // 看完最后一张 → "看完了"空态
+      emptyReason: nextIndex >= this.data.cards.length ? 'finished' : this.data.emptyReason,
     }, () => {
       this._refreshStack();
     });
   },
 
   tapDetail(e) {
+    // 拖动回弹后的短时间内抑制 tap，防止误触跳详情
+    if (this._suppressTap) {
+      this._suppressTap = false;
+      return;
+    }
     const id = (e.currentTarget.dataset.id) || (this.data.cards[this.data.currentIndex] || {})._id;
     if (!id) return;
+    this._track('detail', id);
     wx.navigateTo({ url: `/pages/resumeDetail/index?id=${id}` });
+  },
+
+  // 跳"我的心动阿姨"：需登录，未登录走登录拦截（登录成功后自动跳回 myLikes）
+  goMyLikes() {
+    const crmUserInfo = wx.getStorageSync('crmUserInfo') || {};
+    if (!crmUserInfo.phone) {
+      wx.showModal({
+        title: '请先登录',
+        content: '登录后才能查看你标记过的心动阿姨',
+        confirmText: '去登录',
+        confirmColor: '#7B5BF5',
+        success: (r) => {
+          if (r.confirm) {
+            wx.navigateTo({
+              url: `/pages/login/index?redirect=${encodeURIComponent('/pages/myLikes/index')}`,
+            });
+          }
+        },
+      });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/myLikes/index' });
   },
 
   resetMatch() {
@@ -482,10 +684,36 @@ Page({
       currentIndex: 0,
       cardStyle: 'z-index: 20;',
       swipeDirection: '',
+      animating: false,
+      emptyReason: '',
+      likeCount: 0,
+      relaxNote: '',
     });
+    // 重新匹配时同步清掉草稿与曝光/操作/已选去重表
+    wx.removeStorageSync('aiMatch_draft');
+    this._impressedIds = {};
+    this._actedIds = {};
+    this._likedIds = {};
+    // 清掉未完成的飞卡定时器，避免重置后 _afterSwipe 迟到推进
+    if (this._swipeTimer) {
+      clearTimeout(this._swipeTimer);
+      this._swipeTimer = null;
+    }
+  },
+
+  // 页面被遮盖（切后台/跳转）时录音中则收尾，避免状态悬挂
+  onHide() {
+    if (this.data.recording) {
+      this.onVoiceEnd();
+    }
   },
 
   onUnload() {
+    this._clearRecordTimer();
+    if (this._swipeTimer) {
+      clearTimeout(this._swipeTimer);
+      this._swipeTimer = null;
+    }
     if (this.manager && this.data.recording) {
       try { this.manager.stop(); } catch (e) {}
     }

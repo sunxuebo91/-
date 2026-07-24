@@ -18,15 +18,15 @@
       <view class="hero-icon-wrap">
         <text class="hero-icon">✨</text>
       </view>
-      <view class="hero-title">AI 智能匹配</view>
+      <view class="hero-title">说出需求，AI 帮你挑阿姨</view>
       <view class="hero-sub">描述您的家政需求，智能为您推荐合适的服务人员</view>
     </view>
 
     <view class="tips-row">
-      <view class="tip-chip">月嫂</view>
-      <view class="tip-chip">育儿嫂</view>
-      <view class="tip-chip">保姆</view>
-      <view class="tip-chip">护老</view>
+      <view class="tip-chip" data-text="想找一位月嫂，预算 15000 以内，有新生儿护理经验" bindtap="tapTipChip">月嫂</view>
+      <view class="tip-chip" data-text="想找一位住家育儿嫂，擅长早教和辅食，带 1 岁宝宝" bindtap="tapTipChip">育儿嫂</view>
+      <view class="tip-chip" data-text="想找一位住家保姆，做饭好吃，会整理收纳" bindtap="tapTipChip">保姆</view>
+      <view class="tip-chip" data-text="想找一位住家护老阿姨，照顾半自理老人，有耐心" bindtap="tapTipChip">护老</view>
     </view>
 
     <view class="input-card">
@@ -47,9 +47,10 @@
           class="voice-btn {{recording ? 'voice-btn-active' : ''}}"
           bindtouchstart="onVoiceStart"
           bindtouchend="onVoiceEnd"
+          bindtouchcancel="onVoiceEnd"
         >
           <text class="voice-icon">{{recording ? '⏹' : '🎙'}}</text>
-          <text class="voice-text">{{recording ? '松开结束' : '按住说话'}}</text>
+          <text class="voice-text">{{recording ? '松开结束 ' + recordSeconds + 's' : '按住说话'}}</text>
         </view>
       </view>
     </view>
@@ -61,12 +62,16 @@
     <view class="footer-hint">支持语音/文字 · 按匹配度推荐 · 左右滑动查看</view>
   </view>
 
-  <!-- 结果阶段：探探骨架 + 家政血肉 -->
-  <view class="result-stage" wx:if="{{resultReady}}">
+  <!-- 结果阶段：探探骨架 + 家政血肉；flex 纵向撑满视口剩余高度 -->
+  <view class="result-stage" wx:if="{{resultReady}}" style="height: calc(100vh - {{statusBarHeight}}px - {{navBarHeight}}px);">
     <view class="result-header">
       <view class="result-summary">{{needs.summary || inputText}}</view>
+      <view class="likes-chip" bindtap="goMyLikes">已选 {{likeCount}} 位 ›</view>
       <view class="result-reset" bindtap="resetMatch">重新描述</view>
     </view>
+
+    <!-- 放宽提示条：没有完全符合条件的阿姨时后端给的说明（strictCount=0 才有） -->
+    <view class="relax-note" wx:if="{{relaxNote}}">💡 {{relaxNote}}</view>
 
     <view class="card-area">
       <view class="card-stack" wx:if="{{currentIndex < cards.length}}">
@@ -83,26 +88,28 @@
           bindtouchend="onTouchEnd"
           catchtap="tapDetail"
         >
-          <!-- 整张卡 = 一张图 -->
-          <image class="card-photo" src="{{item.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+          <!-- 上部照片区：view 背景图，center 20% 偏上定位，人脸（一般在画面上 1/3 处）不被信息区顶掉 -->
+          <view class="card-photo" style="background-image: url({{item.coverFileId || '/images/default-goods-image.png'}})"></view>
 
-          <!-- 顶部：岗位 + 评分 -->
+          <!-- 顶部：岗位 + 评分（绝对定位于照片区顶部，不压脸） -->
           <view class="card-top">
             <view class="card-job-pill" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</view>
-            <view class="card-score" wx:if="{{item.score}}">
-              <text class="card-score-icon">★</text>
-              <text>{{item.score}}</text>
-            </view>
+            <view class="card-score" wx:if="{{item.matchScore}}">匹配度 {{item.matchScore}}%</view>
           </view>
 
-          <!-- 底部：黑色渐变 + 信息浮层（名字/年龄/价格/自我描述/技能） -->
-          <view class="card-bottom">
+          <!-- 诚实匹配：未满足条件小标签（琥珀色低调，无则整个不渲染） -->
+          <view class="card-unmet" wx:if="{{item.unmetLabels && item.unmetLabels.length}}">
+            <text class="card-unmet-tag" wx:for="{{item.unmetLabels}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+
+          <!-- 下部信息区：实心深底，正常文档流（名字/推荐理由/自我描述/技能/价格） -->
+          <view class="card-info">
             <view class="card-name-row">
               <text class="card-name">{{item.name}}</text>
               <text class="card-info-line" wx:if="{{item.infoLine}}">· {{item.infoLine}}</text>
             </view>
 
-            <view class="card-intro" wx:if="{{item.intro}}">"{{item.intro}}"</view>
+            <view class="card-reason" wx:if="{{item.matchReason}}">{{item.matchReason}}</view>
 
             <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
               <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
@@ -125,34 +132,44 @@
 
       <view class="empty-stage" wx:else>
         <text class="empty-icon">✨</text>
-        <view class="empty-text">已经看完全部推荐啦</view>
-        <button class="match-btn" bindtap="resetMatch">重新提需求</button>
+        <!-- 空态分离：没匹配到 vs 看完了全部推荐 -->
+        <block wx:if="{{emptyReason === 'no-match'}}">
+          <view class="empty-text">暂无完全匹配的阿姨，换个说法试试</view>
+          <button class="match-btn" bindtap="resetMatch">重新描述</button>
+        </block>
+        <block wx:else>
+          <view class="empty-text">已经看完全部推荐啦</view>
+          <button class="match-btn" bindtap="resetMatch">重新提需求</button>
+          <view class="empty-undo" bindtap="tapUndo">上一张</view>
+          <view class="empty-likes" bindtap="goMyLikes">查看我的心动阿姨 ›</view>
+        </block>
       </view>
 
-      <!-- 4 个圆形按钮，浮在卡片底部之上 -->
-      <view class="action-row {{resultEntered ? 'entered' : ''}}" wx:if="{{currentIndex < cards.length}}">
-        <view class="action-btn undo-btn" bindtap="tapUndo">
-          <view class="action-icon-circle undo-circle">
-            <text class="action-icon">↺</text>
+      <!-- 操作区：三个等大次级圆钮（同一基线）+ 全宽面试 CTA -->
+      <view class="action-panel {{resultEntered ? 'entered' : ''}}" wx:if="{{currentIndex < cards.length}}">
+        <view class="action-row">
+          <view class="action-btn" bindtap="tapUndo">
+            <view class="action-icon-circle undo-circle">
+              <image class="action-icon-img" src="{{iconUndo}}" mode="aspectFit"></image>
+            </view>
+            <text class="action-label undo-label">上一张</text>
+          </view>
+          <view class="action-btn" bindtap="tapDislike">
+            <view class="action-icon-circle dislike-circle">
+              <image class="action-icon-img" src="{{iconNope}}" mode="aspectFit"></image>
+            </view>
+            <text class="action-label dislike-label">略过</text>
+          </view>
+          <view class="action-btn" bindtap="tapLike">
+            <view class="action-icon-circle like-circle">
+              <image class="action-icon-img" src="{{iconLike}}" mode="aspectFit"></image>
+            </view>
+            <text class="action-label like-label">合适</text>
           </view>
         </view>
-        <view class="action-btn dislike-btn" bindtap="tapDislike">
-          <view class="action-icon-circle dislike-circle">
-            <text class="action-icon">✕</text>
-          </view>
-          <text class="action-label">略过</text>
-        </view>
-        <view class="action-btn like-btn" bindtap="tapLike">
-          <view class="action-icon-circle like-circle">
-            <text class="action-icon">♥</text>
-          </view>
-          <text class="action-label">合适</text>
-        </view>
-        <view class="action-btn super-btn" bindtap="tapSuper">
-          <view class="action-icon-circle super-circle">
-            <text class="action-icon">★</text>
-          </view>
-          <text class="action-label">面试</text>
+        <view class="interview-cta" bindtap="tapSuper">
+          <image class="interview-cta-icon" src="{{iconStar}}" mode="aspectFit"></image>
+          <text class="interview-cta-text">申请面试</text>
         </view>
       </view>
     </view>

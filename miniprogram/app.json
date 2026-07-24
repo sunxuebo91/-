@@ -51,6 +51,7 @@
     "pages/poster/index",
     "pages/posterCustomerList/index",
     "pages/aiMatch/index",
+    "pages/myLikes/index",
     "pages/qaService/index",
     "pages/companyIntro/index",
     "pages/houseRules/index",

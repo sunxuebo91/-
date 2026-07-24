@@ -14,6 +14,9 @@ temp.txt
 # 临时输出目录（视频抽帧等）
 __tmp/
 
+# 工作区根的临时素材 / 草稿目录（与项目代码无关）
+/安得褓贝/
+
 # Node modules
 node_modules/
 

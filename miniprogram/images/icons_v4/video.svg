@@ -7,7 +7,6 @@
   </defs>
   <rect x="12" y="12" width="76" height="76" rx="20" fill="url(#bg)"/>
   <ellipse cx="50" cy="80" rx="22" ry="5" fill="#C9B8FF" opacity="0.35"/>
-  <rect x="32" y="28" width="36" height="46" rx="5" fill="none" stroke="#ffffff" stroke-width="5"/>
-  <circle cx="58" cy="40" r="4" fill="#ffffff"/>
-  <polyline points="37,64 46,50 52,58 57,49 64,64" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="28" y="32" width="44" height="36" rx="8" fill="none" stroke="#ffffff" stroke-width="5"/>
+  <polygon points="46,42 46,58 60,50" fill="#ffffff"/>
 </svg>

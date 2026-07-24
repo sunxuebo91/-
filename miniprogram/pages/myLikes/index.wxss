@@ -1,0 +1,142 @@
+/* pages/myLikes/index.wxss */
+.page {
+  min-height: 100vh;
+  background: #F5F2FB;
+  padding: 24rpx 24rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 照片左 / 信息右 横卡，沿用 aiMatch 的圆角与紫色投影语言 */
+.like-card {
+  display: flex;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 12rpx 32rpx rgba(123, 91, 245, 0.12);
+}
+
+.card-photo {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  background: #EDE8FF;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.card-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2D1B69;
+}
+.card-job {
+  font-size: 20rpx;
+  color: #7B5BF5;
+  background: #F1EAFE;
+  border-radius: 999rpx;
+  padding: 4rpx 14rpx;
+  white-space: nowrap;
+}
+
+.card-meta {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6B5FA5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-bottom-row {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+.card-price-num {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #FF8F1F;
+}
+.card-price-unit {
+  font-size: 20rpx;
+  color: #9B8FC4;
+}
+
+/* 申请面试：橙色胶囊（与 aiMatch CTA 同色系）；已申请置灰 */
+.interview-btn {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #FFB24F 0%, #FF8F1F 100%);
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+  white-space: nowrap;
+}
+.interview-btn-applied {
+  background: #EDE8FF;
+  color: #9B8FC4;
+}
+
+/* 空态 */
+.empty {
+  padding-top: 160rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.empty-icon { font-size: 96rpx; }
+.empty-title {
+  margin-top: 24rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2D1B69;
+}
+.empty-sub {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #9B8FC4;
+}
+.go-match-btn {
+  display: block;
+  width: 480rpx !important;
+  margin: 48rpx 0 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(135deg, #7B5BF5 0%, #9B7BF8 100%) !important;
+  color: #fff !important;
+  font-size: 30rpx;
+  font-weight: 700;
+  border: none !important;
+  border-radius: 999rpx !important;
+  height: 88rpx;
+  line-height: 88rpx;
+  box-shadow: 0 12rpx 28rpx rgba(123, 91, 245, 0.35);
+  text-align: center;
+}
+.go-match-btn::after { border: none !important; }
+
+.loading {
+  padding: 120rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: #9B8FC4;
+}

@@ -1,4 +1,4 @@
-﻿const articleService = require('../../services/article.js');
+const articleService = require('../../services/article.js');
 const babyDiaryService = require('../../services/babyDiary.js');
 const userService = require('../../services/userService.js');
 
@@ -246,7 +246,12 @@ Page({
         confirmText: '去登录',
         confirmColor: '#7B5BF5',
         success: (r) => {
-          if (r.confirm) wx.navigateTo({ url: '/pages/login/index' });
+          // 带上 redirect 参数，登录成功后自动跳回 AI 匹配页
+          if (r.confirm) {
+            wx.navigateTo({
+              url: `/pages/login/index?redirect=${encodeURIComponent('/pages/aiMatch/index')}`,
+            });
+          }
         },
       });
       return;

@@ -1,4 +1,4 @@
-﻿<view class="page">
+<view class="page">
   <view class="header-card">
     <view class="header-content" bindtap="goLogin">
       <view class="avatar-wrap">
@@ -37,22 +37,30 @@
     <view class="service-grid">
       <view class="service-item" bindtap="goMyOrders" wx:if="{{me.phone}}">
         <view class="service-icon-wrap service-icon-order">
-          <image class="service-icon-img" src="/images/icons_v4/my-orders.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/order.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我的订单</text>
       </view>
       <view class="service-item" bindtap="goBabyDiary">
         <view class="service-icon-wrap service-icon-diary">
-          <image class="service-icon-img" src="/images/icons_v4/baby-diary.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/diary.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">宝贝日记</text>
+      </view>
+
+      <!-- 我的心动阿姨：AI 匹配里标记"合适"的阿姨；未登录点击会先走登录 -->
+      <view class="service-item" bindtap="goMyLikes">
+        <view class="service-icon-wrap service-icon-likes">
+          <image class="service-icon-img" src="/images/icons_v4/likes.svg" mode="aspectFit"/>
+        </view>
+        <text class="service-label">心动阿姨</text>
       </view>
 
       <!-- 我推荐的：推荐官、员工、管理员均可见（员工本来就是推荐核心角色） -->
       <view class="service-item" bindtap="goReferral"
         wx:if="{{me.role === 'referrer' || me.role === '推荐官' || me.role === 'staff' || me.role === 'admin' || me.isReferrer || me.isStaff}}">
         <view class="service-icon-wrap service-icon-referral">
-          <image class="service-icon-img" src="/images/icons_v4/referral.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/refer.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我推荐的</text>
       </view>
@@ -60,7 +68,7 @@
       <!-- 接单大厅入口：所有用户可见，阿姨抢单不强制登录 -->
       <view class="service-item" bindtap="goOrderHall">
         <view class="service-icon-wrap service-icon-order">
-          <image class="service-icon-img" src="/images/icons_v4/order-hall.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/hall.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">接单大厅</text>
       </view>
@@ -78,21 +86,21 @@
       <view class="service-item" bindtap="goMyContracts"
         wx:if="{{me.role === 'staff' || me.role === 'admin' || me.isStaff}}">
         <view class="service-icon-wrap service-icon-contract">
-          <image class="service-icon-img" src="/images/icons_v4/document.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/contract.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我的合同</text>
       </view>
 
       <view class="service-item" bindtap="goSalaryAssessment">
         <view class="service-icon-wrap service-icon-salary">
-          <image class="service-icon-img" src="/images/icons_v4/yuexin.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/salary.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">工资测评</text>
       </view>
 
       <view class="service-item" bindtap="goCourse">
         <view class="service-icon-wrap service-icon-course">
-          <image class="service-icon-img" src="/images/icons_v4/document.svg" mode="aspectFit"/>
+          <image class="service-icon-img" src="/images/icons_v4/video.svg" mode="aspectFit"/>
         </view>
         <text class="service-label">我的视频</text>
       </view>

@@ -1,0 +1,37 @@
+<!--pages/myLikes/index.wxml-->
+<view class="page">
+
+  <!-- 心动列表：照片左 / 信息右 横卡 -->
+  <view class="list" wx:if="{{items.length}}">
+    <view class="like-card" wx:for="{{items}}" wx:key="_id" data-id="{{item._id}}" bindtap="tapCard">
+      <image class="card-photo" src="{{item.coverFileId || '/images/default-goods-image.png'}}" mode="aspectFill"></image>
+      <view class="card-info">
+        <view class="card-name-row">
+          <text class="card-name">{{item.name}}</text>
+          <text class="card-job" wx:if="{{item.jobTypeLabel}}">{{item.jobTypeLabel}}</text>
+        </view>
+        <view class="card-meta" wx:if="{{item.infoLine}}">{{item.infoLine}}</view>
+        <view class="card-bottom-row">
+          <view class="card-price">
+            <text class="card-price-num">¥{{item.priceMonth}}</text>
+            <text class="card-price-unit">{{item.priceUnit}}</text>
+          </view>
+          <view class="interview-btn {{item.applied ? 'interview-btn-applied' : ''}}" catchtap="tapInterview" data-id="{{item._id}}">
+            {{item.applied ? '已申请面试' : '申请面试'}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty" wx:if="{{!loading && !items.length}}">
+    <text class="empty-icon">💜</text>
+    <view class="empty-title">还没有心动阿姨</view>
+    <view class="empty-sub">去 AI 智能匹配，右滑标记「合适」就会出现在这里</view>
+    <button class="go-match-btn" bindtap="goAiMatch">去 AI 智能匹配</button>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+</view>
