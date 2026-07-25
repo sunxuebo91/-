@@ -5,6 +5,18 @@
 
 const { request, publicRequest, authenticatedRequest } = require('../utils/request.js');
 
+// 读取当前用户 openid（员工身份标识：后端命中 CRM 员工则返回未脱敏数据）
+const getOpenid = () => {
+  try {
+    return wx.getStorageSync('openid')
+      || (wx.getStorageSync('crmUserInfo') || {}).openid
+      || (getApp().globalData.userInfo || {}).openid
+      || '';
+  } catch (e) {
+    return '';
+  }
+};
+
 /**
  * 获取简历列表（公开接口，无需登录）
  * @param {Object} params 查询参数
@@ -21,6 +33,12 @@ const getResumeList = (params = {}) => {
     page: params.page || 1,
     pageSize: params.pageSize || 20
   };
+
+  // 员工身份标识：后端据此跳过姓名脱敏（非员工忽略此参数，仍返回脱敏数据）
+  const openid = getOpenid();
+  if (openid) {
+    queryData.openid = openid;
+  }
 
   // 只有当 keyword 有值时才添加
   if (params.keyword && params.keyword.trim()) {
@@ -78,9 +96,13 @@ const getResumeListMiniprogram = (params = {}) => {
 const getResumeDetail = (id) => {
   console.log('📄 获取简历详情（公开接口）:', id);
 
+  // 员工身份标识：后端据此跳过姓名脱敏（非员工忽略此参数，仍返回脱敏数据）
+  const openid = getOpenid();
+
   return publicRequest({
     url: '/resumes/public/' + id,
-    method: 'GET'
+    method: 'GET',
+    data: openid ? { openid } : {}
   });
 };
 
@@ -92,9 +114,13 @@ const getResumeDetail = (id) => {
 const getResumeDetailMiniprogram = (id) => {
   console.log('📄 获取简历详情（小程序，公开接口）:', id);
 
+  // 员工身份标识：后端据此跳过姓名脱敏（非员工忽略此参数，仍返回脱敏数据）
+  const openid = getOpenid();
+
   return publicRequest({
     url: '/resumes/public/' + id,
-    method: 'GET'
+    method: 'GET',
+    data: openid ? { openid } : {}
   });
 };
 

@@ -109,6 +109,9 @@ App({
         return;
       }
 
+      // 缓存 openid：简历公开接口用它识别员工身份（员工看真实姓名，其他身份脱敏）
+      try { wx.setStorageSync('openid', openid); } catch (e) { /* ignore */ }
+
       // 3. 调用 CRM 后端登录接口
       const apiRes = await new Promise((resolve, reject) => {
         wx.request({
