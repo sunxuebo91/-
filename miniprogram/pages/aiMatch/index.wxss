@@ -193,7 +193,7 @@
   background: #F0EAFB;
 }
 .voice-btn-active { background: #E0D4F7; }
-.voice-icon { font-size: 32rpx; color: #7B5BF5; }
+.voice-icon { width: 32rpx; height: 32rpx; }
 .voice-text { font-size: 26rpx; color: #7B5BF5; font-weight: 600; }
 
 .match-btn {
@@ -283,6 +283,9 @@
 /* 放宽提示条：没有完全符合条件时的说明，浅紫低调、自然高不遮挡卡片 */
 .relax-note {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
   font-size: 24rpx;
   color: #5A3DD8;
   background: rgba(245, 242, 251, 0.95);
@@ -291,6 +294,7 @@
   margin: 0 12rpx 12rpx;
   line-height: 1.5;
 }
+.relax-note-icon { width: 28rpx; height: 28rpx; flex-shrink: 0; }
 /* 合规声明：结果页整体算法推荐说明，位于摘要行下方（紫色渐变底上用半透明白） */
 .ai-result-note {
   flex-shrink: 0;

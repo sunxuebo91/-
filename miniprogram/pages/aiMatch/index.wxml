@@ -55,7 +55,8 @@
           bindtouchend="onVoiceEnd"
           bindtouchcancel="onVoiceEnd"
         >
-          <text class="voice-icon">{{recording ? '⏹' : '🎙'}}</text>
+          <image class="voice-icon" wx:if="{!recording}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN0I1QkY1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxyZWN0IHg9IjE3IiB5PSI2IiB3aWR0aD0iMTQiIGhlaWdodD0iMjIiIHJ4PSI3Ii8+CjxwYXRoIGQ9Ik0xMSAyMSBhMTMgMTMgMCAwIDAgMjYgMCIvPgo8cGF0aCBkPSJNMjQgMzQgdjciLz4KPHBhdGggZD0iTTE3IDQzIGgxNCIvPgo8L3N2Zz4=" mode="aspectFit"/>
+          <image class="voice-icon" wx:if="{recording}" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CjxjaXJjbGUgY3g9IjI0IiBjeT0iMjQiIHI9IjE5IiBmaWxsPSJub25lIiBzdHJva2U9IiM3QjVCRjUiIHN0cm9rZS13aWR0aD0iMyIvPgo8cmVjdCB4PSIxNiIgeT0iMTYiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgcng9IjQiIGZpbGw9IiM3QjVCRjUiLz4KPC9zdmc+" mode="aspectFit"/>
           <text class="voice-text">{{recording ? '松开结束 ' + recordSeconds + 's' : '按住说话'}}</text>
         </view>
       </view>
@@ -82,7 +83,10 @@
     <view class="ai-result-note">推荐结果由匹配算法计算得出，仅供参考，实际服务以顾问沟通为准</view>
 
     <!-- 放宽提示条：没有完全符合条件的阿姨时后端给的说明（strictCount=0 才有） -->
-    <view class="relax-note" wx:if="{{relaxNote}}">💡 {{relaxNote}}</view>
+    <view class="relax-note" wx:if="{{relaxNote}}">
+      <image class="relax-note-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNUEzREQ4IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Ik0yNCA4IGExMSAxMSAwIDAgMSA2LjYgMTkuOCBjLTEuNCAxLjEtMi4xIDIuMi0yLjEgNC4yIGgtOSBjMC0yLTAuNy0zLjEtMi4xLTQuMiBBMTEgMTEgMCAwIDEgMjQgOCBaIi8+CjxwYXRoIGQ9Ik0yMC41IDM3IGg3Ii8+CjxwYXRoIGQ9Ik0yMiA0MS41IGg0Ii8+CjxwYXRoIGQ9Ik0yNCAxLjUgdjMiLz4KPHBhdGggZD0iTTguNSAxMCBsMi4xIDIuMSIvPgo8cGF0aCBkPSJNMzkuNSAxMCBsLTIuMSAyLjEiLz4KPC9zdmc+" mode="aspectFit"/>
+      <text>{{relaxNote}}</text>
+    </view>
 
     <view class="card-area">
       <view class="card-stack" wx:if="{{currentIndex < cards.length}}">
