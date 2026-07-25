@@ -73,16 +73,11 @@
   margin-bottom: 32rpx;
 }
 .hero-icon-wrap {
-  width: 120rpx;
-  height: 120rpx;
-  background: rgba(255, 255, 255, 0.28);
-  border-radius: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 140rpx;
+  height: 140rpx;
   margin: 0 auto 16rpx;
 }
-.hero-icon { font-size: 64rpx; line-height: 1; }
+.hero-icon-img { width: 140rpx; height: 140rpx; }
 .hero-title { font-size: 38rpx; font-weight: 700; color: #fff; letter-spacing: 1rpx; text-shadow: 0 2rpx 8rpx rgba(45, 27, 105, 0.4); }
 .hero-sub { margin-top: 12rpx; font-size: 24rpx; color: rgba(255,255,255,0.95); text-shadow: 0 1rpx 4rpx rgba(45, 27, 105, 0.3); }
 
