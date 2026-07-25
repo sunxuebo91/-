@@ -248,7 +248,7 @@
   margin: 0 12rpx 12rpx;
   line-height: 1.5;
 }
-/* 合规标识：结果页整体 AI 生成说明，位于摘要行下方（紫色渐变底上用半透明白） */
+/* 合规声明：结果页整体算法推荐说明，位于摘要行下方（紫色渐变底上用半透明白） */
 .ai-result-note {
   flex-shrink: 0;
   text-align: center;

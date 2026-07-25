@@ -72,8 +72,8 @@
       <view class="result-reset" bindtap="resetMatch">重新描述</view>
     </view>
 
-    <!-- 合规标识：结果页整体 AI 生成说明 -->
-    <view class="ai-result-note">推荐结果由人工智能生成，实际服务以顾问沟通为准</view>
+    <!-- 合规声明：结果页整体算法推荐说明 -->
+    <view class="ai-result-note">推荐结果由匹配算法计算得出，仅供参考，实际服务以顾问沟通为准</view>
 
     <!-- 放宽提示条：没有完全符合条件的阿姨时后端给的说明（strictCount=0 才有） -->
     <view class="relax-note" wx:if="{{relaxNote}}">💡 {{relaxNote}}</view>
@@ -115,8 +115,8 @@
             </view>
 
             <view class="card-reason" wx:if="{{item.matchReason}}">{{item.matchReason}}</view>
-            <!-- 合规标识：AI 推荐理由旁的人工智能生成胶囊标签 -->
-            <view class="ai-gen-tag" wx:if="{{item.matchReason}}">人工智能生成</view>
+            <!-- 合规标识：AI 推荐理由旁的算法推荐胶囊标签 -->
+            <view class="ai-gen-tag" wx:if="{{item.matchReason}}">算法推荐</view>
 
             <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
               <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
