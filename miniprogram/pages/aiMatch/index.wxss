@@ -73,11 +73,59 @@
   margin-bottom: 32rpx;
 }
 .hero-icon-wrap {
-  width: 140rpx;
-  height: 140rpx;
-  margin: 0 auto 16rpx;
+  position: relative;
+  width: 150rpx;
+  height: 150rpx;
+  margin: 6rpx auto 22rpx;
 }
-.hero-icon-img { width: 140rpx; height: 140rpx; }
+/* 呼吸光晕：徽章背后的大范围柔光，明暗起伏营造能量感 */
+.hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 210rpx;
+  height: 210rpx;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0) 70%);
+  animation: hero-breathe 3.2s ease-in-out infinite;
+}
+.hero-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 150rpx;
+  height: 150rpx;
+}
+/* 轨道层：顺时针匀速旋转，候选节点环绕人形 */
+.hero-orbit { animation: hero-spin 9s linear infinite; }
+/* 雷达扫光：反向慢旋，与轨道形成差速的科技层次 */
+.hero-sweep { animation: hero-spin-rev 6s linear infinite; }
+/* AI 星芒：定位徽章右上，缩放脉冲 */
+.hero-star {
+  position: absolute;
+  left: 102rpx;
+  top: 16rpx;
+  width: 40rpx;
+  height: 40rpx;
+  animation: hero-pulse 2.2s ease-in-out infinite;
+}
+@keyframes hero-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes hero-spin-rev {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+@keyframes hero-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.22); opacity: 1; }
+}
+@keyframes hero-breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
 .hero-title { font-size: 38rpx; font-weight: 700; color: #fff; letter-spacing: 1rpx; text-shadow: 0 2rpx 8rpx rgba(45, 27, 105, 0.4); }
 .hero-sub { margin-top: 12rpx; font-size: 24rpx; color: rgba(255,255,255,0.95); text-shadow: 0 1rpx 4rpx rgba(45, 27, 105, 0.3); }
 
