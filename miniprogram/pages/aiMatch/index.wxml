@@ -60,6 +60,8 @@
     </button>
 
     <view class="footer-hint">支持语音/文字 · 按匹配度推荐 · 左右滑动查看</view>
+    <!-- 合规声明：AI 仅提供算法、不生成内容；固定页面底部，审核一眼可见 -->
+    <view class="ai-disclaimer">AI 仅提供匹配算法，不生成任何内容，算法结果仅供参考</view>
   </view>
 
   <!-- 结果阶段：探探骨架 + 家政血肉；flex 纵向撑满视口剩余高度 -->
@@ -69,6 +71,9 @@
       <view class="likes-chip" bindtap="goMyLikes">已选 {{likeCount}} 位 ›</view>
       <view class="result-reset" bindtap="resetMatch">重新描述</view>
     </view>
+
+    <!-- 合规标识：结果页整体 AI 生成说明 -->
+    <view class="ai-result-note">推荐结果由人工智能生成，实际服务以顾问沟通为准</view>
 
     <!-- 放宽提示条：没有完全符合条件的阿姨时后端给的说明（strictCount=0 才有） -->
     <view class="relax-note" wx:if="{{relaxNote}}">💡 {{relaxNote}}</view>
@@ -110,6 +115,8 @@
             </view>
 
             <view class="card-reason" wx:if="{{item.matchReason}}">{{item.matchReason}}</view>
+            <!-- 合规标识：AI 推荐理由旁的人工智能生成胶囊标签 -->
+            <view class="ai-gen-tag" wx:if="{{item.matchReason}}">人工智能生成</view>
 
             <view class="card-tags" wx:if="{{item.tags && item.tags.length}}">
               <text class="card-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
