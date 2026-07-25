@@ -451,6 +451,12 @@ Page({
       return;
     }
 
+    // AI 智能匹配 banner 统一走 goAiMatch（含登录拦截拿手机号），不直接 navigateTo
+    if (item.linkUrl && item.linkUrl.indexOf('/pages/aiMatch/index') !== -1) {
+      this.goAiMatch();
+      return;
+    }
+
     // 根据 linkType 处理不同的跳转类型
     switch (item.linkType) {
       case 'page':
