@@ -272,7 +272,15 @@ page {
 }
 .ai-match-entry-card:active { transform: translateY(2rpx) scale(0.99); }
 .ai-match-entry-left { display: flex; align-items: center; gap: 20rpx; }
-.ai-match-entry-icon { font-size: 48rpx; }
+.ai-match-entry-icon {
+  width: 56rpx;
+  height: 56rpx;
+  animation: ai-entry-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes ai-entry-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.12) rotate(8deg); opacity: 1; }
+}
 .ai-match-entry-title { font-size: 30rpx; font-weight: 800; color: #fff; }
 .ai-match-entry-sub { margin-top: 6rpx; font-size: 22rpx; color: rgba(255,255,255,0.75); }
 .ai-match-entry-arrow { font-size: 46rpx; color: rgba(255,255,255,0.4); font-weight: 300; }

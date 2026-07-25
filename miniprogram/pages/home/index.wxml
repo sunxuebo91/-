@@ -95,7 +95,7 @@
     <!-- AI智能匹配入口 -->
     <view class="ai-match-entry-card" bindtap="goAiMatch">
       <view class="ai-match-entry-left">
-        <text class="ai-match-entry-icon">✨</text>
+        <image class="ai-match-entry-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+CjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ2QiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRTlCOCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI0YwQjIzRSIvPgo8L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMTQiIGZpbGw9IiNGNUMxNUMiIG9wYWNpdHk9IjAuMjUiLz4KPHBhdGggZD0iTTI0IDYgTDI3LjggMjAuMiBMNDIgMjQgTDI3LjggMjcuOCBMMjQgNDIgTDIwLjIgMjcuOCBMNiAyNCBMMjAuMiAyMC4yIFoiIGZpbGw9InVybCgjZ2QpIi8+CjxjaXJjbGUgY3g9IjM4IiBjeT0iMTAiIHI9IjIuMiIgZmlsbD0iI0ZGRTlCOCIvPgo8L3N2Zz4=" mode="aspectFit"/>
         <view class="ai-match-entry-info">
           <view class="ai-match-entry-title">AI智能匹配</view>
           <view class="ai-match-entry-sub">一句话描述需求 · AI精准匹配优质服务人员</view>
