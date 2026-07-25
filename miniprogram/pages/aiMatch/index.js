@@ -155,6 +155,8 @@ Page({
         this._clearRecordTimer();
         const result = (res && res.result) || '';
         if (result) {
+          // 记录成功时间：插件随后可能补发一次 error，用于甄别“假失败”
+          this._lastVoiceResultAt = Date.now();
           // 原有文本非空且不以空格/标点结尾时，中间补一个空格再拼
           const prev = this.data.inputText || '';
           const sep = prev && !/[\s，。,.、；;！!？?]$/.test(prev) ? ' ' : '';
@@ -167,6 +169,13 @@ Page({
       };
       this.manager.onError = (res) => {
         this._clearRecordTimer();
+        // 同声传译插件在 onStop 返回识别结果后，常会补发一次 error；
+        // 刚拿到结果的本次录音会话不再提示失败
+        if (this._lastVoiceResultAt && Date.now() - this._lastVoiceResultAt < 3000) {
+          console.warn('[aiMatch] 识别成功后补发的 error（忽略）', res);
+          this.setData({ recording: false, recordSeconds: 60 });
+          return;
+        }
         console.warn('[aiMatch] 语音识别错误', res);
         wx.showToast({ title: '语音识别失败，请重试', icon: 'none' });
         this.setData({ recording: false, recordSeconds: 60 });
@@ -198,6 +207,8 @@ Page({
     wx.authorize({
       scope: 'scope.record',
       success: () => {
+        // 新一次录音会话开始，清掉上一轮的成功标记，避免掩盖真实失败
+        this._lastVoiceResultAt = 0;
         this.manager.start({ duration: 60000, lang: 'zh_CN' });
         this.setData({ recording: true, recordSeconds: 60 });
         this._startRecordTimer();
