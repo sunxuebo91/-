@@ -6,16 +6,18 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 // 用于快速确认"云函数是否已重新部署/生效"
-const VERSION = '2026-07-24-aiMatchService-v6';
+const VERSION = '2026-07-24-aiMatchService-v7';
 
 // ── 需求解析 LLM 双通道配置 ─────────────────────────────────────
 // 通道① DashScope 直连（首选）：云函数环境变量配 DASHSCOPE_API_KEY 即启用
 //   （值 = CRM 服务器 .env 里的 QWEN_API_KEY，阿里百炼平台，用户已拍板 qwen3.5-plus）
 //   微信云 AI 官方模型列表不含 qwen，直连百炼兼容模式端点调用。
+//   ⚠️ 线上实测：兼容模式端点不认别名 qwen3.5-plus（报 "Required body invalid"），
+//   必须用带日期的快照型号 qwen3.5-plus-2026-02-15（enable_thinking:false 已验证生效）。
 // 通道② 微信云 AI（降级）：无 key 或通道①失败时回退，
 //   模型限定微信云官方列表内（deepseek/混元/glm/kimi/minimax）。
 // 换模型不用改代码：环境变量 AIMATCH_PARSE_MODEL / AIMATCH_WX_PARSE_MODEL 覆盖默认值。
-const PARSE_MODEL = process.env.AIMATCH_PARSE_MODEL || 'qwen3.5-plus';
+const PARSE_MODEL = process.env.AIMATCH_PARSE_MODEL || 'qwen3.5-plus-2026-02-15';
 const WX_PARSE_MODEL = process.env.AIMATCH_WX_PARSE_MODEL || 'deepseek-v4-pro';
 
 // ── 工种枚举：与生产库真实值对齐（旧 yuer/baomu 不存在，库里 0 条）──
